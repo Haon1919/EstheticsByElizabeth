@@ -1,0 +1,11 @@
+<div class="service-card">
+  <div class="service-image">
+    <img [src]="service.image" [alt]="service.title">
+  </div>
+  <div class="service-content">
+    <h3>{{service.title}}</h3>
+    <p>{{service.description}}</p>
+    <div class="service-price">${{service.price}}</div>
+    <a routerLink="/booking" class="btn btn-primary">Book Now</a>
+  </div>
+</div>

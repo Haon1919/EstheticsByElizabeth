@@ -1,0 +1,195 @@
+<main class="booking-page">
+  <section class="booking-hero">
+    <div class="container">
+      <h1>Book an Appointment</h1>
+      <p>Schedule your beauty treatment with our expert estheticians</p>
+    </div>
+  </section>
+
+  <section class="booking-form-section" *ngIf="!isSubmitted">
+    <div class="container">
+      <div class="booking-form-container">
+        <!-- Step 1: Booking Information -->
+        <div class="booking-step" *ngIf="!isPaymentStep">
+          <h2>Appointment Details</h2>
+          
+          <form [formGroup]="bookingForm" class="booking-form">
+            <div class="form-group">
+              <label for="service">Select Service *</label>
+              <select id="service" formControlName="service" [class.is-invalid]="bookingForm.get('service')?.invalid && bookingForm.get('service')?.touched">
+                <option value="">-- Select a Service --</option>
+                <option *ngFor="let service of services" [value]="service.id">{{service.name}} - ${{service.price}}</option>
+              </select>
+              <div class="invalid-feedback" *ngIf="bookingForm.get('service')?.invalid && bookingForm.get('service')?.touched">
+                Please select a service
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="date">Select Date *</label>
+              <input type="date" id="date" (change)="onDateChange($event)" [class.is-invalid]="bookingForm.get('date')?.invalid && bookingForm.get('date')?.touched">
+              <div class="invalid-feedback" *ngIf="bookingForm.get('date')?.invalid && bookingForm.get('date')?.touched">
+                Please select a date
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Select Time *</label>
+              <div class="time-slots">
+                <button 
+                  type="button" 
+                  *ngFor="let time of availableTimes" 
+                  class="time-slot" 
+                  [class.selected]="selectedTime === time"
+                  (click)="onTimeSelect(time)"
+                >
+                  {{time}}
+                </button>
+              </div>
+              <div class="invalid-feedback" *ngIf="bookingForm.get('time')?.invalid && bookingForm.get('time')?.touched">
+                Please select a time
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="name">Your Name *</label>
+              <input type="text" id="name" formControlName="name" [class.is-invalid]="bookingForm.get('name')?.invalid && bookingForm.get('name')?.touched">
+              <div class="invalid-feedback" *ngIf="bookingForm.get('name')?.invalid && bookingForm.get('name')?.touched">
+                Please enter your name
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="email">Email Address *</label>
+              <input type="email" id="email" formControlName="email" [class.is-invalid]="bookingForm.get('email')?.invalid && bookingForm.get('email')?.touched">
+              <div class="invalid-feedback" *ngIf="bookingForm.get('email')?.invalid && bookingForm.get('email')?.touched">
+                Please enter a valid email address
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="phone">Phone Number *</label>
+              <input type="tel" id="phone" formControlName="phone" [class.is-invalid]="bookingForm.get('phone')?.invalid && bookingForm.get('phone')?.touched">
+              <div class="invalid-feedback" *ngIf="bookingForm.get('phone')?.invalid && bookingForm.get('phone')?.touched">
+                Please enter your phone number
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="notes">Special Requests or Notes</label>
+              <textarea id="notes" formControlName="notes" rows="3"></textarea>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" class="btn btn-primary" (click)="proceedToPayment()">Proceed to Payment</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Step 2: Payment Information -->
+        <div class="booking-step" *ngIf="isPaymentStep">
+          <div class="booking-summary">
+            <h2>Booking Summary</h2>
+            <div class="summary-item">
+              <span>Service:</span>
+              <span>{{getServiceName(bookingForm.get('service')?.value)}}</span>
+            </div>
+            <div class="summary-item">
+              <span>Date:</span>
+              <span>{{bookingForm.get('date')?.value | date:'mediumDate'}}</span>
+            </div>
+            <div class="summary-item">
+              <span>Time:</span>
+              <span>{{bookingForm.get('time')?.value}}</span>
+            </div>
+            <div class="summary-item total">
+              <span>Total:</span>
+              <span>${{getServicePrice(bookingForm.get('service')?.value)}}</span>
+            </div>
+          </div>
+
+          <h2>Payment Details</h2>
+          <form [formGroup]="bookingForm" class="payment-form">
+            <div class="form-group">
+              <label for="cardName">Name on Card *</label>
+              <input type="text" id="cardName" formControlName="cardName" [class.is-invalid]="bookingForm.get('cardName')?.invalid && bookingForm.get('cardName')?.touched">
+              <div class="invalid-feedback" *ngIf="bookingForm.get('cardName')?.invalid && bookingForm.get('cardName')?.touched">
+                Please enter the name on your card
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="cardNumber">Card Number *</label>
+              <input type="text" id="cardNumber" formControlName="cardNumber" placeholder="1234 5678 9012 3456" [class.is-invalid]="bookingForm.get('cardNumber')?.invalid && bookingForm.get('cardNumber')?.touched">
+              <div class="invalid-feedback" *ngIf="bookingForm.get('cardNumber')?.invalid && bookingForm.get('cardNumber')?.touched">
+                Please enter a valid 16-digit card number
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group col-half">
+                <label for="expiryDate">Expiry Date (MM/YY) *</label>
+                <input type="text" id="expiryDate" formControlName="expiryDate" placeholder="MM/YY" [class.is-invalid]="bookingForm.get('expiryDate')?.invalid && bookingForm.get('expiryDate')?.touched">
+                <div class="invalid-feedback" *ngIf="bookingForm.get('expiryDate')?.invalid && bookingForm.get('expiryDate')?.touched">
+                  Please enter a valid expiry date (MM/YY)
+                </div>
+              </div>
+
+              <div class="form-group col-half">
+                <label for="cvv">CVV *</label>
+                <input type="text" id="cvv" formControlName="cvv" placeholder="123" [class.is-invalid]="bookingForm.get('cvv')?.invalid && bookingForm.get('cvv')?.touched">
+                <div class="invalid-feedback" *ngIf="bookingForm.get('cvv')?.invalid && bookingForm.get('cvv')?.touched">
+                  Please enter a valid CVV code
+                </div>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" class="btn btn-outline" (click)="goBack()">Back</button>
+              <button type="button" class="btn btn-primary" (click)="submitBooking()">Confirm Booking</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Confirmation Section -->
+  <section class="booking-confirmation" *ngIf="isSubmitted">
+    <div class="container">
+      <div class="confirmation-content">
+        <div class="confirmation-icon">
+          <i class="fa fa-check-circle"></i>
+        </div>
+        <h2>Booking Confirmed!</h2>
+        <p>Thank you for booking with us. Your appointment has been confirmed.</p>
+        
+        <div class="confirmation-details">
+          <div class="detail-item">
+            <span>Service:</span>
+            <span>{{getServiceName(bookingForm.get('service')?.value)}}</span>
+          </div>
+          <div class="detail-item">
+            <span>Date:</span>
+            <span>{{bookingForm.get('date')?.value | date:'fullDate'}}</span>
+          </div>
+          <div class="detail-item">
+            <span>Time:</span>
+            <span>{{bookingForm.get('time')?.value}}</span>
+          </div>
+          <div class="detail-item">
+            <span>Total Paid:</span>
+            <span>${{getServicePrice(bookingForm.get('service')?.value)}}</span>
+          </div>
+        </div>
+        
+        <p>A confirmation email has been sent to <strong>{{bookingForm.get('email')?.value}}</strong>.</p>
+        <p>If you need to reschedule or cancel your appointment, please contact us at least 24 hours in advance.</p>
+        
+        <div class="confirmation-actions">
+          <button class="btn btn-primary" (click)="bookAnother()">Book Another Appointment</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>

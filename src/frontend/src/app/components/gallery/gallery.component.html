@@ -1,0 +1,43 @@
+<main class="gallery-page">
+  <section class="gallery-hero">
+    <div class="container">
+      <h1>Our Gallery</h1>
+      <p>Browse our collection of images showcasing our esthetic services and results</p>
+    </div>
+  </section>
+
+  <section class="gallery-section">
+    <div class="container">
+      <div class="gallery-filters">
+        <button 
+          *ngFor="let category of categories" 
+          [class.active]="selectedCategory === category.id"
+          (click)="filterImages(category.id)"
+        >
+          {{category.name}}
+        </button>
+      </div>
+
+      <div class="gallery-grid">
+        <div class="gallery-item" *ngFor="let image of filteredImages">
+          <div class="gallery-image">
+            <img [src]="image.src" [alt]="image.alt">
+            <div class="overlay">
+              <span class="category">{{image.category | titlecase}}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="gallery-cta">
+    <div class="container">
+      <div class="cta-content">
+        <h2>Ready to Experience Our Services?</h2>
+        <p>Schedule an appointment today and let our expert estheticians pamper you</p>
+        <a routerLink="/booking" class="btn btn-white">Book an Appointment</a>
+      </div>
+    </div>
+  </section>
+</main>

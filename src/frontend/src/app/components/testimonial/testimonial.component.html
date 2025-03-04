@@ -1,0 +1,19 @@
+<div class="testimonial-card">
+  <div class="testimonial-content">
+    <div class="quote">
+      <i class="fa fa-quote-left"></i>
+      <p>{{testimonial.quote}}</p>
+    </div>
+    <div class="stars">
+      <i class="fa fa-star" *ngFor="let star of getStars(testimonial.rating)"></i>
+    </div>
+  </div>
+  <div class="testimonial-author">
+    <div class="author-image">
+      <img [src]="testimonial.image" [alt]="testimonial.name">
+    </div>
+    <div class="author-name">
+      <h4>{{testimonial.name}}</h4>
+    </div>
+  </div>
+</div>
