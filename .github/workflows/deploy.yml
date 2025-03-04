@@ -20,8 +20,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-        with:
-          persist-credentials: false
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
@@ -34,12 +32,49 @@ jobs:
       - name: Build
         run: npm run build -- --configuration production --base-href="https://haon1919.github.io/EstheticsByElizabeth/"
 
+      - name: Debug directory structure
+        run: |
+          echo "Current directory: $(pwd)"
+          echo "Listing dist directory:"
+          ls -la dist || echo "dist directory not found"
+          echo "Finding all directories in dist:"
+          find dist -type d 2>/dev/null || echo "No subdirectories found"
+          echo "Finding index.html files:"
+          find dist -name "index.html" 2>/dev/null || echo "No index.html found"
+
       - name: Add .nojekyll file
-        run: touch dist/app/.nojekyll # Update path to match actual build directory
+        run: |
+          # Try multiple potential build output directories
+          for dir in dist/frontend dist/app dist/esthetics-by-elizabeth dist; do
+            if [ -d "$dir" ]; then
+              echo "Adding .nojekyll to $dir"
+              touch $dir/.nojekyll
+            fi
+          done
+
+      - name: Determine correct build directory
+        id: find-build-dir
+        run: |
+          # Try to find the directory with index.html
+          BUILD_DIR=""
+          for dir in dist/frontend dist/app dist/esthetics-by-elizabeth dist; do
+            if [ -f "$dir/index.html" ]; then
+              BUILD_DIR="$dir"
+              break
+            fi
+          done
+          
+          if [ -z "$BUILD_DIR" ]; then
+            echo "Could not find build directory with index.html"
+            BUILD_DIR="dist" # fallback
+          fi
+          
+          echo "Using build directory: $BUILD_DIR"
+          echo "build-dir=$BUILD_DIR" >> $GITHUB_OUTPUT
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: src/frontend/dist/app # Update path to reflect the correct build output directory
+          folder: src/frontend/${{ steps.find-build-dir.outputs.build-dir }}
           branch: gh-pages
-          token: ${{ secrets.GITHUB_TOKEN }} 
+          clean: true 
