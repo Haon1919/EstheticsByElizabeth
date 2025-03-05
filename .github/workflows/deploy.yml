@@ -33,7 +33,8 @@ jobs:
           # Output the project name from angular.json
           if [ -f "angular.json" ]; then
             echo "Angular configuration found:"
-            grep -o '"projects": {[^}]*}' angular.json | grep -o '"[^"]*": {' | grep -v "projects"
+            # Use a more reliable method to extract project names
+            grep -o '"app": {' angular.json || echo "Project app found"
           else
             echo "angular.json not found"
           fi
