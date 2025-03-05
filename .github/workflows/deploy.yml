@@ -42,7 +42,7 @@ jobs:
       - name: Build
         working-directory: src/frontend
         # Use outputPath to be explicit about where files should go
-        run: npm run build -- --configuration production --base-href="/EstheticsByElizabeth/" --output-path=dist/deploy
+        run: npm run build -- --configuration production --base-href="/EstheticsByElizabeth/" --output-path=dist/deploy && pwd && ls -la dist/deploy
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
