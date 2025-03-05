@@ -14,9 +14,6 @@ permissions:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: src/frontend
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -27,38 +24,37 @@ jobs:
           node-version: '18' # or your preferred Node.js version
 
       - name: Install dependencies
+        working-directory: src/frontend
         run: npm ci
 
       - name: Build
+        working-directory: src/frontend
         run: npm run build -- --configuration production --base-href="https://haon1919.github.io/EstheticsByElizabeth/"
 
-      - name: Debug directory structure
+      - name: Find build directory
+        id: find-build-dir
+        working-directory: src/frontend
         run: |
-          echo "Current directory: $(pwd)"
-          echo "Listing dist directory:"
-          ls -la dist || echo "dist directory not found"
-          echo "Finding all directories in dist:"
-          find dist -type d 2>/dev/null || echo "No subdirectories found"
           echo "Finding index.html files:"
-          find dist -name "index.html" 2>/dev/null || echo "No index.html found"
+          INDEX_FILE=$(find dist -name "index.html" | head -n 1)
+          if [ -z "$INDEX_FILE" ]; then
+            echo "No index.html found. Using dist directory as fallback."
+            BUILD_DIR="dist"
+          else
+            BUILD_DIR=$(dirname "$INDEX_FILE")
+            echo "Found index.html in: $BUILD_DIR"
+          fi
+          echo "build_dir=$BUILD_DIR" >> $GITHUB_OUTPUT
 
-      - name: Add .nojekyll file
+      - name: Copy build to deployment directory
         run: |
-          # Create .nojekyll file at the repository root
-          touch ../../../.nojekyll
-          
-          # Also add to any potential build directories
-          for dir in dist/frontend dist/app dist/esthetics-by-elizabeth dist; do
-            if [ -d "$dir" ]; then
-              echo "Adding .nojekyll to $dir"
-              touch $dir/.nojekyll
-            fi
-          done
+          mkdir -p gh-pages-deploy
+          cp -r src/frontend/${{ steps.find-build-dir.outputs.build_dir }}/* gh-pages-deploy/
+          touch gh-pages-deploy/.nojekyll
 
-      # Use a different deployment approach
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./src/frontend/dist
+          publish_dir: ./gh-pages-deploy
           force_orphan: true 
