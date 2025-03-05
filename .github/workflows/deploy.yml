@@ -50,6 +50,7 @@ jobs:
         run: |
           mkdir -p gh-pages-deploy
           cp -r src/frontend/${{ steps.find-build-dir.outputs.build_dir }}/* gh-pages-deploy/
+          ls -la gh-pages-deploy
           touch gh-pages-deploy/.nojekyll
 
       - name: Deploy to GitHub Pages
