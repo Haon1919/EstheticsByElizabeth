@@ -65,5 +65,5 @@ jobs:
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: /home/runner/work/EstheticsByElizabeth/EstheticsByElizabeth/src/frontend/dist/app
+          publish_dir: ./src/frontend/dist/app/browser
           force_orphan: true
