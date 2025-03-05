@@ -44,7 +44,10 @@ jobs:
 
       - name: Add .nojekyll file
         run: |
-          # Try multiple potential build output directories
+          # Create .nojekyll file at the repository root
+          touch ../../../.nojekyll
+          
+          # Also add to any potential build directories
           for dir in dist/frontend dist/app dist/esthetics-by-elizabeth dist; do
             if [ -d "$dir" ]; then
               echo "Adding .nojekyll to $dir"
@@ -52,29 +55,10 @@ jobs:
             fi
           done
 
-      - name: Determine correct build directory
-        id: find-build-dir
-        run: |
-          # Try to find the directory with index.html
-          BUILD_DIR=""
-          for dir in dist/frontend dist/app dist/esthetics-by-elizabeth dist; do
-            if [ -f "$dir/index.html" ]; then
-              BUILD_DIR="$dir"
-              break
-            fi
-          done
-          
-          if [ -z "$BUILD_DIR" ]; then
-            echo "Could not find build directory with index.html"
-            BUILD_DIR="dist" # fallback
-          fi
-          
-          echo "Using build directory: $BUILD_DIR"
-          echo "build-dir=$BUILD_DIR" >> $GITHUB_OUTPUT
-
-      - name: Deploy
-        uses: JamesIves/github-pages-deploy-action@v4
+      # Use a different deployment approach
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
         with:
-          folder: src/frontend/${{ steps.find-build-dir.outputs.build-dir }}
-          branch: gh-pages
-          clean: true 
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./src/frontend/dist
+          force_orphan: true 
