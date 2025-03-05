@@ -29,21 +29,16 @@ jobs:
 
       - name: Build
         working-directory: src/frontend
-        run: npm run build -- --configuration production --base-href="https://haon1919.github.io/EstheticsByElizabeth/"
+        run: npm run build -- --configuration production --base-href="/EstheticsByElizabeth/"
 
       - name: Find build directory
         id: find-build-dir
         working-directory: src/frontend
         run: |
           echo "Finding index.html files:"
-          INDEX_FILE=$(find dist -name "index.html" | head -n 1)
-          if [ -z "$INDEX_FILE" ]; then
-            echo "No index.html found. Using dist directory as fallback."
-            BUILD_DIR="dist"
-          else
-            BUILD_DIR=$(dirname "$INDEX_FILE")
-            echo "Found index.html in: $BUILD_DIR"
-          fi
+          find dist -type f -name "index.html" | xargs -n1 dirname
+          BUILD_DIR=$(find dist -type f -name "index.html" | head -n 1 | xargs -n1 dirname)
+          echo "Selected build directory: $BUILD_DIR"
           echo "build_dir=$BUILD_DIR" >> $GITHUB_OUTPUT
 
       - name: Copy build to deployment directory
