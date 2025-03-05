@@ -21,36 +21,31 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18' # or your preferred Node.js version
+          node-version: '18'
 
       - name: Install dependencies
         working-directory: src/frontend
         run: npm ci
 
+      - name: Inspect Angular configuration
+        working-directory: src/frontend
+        run: |
+          # Output the project name from angular.json
+          if [ -f "angular.json" ]; then
+            echo "Angular configuration found:"
+            grep -o '"projects": {[^}]*}' angular.json | grep -o '"[^"]*": {' | grep -v "projects"
+          else
+            echo "angular.json not found"
+          fi
+
       - name: Build
         working-directory: src/frontend
-        run: npm run build -- --configuration production --base-href="/EstheticsByElizabeth/"
-
-      - name: Find build directory
-        id: find-build-dir
-        working-directory: src/frontend
-        run: |
-          echo "Finding index.html files:"
-          find dist -type f -name "index.html" | xargs -n1 dirname
-          BUILD_DIR=$(find dist -type f -name "index.html" | head -n 1 | xargs -n1 dirname)
-          echo "Selected build directory: $BUILD_DIR"
-          echo "build_dir=$BUILD_DIR" >> $GITHUB_OUTPUT
-
-      - name: Copy build to deployment directory
-        run: |
-          mkdir -p gh-pages-deploy
-          cp -r src/frontend/${{ steps.find-build-dir.outputs.build_dir }}/* gh-pages-deploy/
-          ls -la gh-pages-deploy
-          touch gh-pages-deploy/.nojekyll
+        # Use outputPath to be explicit about where files should go
+        run: npm run build -- --configuration production --base-href="/EstheticsByElizabeth/" --output-path=dist/deploy
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./gh-pages-deploy
-          force_orphan: true 
+          publish_dir: ./src/frontend/dist/deploy
+          force_orphan: true
