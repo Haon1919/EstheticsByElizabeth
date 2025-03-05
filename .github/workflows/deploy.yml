@@ -60,7 +60,6 @@ jobs:
           echo "Current directory: $(pwd)"
           ls -la ./src/frontend/dist/app/browser
 
-
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
