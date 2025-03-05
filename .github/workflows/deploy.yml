@@ -55,6 +55,12 @@ jobs:
           echo "Listing dist/app/browser directory (if exists):"
           ls -la dist/app/browser || echo "dist/app/browser doesn't exist"
 
+      - name: List directory being deployed from same level
+        run: |
+          echo "Current directory: $(pwd)"
+          ls -la ./src/frontend/dist/app/browser
+
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
