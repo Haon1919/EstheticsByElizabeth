@@ -44,22 +44,6 @@ jobs:
         # Use outputPath to be explicit about where files should go
         run: npm run build -- --configuration production --base-href="/EstheticsByElizabeth/"
 
-      - name: Debug directory structure
-        working-directory: src/frontend
-        run: |
-          echo "Current directory: $(pwd)"
-          echo "Listing dist directory:"
-          ls -la dist
-          echo "Listing dist/app directory (if exists):"
-          ls -la dist/app || echo "dist/app doesn't exist"
-          echo "Listing dist/app/browser directory (if exists):"
-          ls -la dist/app/browser || echo "dist/app/browser doesn't exist"
-
-      - name: List directory being deployed from same level
-        run: |
-          echo "Current directory: $(pwd)"
-          ls -la ./src/frontend/dist/app/browser
-
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
