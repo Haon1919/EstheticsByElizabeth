@@ -26,7 +26,12 @@
               {
                 "glob": "**/*",
                 "input": "assets",
-                "output": "/assets"
+                "output": "assets"
+              },
+              {
+                "glob": "**/*.jpeg",
+                "input": "assets/images",
+                "output": "images"
               },
               {
                 "glob": "**/*",

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Asset Path Debug</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+    }
+    .image-container {
+      margin: 20px 0;
+    }
+    .test-image {
+      max-width: 100%;
+      border: 2px solid #ccc;
+    }
+  </style>
+</head>
+<body>
+  <h1>Image Path Debug</h1>
+  
+  <h2>Relative path (assets/images/image7.jpeg)</h2>
+  <div class="image-container">
+    <img src="assets/images/image7.jpeg" alt="Test Image 1" class="test-image">
+  </div>
+  
+  <h2>Absolute path (/assets/images/image7.jpeg)</h2>
+  <div class="image-container">
+    <img src="/assets/images/image7.jpeg" alt="Test Image 2" class="test-image">
+  </div>
+  
+  <h2>Base href adjusted path (/EstheticsByElizabeth/assets/images/image7.jpeg)</h2>
+  <div class="image-container">
+    <img src="/EstheticsByElizabeth/assets/images/image7.jpeg" alt="Test Image 3" class="test-image">
+  </div>
+</body>
+</html> 

@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { RouterModule } from '@angular/router';
+import { DomSanitizer, SafeStyle } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-home',
@@ -15,11 +16,24 @@ export class HomeComponent implements OnInit, OnDestroy {
   private heroBackgroundEl: HTMLElement | null = null;
   private heroContentEl: HTMLElement | null = null;
   private parallaxRatio = 0.4; // How fast the background moves compared to scroll
+  public backgroundStyle: SafeStyle;
+
+  constructor(private sanitizer: DomSanitizer) {
+    // Create a safe style that includes the background image
+    this.backgroundStyle = this.sanitizer.bypassSecurityTrustStyle(
+      `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('../../../../../../../assets/images/image7.jpeg')`
+    );
+  }
 
   ngOnInit() {
     // Get references to the elements
     this.heroBackgroundEl = document.querySelector('.hero-background');
     this.heroContentEl = document.querySelector('.hero-content');
+    
+    // Apply the background style directly
+    if (this.heroBackgroundEl) {
+      this.heroBackgroundEl.style.backgroundImage = this.backgroundStyle as string;
+    }
     
     // Set initial positions
     this.updateParallaxPositions();

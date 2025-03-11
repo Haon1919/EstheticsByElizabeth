@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Image Test</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    h1 { color: #333; }
+    .image-test { margin: 20px 0; border: 1px solid #ddd; padding: 10px; }
+    img { max-width: 100%; height: auto; }
+  </style>
+</head>
+<body>
+  <h1>Image Path Testing</h1>
+  
+  <div class="image-test">
+    <h3>Path: assets/images/image7.jpeg</h3>
+    <img src="assets/images/image7.jpeg" alt="Test 1">
+  </div>
+  
+  <div class="image-test">
+    <h3>Path: src/assets/images/image7.jpeg</h3>
+    <img src="src/assets/images/image7.jpeg" alt="Test 2">
+  </div>
+  
+  <div class="image-test">
+    <h3>Path: ./assets/images/image7.jpeg</h3>
+    <img src="./assets/images/image7.jpeg" alt="Test 3">
+  </div>
+  
+  <div class="image-test">
+    <h3>Path: ../assets/images/image7.jpeg</h3>
+    <img src="../assets/images/image7.jpeg" alt="Test 4">
+  </div>
+</body>
+</html> 
