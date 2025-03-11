@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { RouterModule } from '@angular/router';
 
 @Component({
@@ -8,7 +8,51 @@ import { RouterModule } from '@angular/router';
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css']
 })
-export class HomeComponent {
+export class HomeComponent implements OnInit, OnDestroy {
+  // Parallax variables
+  private tetheredDelay = 100; // Delay before content follows (in pixels)
+  private scrollY = 0;
+  private heroBackgroundEl: HTMLElement | null = null;
+  private heroContentEl: HTMLElement | null = null;
+  private parallaxRatio = 0.4; // How fast the background moves compared to scroll
+
+  ngOnInit() {
+    // Get references to the elements
+    this.heroBackgroundEl = document.querySelector('.hero-background');
+    this.heroContentEl = document.querySelector('.hero-content');
+    
+    // Set initial positions
+    this.updateParallaxPositions();
+  }
+
+  ngOnDestroy() {
+    // Clean up if needed
+  }
+
+  @HostListener('window:scroll', ['$event'])
+  onWindowScroll() {
+    this.scrollY = window.scrollY;
+    this.updateParallaxPositions();
+  }
+
+  private updateParallaxPositions() {
+    if (!this.heroBackgroundEl || !this.heroContentEl) return;
+
+    // Calculate background movement (starts immediately)
+    const backgroundY = this.scrollY * this.parallaxRatio;
+    
+    // Calculate content movement (starts after tetheredDelay)
+    let contentY = 0;
+    if (this.scrollY > this.tetheredDelay) {
+      // Once the "tether" pulls, content starts moving too
+      contentY = (this.scrollY - this.tetheredDelay) * this.parallaxRatio;
+    }
+    
+    // Apply transformations
+    this.heroBackgroundEl.style.transform = `translateY(${backgroundY}px)`;
+    this.heroContentEl.style.transform = `translateY(${contentY}px)`;
+  }
+
   featuredServices = [
     {
       id: 1,
