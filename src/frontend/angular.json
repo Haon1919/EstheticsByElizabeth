@@ -31,7 +31,7 @@
               {
                 "glob": "**/*.jpeg",
                 "input": "assets/images",
-                "output": "images"
+                "output": "assets/images"
               },
               {
                 "glob": "**/*",
