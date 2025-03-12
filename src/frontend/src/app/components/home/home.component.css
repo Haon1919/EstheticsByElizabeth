@@ -8,10 +8,14 @@
   height: 80vh;
   overflow: hidden;
   color: #fff;
-  background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('src/frontend/assets/images/image7.jpeg');
+  background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('../../../assets/images/image7.jpeg');
   background-size: cover;
   background-position: 25% 30%;
   background-repeat: no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 
 .hero-background {

@@ -50,6 +50,12 @@ jobs:
         # Use outputPath to be explicit about where files should go
         run: npm run build -- --configuration production --base-href="https://haon1919.github.io/EstheticsByElizabeth/"
 
+      - name: List built files
+        run: |
+          echo "Built files structure:"
+          find ./src/frontend/dist -type f | grep -i "\.jpeg\|\.jpg\|\.png" || echo "No image files found"
+          find ./src/frontend/dist -type d | sort || echo "No directories found"
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
