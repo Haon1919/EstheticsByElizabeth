@@ -27,6 +27,12 @@ jobs:
         working-directory: src/frontend
         run: npm ci
 
+      - name: List source assets directory
+        run: |
+          echo "Source assets structure:"
+          ls -la src/frontend/assets/images/ || echo "No frontend/assets/images directory"
+          ls -la src/frontend/src/assets/images/ || echo "No frontend/src/assets/images directory"
+
       - name: Inspect Angular configuration
         working-directory: src/frontend
         run: |
@@ -42,10 +48,10 @@ jobs:
       - name: Build
         working-directory: src/frontend
         # Use outputPath to be explicit about where files should go
-        run: npm run build -- --configuration production --base-href="/EstheticsByElizabeth/"
+        run: npm run build -- --configuration production --base-href="https://haon1919.github.io/EstheticsByElizabeth/"
 
       - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./src/frontend/dist/app/browser
