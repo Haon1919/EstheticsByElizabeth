@@ -60,6 +60,18 @@ h1, h2, h3, h4, h5, h6 {
   border-color: #fff;
 }
 
+.feature {
+  padding-bottom: 3%;
+}
+
+.feature:last-of-type {
+    padding-bottom: 4%;
+}
+
+.why-choose-us .section-header {
+  margin-bottom: 1rem !important;
+}
+
 .btn-secondary:hover {
   background-color: rgba(255, 255, 255, 0.1);
 }
@@ -68,6 +80,7 @@ h1, h2, h3, h4, h5, h6 {
   background-color: transparent;
   color: #b27092;
   border-color: #b27092;
+  padding-bottom: 4% !important;
 }
 
 .btn-outline:hover {
