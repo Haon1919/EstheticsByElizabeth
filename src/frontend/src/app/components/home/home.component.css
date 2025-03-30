@@ -192,9 +192,9 @@
 }
 
 .instagram-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 1rem;
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem; /* Retain gap for spacing between items */
 }
 
 .instagram-item {
