@@ -29,6 +29,16 @@
     </div>
   </section>
 
+  <!-- Skincare Brands Section -->
+  <div class="skincare-brands-section">
+    <h2>Skincare Lines I Use:</h2>
+    <div class="brands-container">
+      <div *ngFor="let brand of skincareBrands" class="brand-item">
+        <a [href]="brand.website" target="_blank" rel="noopener noreferrer">{{ brand.name }}</a>
+      </div>
+    </div>
+  </div>
+
   <section class="services-cta">
     <div class="container">
       <div class="cta-content">

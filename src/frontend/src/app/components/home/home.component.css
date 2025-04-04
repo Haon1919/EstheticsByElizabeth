@@ -173,6 +173,13 @@
   font-size: 1.1rem;
   margin-bottom: 2rem;
 }
+.testimonial > * {
+  height: 50%;
+}
+
+.testimonial > :last-child {
+  padding-top: 1rem;
+}
 
 /* Testimonials */
 .testimonials {
