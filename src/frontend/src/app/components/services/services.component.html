@@ -11,33 +11,31 @@
       <div class="services-category" *ngFor="let category of services">
         <h2>{{category.category}}</h2>
         <div class="service-items">
-          <div class="service-item" *ngFor="let item of category.items">
+          <div class="service-item" *ngFor="let item of category.items" 
+               [class.clickable]="item?.website">
+            <!-- Website click overlay -->
+            <div class="website-click-overlay" *ngIf="item?.website" (click)="navigateToWebsite(item?.website || '')"></div>
+            
             <div class="service-header">
               <h3>{{item.name}}</h3>
-              <div class="service-price">${{item.price}}</div>
+              <div class="service-price" *ngIf="item?.price !== undefined">${{item?.price}}</div>
             </div>
             <div class="service-details">
               <p>{{item.description}}</p>
-              <div class="service-duration">
-                <i class="fa fa-clock-o"></i> {{item.duration}}
+              <div class="service-duration" *ngIf="item?.duration">
+                <i class="fa fa-clock-o"></i> {{item?.duration}}
               </div>
             </div>
-            <a routerLink="/booking" [queryParams]="{service: item.id}" class="btn btn-primary">Book Now</a>
+            <div class="click-me-text" *ngIf="item?.website">
+              <p>CLICK ME!</p>
+            </div>
+            <a routerLink="/booking" [queryParams]="{service: item.id}" class="btn btn-primary" *ngIf="item?.price !== undefined">Book Now</a>
+            <a *ngIf="item?.website" [href]="item.website" target="_blank" class="btn btn-secondary">Visit Website</a>
           </div>
         </div>
       </div>
     </div>
   </section>
-
-  <!-- Skincare Brands Section -->
-  <div class="skincare-brands-section">
-    <h2>Skincare Lines I Use:</h2>
-    <div class="brands-container">
-      <div *ngFor="let brand of skincareBrands" class="brand-item">
-        <a [href]="brand.website" target="_blank" rel="noopener noreferrer">{{ brand.name }}</a>
-      </div>
-    </div>
-  </div>
 
   <section class="services-cta">
     <div class="container">

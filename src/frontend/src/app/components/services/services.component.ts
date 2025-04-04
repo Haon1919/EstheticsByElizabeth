@@ -2,6 +2,21 @@ import { Component } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 
+interface ServiceItem {
+  id: number;
+  name: string;
+  description: string;
+  price?: number;  // Optional property
+  duration?: string;  // Optional property
+  website?: string;  // Add this optional property
+}
+
+interface ServiceCategory {
+  id: number;
+  category: string;
+  items: ServiceItem[];
+}
+
 @Component({
   selector: 'app-services',
   standalone: true,
@@ -10,7 +25,21 @@ import { CommonModule } from '@angular/common';
   styleUrls: ['./services.component.css']
 })
 export class ServicesComponent {
-  services = [
+  clickedItems: {[key: number]: boolean} = {};
+
+  handleItemClick(item: ServiceItem) {
+    if (item.website) {
+      this.clickedItems[item.id] = !this.clickedItems[item.id];
+    }
+  }
+
+  navigateToWebsite(url: string | undefined): void {
+    if (url) {
+      window.open(url, '_blank');
+    }
+  }
+
+  services: ServiceCategory[] = [
     {
       id: 1,
       category: 'Facial Treatments',
@@ -70,11 +99,24 @@ export class ServicesComponent {
           price: 15
         }
       ]
+    },
+    {
+      id: 4,
+      category: 'Skincare Brands I Use',
+      items: [
+        {
+          id: 401,
+          name: 'SkinCeuticals',
+          description: 'A skincare brand known for its advanced skincare products backed by science.',
+          website: 'https://www.skinceuticals.com/'
+        },
+        {
+          id: 402,
+          name: 'Bioelements',
+          description: 'A professional skincare brand offering customized skincare solutions for all skin types.',
+          website: 'https://www.bioelements.com/'
+        }
+      ]
     }
-  ];
-
-  skincareBrands = [
-    { name: 'Skinceuticals', website: 'https://www.skinceuticals.com/' },
-    { name: 'Bioelements', website: 'https://www.bioelements.com/' }
   ];
 }

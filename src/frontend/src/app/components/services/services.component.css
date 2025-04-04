@@ -70,6 +70,7 @@
   padding: 2rem;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
+  position: relative;
 }
 
 .service-item:hover {
@@ -137,6 +138,8 @@
   background-color: #b27092;
   color: #fff;
   border: 2px solid #b27092;
+  position: relative;
+  z-index: 20;
 }
 
 .btn-primary:hover {
@@ -180,6 +183,64 @@
 .btn-white:hover {
   background-color: transparent;
   color: #fff;
+}
+
+.clickable {
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.clickable:hover {
+  transform: scale(1.02);
+}
+
+.clickable:hover .service-details {
+  display: none;
+}
+
+.clickable:hover .click-me-text {
+  display: flex;
+  animation: swell 1s infinite alternate;
+}
+
+.click-me-text {
+  font-size: 1.5em;
+  font-weight: bold;
+  text-align: center;
+  color: #000000;
+  padding: 20px;
+  display: none; /* Only keep this one display property */
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  align-items: center; /* Keep these for when display becomes flex */
+  justify-content: center;
+}
+
+.clicked {
+  animation: swell 1s infinite alternate;
+}
+
+@keyframes swell {
+  from {
+    transform: scale(1);
+  }
+  to {
+    transform: scale(1.1);
+  }
+}
+
+.website-click-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: transparent;
+  z-index: 10;
+  cursor: pointer;
 }
 
 @media (max-width: 768px) {
