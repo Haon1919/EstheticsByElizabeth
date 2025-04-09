@@ -5,16 +5,16 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace API
 {
-    public class GetAppointment
+    public class GetCategories
     {
-        private readonly ILogger<GetAppointment> _logger;
+        private readonly ILogger<GetCategories> _logger;
 
-        public GetAppointment(ILogger<GetAppointment> logger)
+        public GetCategories(ILogger<GetCategories> logger)
         {
             _logger = logger;
         }
 
-        [Function("GetAppointment")]
+        [Function("GetCategories")]
         public IActionResult Run([HttpTrigger(AuthorizationLevel.Function, "get", "post")] HttpRequest req)
         {
             _logger.LogInformation("C# HTTP trigger function processed a request.");
