@@ -1,0 +1,42 @@
+{
+  "collection": "./appointment-api-collection.json",
+  "environment": "./local-environment.json",
+  "reporters": ["cli", "htmlextra"],
+  "reporter": {
+    "htmlextra": {
+      "export": "./newman-report.html",
+      "template": "default",
+      "showOnlyFails": false,
+      "noSyntaxHighlighting": false,
+      "testPaging": true,
+      "browserTitle": "API Test Report",
+      "title": "Appointment API Test Results",
+      "titleSize": 1,
+      "omitHeaders": false,
+      "skipHeaders": ["Authorization"],
+      "skipSensitiveData": true,
+      "omitRequestBodies": false,
+      "omitResponseBodies": false,
+      "hideRequestBody": [],
+      "hideResponseBody": [],
+      "showEnvironmentData": true,
+      "skipEnvironmentVars": [],
+      "showGlobalData": true,
+      "skipGlobalVars": [],
+      "skipSensitiveData": true,
+      "showMarkdownLinks": true,
+      "showFolderDescription": true,
+      "timezone": "UTC",
+      "skipFolders": [],
+      "skipRequests": [],
+      "displayProgressBar": true
+    }
+  },
+  "timeout": 10000,
+  "timeoutRequest": 5000,
+  "timeoutScript": 5000,
+  "bail": false,
+  "ignoreRedirects": false,
+  "insecure": true,
+  "color": "on"
+}

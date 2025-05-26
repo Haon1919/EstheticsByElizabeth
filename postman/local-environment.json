@@ -1,0 +1,45 @@
+{
+  "id": "abcdef12-3456-7890-abcd-ef1234567890",
+  "name": "Local Development",
+  "values": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:7071/api",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "clientEmail",
+      "value": "john.doe@example.com",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "appointmentId",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "reviewId",
+      "value": "1",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "serviceId",
+      "value": "1",
+      "type": "default",
+      "enabled": true
+    },
+    {
+      "key": "appointmentDate",
+      "value": "",
+      "type": "default",
+      "enabled": true
+    }
+  ],
+  "_postman_variable_scope": "environment",
+  "_postman_exported_at": "2025-05-25T12:00:00.000Z",
+  "_postman_exported_using": "Postman/10.17.4"
+}
