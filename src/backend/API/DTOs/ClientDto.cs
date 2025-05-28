@@ -1,4 +1,4 @@
-namespace API.Entities // Replace YourProjectName with your actual project namespace
+namespace API.DTOs // Replace YourProjectName with your actual project namespace
 {
     public class ClientDto
     {

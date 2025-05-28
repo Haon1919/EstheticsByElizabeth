@@ -16,11 +16,19 @@ namespace API.Data // Adjust namespace
         public DbSet<Category> Categories { get; set; } = null!;
         public DbSet<Service> Services { get; set; } = null!;
         public DbSet<Appointment> Appointments { get; set; } = null!;
+        public DbSet<ClientReviewFlag> ClientReviewFlags { get; set; } = null!;
 
         // Optional: Configure model details using Fluent API (alternative/complement to Data Annotations)
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder); // Recommended to call base method
+
+            // Set the correct table names to match your PostgreSQL database
+            modelBuilder.Entity<Service>().ToTable("services");
+            modelBuilder.Entity<Client>().ToTable("clients");
+            modelBuilder.Entity<Category>().ToTable("categories");
+            modelBuilder.Entity<Appointment>().ToTable("appointments");
+            modelBuilder.Entity<ClientReviewFlag>().ToTable("clientreviewflags");
 
             // Example: Configuring UNIQUE constraints using Fluent API (more robust than annotations)
             modelBuilder.Entity<Client>()
@@ -49,6 +57,19 @@ namespace API.Data // Adjust namespace
                 .WithMany(c => c.Services)
                 .HasForeignKey(s => s.CategoryId)
                 .OnDelete(DeleteBehavior.Restrict); // Or Cascade, SetNull depending on requirements
+                
+            // Configure ClientReviewFlag relationships
+            modelBuilder.Entity<ClientReviewFlag>()
+                .HasOne(rf => rf.Client)
+                .WithMany(c => c.ReviewFlags)
+                .HasForeignKey(rf => rf.ClientId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ClientReviewFlag>()
+                .HasOne(rf => rf.Appointment)
+                .WithMany()
+                .HasForeignKey(rf => rf.AppointmentId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }
