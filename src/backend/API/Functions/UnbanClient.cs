@@ -36,25 +36,47 @@ namespace API.Functions
         /// </summary>
         [Function("UnbanClient")]
         public async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Function, "delete", Route = "clients/{clientId}/ban")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "delete", "options", Route = "clients/{clientId}/ban")] HttpRequest req,
             string clientId)
         {
             _logger.LogInformation("✅ Processing unban request for client ID: {ClientId}", clientId);
+
+            // Handle CORS preflight request
+            if (req.Method.Equals("OPTIONS", StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogInformation("🌐 Handling CORS preflight request");
+                
+                var response = new OkResult();
+                req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
+                req.HttpContext.Response.Headers.Add("Access-Control-Allow-Methods", "DELETE, OPTIONS");
+                req.HttpContext.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization");
+                req.HttpContext.Response.Headers.Add("Access-Control-Max-Age", "86400");
+                
+                return response;
+            }
+
+            // Add CORS headers to all responses
+            req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
+            req.HttpContext.Response.Headers.Add("Access-Control-Allow-Methods", "DELETE, OPTIONS");
+            req.HttpContext.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
             try
             {
                 if (!int.TryParse(clientId, out int id))
                 {
+                    _logger.LogWarning("🚫 Invalid client ID format: {ClientId}", clientId);
                     return new BadRequestObjectResult("Invalid client ID format");
                 }
 
                 // Find the client
+                _logger.LogInformation("🔍 Looking for client with ID: {ClientId}", id);
                 var client = await _context.Clients
                     .Include(c => c.ReviewFlags)
                     .FirstOrDefaultAsync(c => c.Id == id);
 
                 if (client == null)
                 {
+                    _logger.LogWarning("❌ Client not found with ID: {ClientId}", clientId);
                     return new NotFoundObjectResult($"Client with ID {clientId} not found");
                 }
 
@@ -65,10 +87,12 @@ namespace API.Functions
 
                 if (banFlags.Count == 0)
                 {
+                    _logger.LogWarning("⚠️ Client with ID {ClientId} is not currently banned", clientId);
                     return new BadRequestObjectResult($"Client with ID {clientId} is not currently banned");
                 }
 
                 // Update all ban flags to "RESOLVED"
+                _logger.LogInformation("🛠️ Resolving {Count} ban flags for client {ClientId}", banFlags.Count, clientId);
                 foreach (var flag in banFlags)
                 {
                     flag.Status = "RESOLVED";
@@ -79,17 +103,26 @@ namespace API.Functions
 
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation("Client with ID {ClientId} has been unbanned", clientId);
+                _logger.LogInformation("✅ Client with ID {ClientId} has been successfully unbanned", clientId);
 
                 return new OkObjectResult(new { 
                     Message = $"Client with ID {clientId} has been unbanned and can now make appointments",
                     UnbannedFlags = banFlags.Count
                 });
             }
+            catch (DbUpdateException dbEx)
+            {
+                _logger.LogError(dbEx, "💥 Database update failed while unbanning client {ClientId}. Inner: {InnerMessage}", 
+                    clientId, dbEx.InnerException?.Message);
+                return new ObjectResult($"🔥 A database error occurred: {dbEx.InnerException?.Message ?? dbEx.Message}")
+                {
+                    StatusCode = StatusCodes.Status409Conflict
+                };
+            }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error processing unban request for client ID: {ClientId}", clientId);
-                return new ObjectResult($"An error occurred while processing unban request for client ID {clientId}")
+                _logger.LogError(ex, "💥 Unexpected error processing unban request for client ID: {ClientId}", clientId);
+                return new ObjectResult($"An unexpected error occurred while processing unban request for client ID {clientId}")
                 {
                     StatusCode = StatusCodes.Status500InternalServerError
                 };

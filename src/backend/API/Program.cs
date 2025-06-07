@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging; // Needed for LogLevel and LogTo
 using Microsoft.EntityFrameworkCore; // Needed for EF Core configuration
 using API.Data; // Your DbContext namespace
+using API.Middleware; // For CORS middleware
 using Npgsql; // Needed for UseNpgsql and options
 using System; // Needed for TimeSpan, StringComparison etc.
 using System.Text.Json; // Needed for JsonSerializerOptions
@@ -19,6 +20,9 @@ using System.Text.Json.Serialization; // Needed for ReferenceHandler and JsonIgn
 var host = new HostBuilder()
     .ConfigureFunctionsWebApplication()
     .ConfigureFunctionsWorkerDefaults(builder => {
+        // Add CORS middleware to the Functions Worker pipeline
+        builder.UseMiddleware<API.Middleware.CorsMiddleware>();
+        
         // Configure JSON options for Functions Worker
         builder.Services.Configure<JsonSerializerOptions>(options =>
         {
@@ -100,11 +104,29 @@ var host = new HostBuilder()
             },
             LogLevel.Information); // Set the minimum log level for messages from EF Core
         });        // Register the ClientReviewService
-        services.AddScoped<API.Services.ClientReviewService>();
+        services.AddScoped<API.Services.ClientReviewService>();        // Add CORS configuration for ASP.NET Core integration in Azure Functions
+        services.AddCors(options =>
+        {
+            options.AddDefaultPolicy(builder =>
+            {
+                builder
+                    .WithOrigins(
+                        "http://localhost:3000",
+                        "http://localhost:4200", 
+                        "http://127.0.0.1:3000",
+                        "http://127.0.0.1:4200"
+                    )
+                    .AllowAnyMethod()
+                    .AllowAnyHeader()
+                    .AllowCredentials();
+            });
+        });        // Register the CORS middleware
+        services.AddTransient<CorsMiddleware>();
+
+        // Azure Functions CORS is configured in host.json file
 
         // Removed the separate Polly policy definition and registration.
         // EF Core's EnableRetryOnFailure is now handling database retries.
-
     })
     .Build();
 

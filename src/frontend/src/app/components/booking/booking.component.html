@@ -146,7 +146,15 @@
 
             <div class="form-actions">
               <button type="button" class="btn btn-outline" (click)="goBack()">Back</button>
-              <button type="button" class="btn btn-primary" (click)="submitBooking()">Confirm Booking</button>
+              <button type="button" class="btn btn-primary" (click)="submitBooking()" [disabled]="isLoading">
+                <span *ngIf="isLoading">Booking...</span>
+                <span *ngIf="!isLoading">Confirm Booking</span>
+              </button>
+            </div>
+            
+            <!-- Error Message Display -->
+            <div class="alert alert-danger" *ngIf="errorMessage">
+              {{errorMessage}}
             </div>
           </form>
         </div>

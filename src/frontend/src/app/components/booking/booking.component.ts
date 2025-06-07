@@ -2,6 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { AppointmentService } from '../../services/appointment.service';
+import { ServiceManagementService } from '../../services/service-management.service';
+import { Service, CreateAppointmentRequest } from '../../models/api-models';
 
 @Component({
   selector: 'app-booking',
@@ -15,27 +18,18 @@ export class BookingComponent implements OnInit {
   selectedDate: Date = new Date();
   selectedTime: string = '';
   availableTimes: string[] = [];
-  services = [
-    { id: 101, name: 'Custom Facial', price: 85 },
-    { id: 102, name: 'Deep Cleansing Facial', price: 95 },
-    { id: 103, name: 'Anti-Aging Facial', price: 120 },
-    { id: 104, name: 'Hydrating Facial', price: 90 },
-    { id: 201, name: 'Body Scrub', price: 70 },
-    { id: 202, name: 'Body Wrap', price: 95 },
-    { id: 203, name: 'Massage Therapy', price: 85 },
-    { id: 204, name: 'Back Facial', price: 75 },
-    { id: 301, name: 'Eyebrow Waxing', price: 20 },
-    { id: 302, name: 'Lip & Chin Waxing', price: 18 },
-    { id: 303, name: 'Full Leg Waxing', price: 65 },
-    { id: 304, name: 'Brazilian Waxing', price: 70 },
-    { id: 401, name: 'Special Event Makeup', price: 75 },
-    { id: 402, name: 'Bridal Makeup', price: 150 },
-    { id: 403, name: 'Makeup Lesson', price: 100 }
-  ];
+  services: Service[] = [];
   isSubmitted = false;
   isPaymentStep = false;
+  isLoading = false;
+  errorMessage = '';
 
-  constructor(private fb: FormBuilder, private route: ActivatedRoute) {
+  constructor(
+    private fb: FormBuilder, 
+    private route: ActivatedRoute, 
+    private appointmentService: AppointmentService,
+    private serviceManagementService: ServiceManagementService
+  ) {
     this.bookingForm = this.fb.group({
       service: ['', Validators.required],
       date: ['', Validators.required],
@@ -53,6 +47,10 @@ export class BookingComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Load services from API
+    this.loadServices();
+    
+    // Check for pre-selected service from query params
     this.route.queryParams.subscribe(params => {
       if (params['service']) {
         const serviceId = parseInt(params['service']);
@@ -62,6 +60,19 @@ export class BookingComponent implements OnInit {
 
     // Generate available time slots
     this.generateTimeSlots();
+  }
+
+  loadServices(): void {
+    this.serviceManagementService.loadServices().subscribe({
+      next: (services: Service[]) => {
+        // Only show bookable services (services with prices)
+        this.services = services.filter(service => service.price !== undefined && service.price !== null);
+      },
+      error: (error: any) => {
+        console.error('Error loading services:', error);
+        this.errorMessage = 'Failed to load services. Please try again.';
+      }
+    });
   }
 
   generateTimeSlots(): void {
@@ -93,7 +104,7 @@ export class BookingComponent implements OnInit {
 
   getServicePrice(serviceId: number): number {
     const service = this.services.find(s => s.id === serviceId);
-    return service ? service.price : 0;
+    return service?.price || 0;
   }
 
   proceedToPayment(): void {
@@ -115,9 +126,56 @@ export class BookingComponent implements OnInit {
 
   submitBooking(): void {
     if (this.bookingForm.valid) {
-      // In a real app, you would send the form data to your backend
-      console.log('Booking submitted:', this.bookingForm.value);
-      this.isSubmitted = true;
+      this.isLoading = true;
+      this.errorMessage = '';
+
+      // Parse the name field into first and last name
+      const fullName = this.bookingForm.get('name')?.value?.trim() || '';
+      const nameParts = fullName.split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+
+      // Combine date and time into a proper DateTime format
+      const dateValue = this.bookingForm.get('date')?.value;
+      const timeValue = this.bookingForm.get('time')?.value;
+      const appointmentDateTime = new Date(`${dateValue}T${timeValue}:00`);
+
+      // Prepare the payload to match the CreateAppointmentRequest interface
+      const appointmentData: CreateAppointmentRequest = {
+        client: {
+          firstName: firstName,
+          lastName: lastName,
+          email: this.bookingForm.get('email')?.value,
+          phoneNumber: this.bookingForm.get('phone')?.value
+        },
+        serviceId: parseInt(this.bookingForm.get('service')?.value),
+        time: appointmentDateTime.toISOString()
+      };
+
+      console.log('Sending appointment data:', appointmentData);
+
+      // Use the AppointmentService to create the appointment
+      this.appointmentService.scheduleAppointment(appointmentData).subscribe({
+        next: (response: any) => {
+          console.log('Booking successful:', response);
+          this.isSubmitted = true;
+          this.isLoading = false;
+        },
+        error: (error: any) => {
+          console.error('Booking failed:', error);
+          this.isLoading = false;
+          
+          if (error.status === 400) {
+            this.errorMessage = 'Please check your booking details and try again.';
+          } else if (error.status === 409) {
+            this.errorMessage = error.error?.message || 'The selected time slot is no longer available.';
+          } else if (error.status === 404) {
+            this.errorMessage = 'The selected service is not available.';
+          } else {
+            this.errorMessage = 'An error occurred while booking your appointment. Please try again.';
+          }
+        }
+      });
     } else {
       // Mark all fields as touched to show validation errors
       Object.keys(this.bookingForm.controls).forEach(key => {
@@ -134,6 +192,8 @@ export class BookingComponent implements OnInit {
   bookAnother(): void {
     this.isSubmitted = false;
     this.isPaymentStep = false;
+    this.isLoading = false;
+    this.errorMessage = '';
     this.bookingForm.reset();
     this.selectedTime = '';
   }

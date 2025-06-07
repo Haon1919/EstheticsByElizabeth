@@ -8,44 +8,74 @@ using Microsoft.AspNetCore.Mvc;
 using API.Data;
 using Microsoft.EntityFrameworkCore;
 
-namespace API
+namespace API.Functions
 {
+    /// <summary>
+    /// 📚 The Client History Librarian 📚
+    /// Retrieves appointment history for specific clients.
+    /// </summary>
     public class GetAppointmentHistoryByClient
     {
         private readonly ILogger<GetAppointmentHistoryByClient> _logger;
-        private readonly ProjectContext _context;
-
-        public GetAppointmentHistoryByClient(ILogger<GetAppointmentHistoryByClient> logger, ProjectContext context)
+        private readonly ProjectContext _context;        public GetAppointmentHistoryByClient(ILogger<GetAppointmentHistoryByClient> logger, ProjectContext context)
         {
-            _logger = logger;
-            _context = context;
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
+        /// <summary>
+        /// 📚 The Magical History Retrieval Ritual 📚
+        /// Azure Function triggered by HTTP GET to retrieve client appointment history.
+        /// </summary>
         [Function("GetAppointmentHistoryByClient")]
-        public async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Function, "get")] HttpRequest req)
+        public async Task<IActionResult> Run(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "options", Route = "appointments/history")] HttpRequest req)
         {
-            _logger.LogInformation("GetAppointmentHistoryByClient function processing request.");
+            _logger.LogInformation("📚 Client appointment history request received.");
+
+            // Handle CORS preflight request
+            if (req.Method.Equals("OPTIONS", StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogInformation("🌐 Handling CORS preflight request");
+                
+                var response = new OkResult();
+                req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
+                req.HttpContext.Response.Headers.Add("Access-Control-Allow-Methods", "GET, OPTIONS");
+                req.HttpContext.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization");
+                req.HttpContext.Response.Headers.Add("Access-Control-Max-Age", "86400");
+                
+                return response;
+            }
+
+            // Add CORS headers to all responses
+            req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
+            req.HttpContext.Response.Headers.Add("Access-Control-Allow-Methods", "GET, OPTIONS");
+            req.HttpContext.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization");
             
             // Get the client email from the query string
             string email = req.Query["email"];
             
             if (string.IsNullOrEmpty(email))
             {
-                _logger.LogWarning("No email parameter provided.");
+                _logger.LogWarning("🚫 No email parameter provided.");
                 return new BadRequestObjectResult("Please provide an email parameter.");
-            }
-
-            try
+            }            try
             {
+                _logger.LogInformation("🔍 Searching for client with email: {Email}", email);
+                
                 // Find the client by email
                 var client = await _context.Clients
+                    .AsNoTracking()
                     .FirstOrDefaultAsync(c => c.Email == email);
                 
                 if (client == null)
                 {
-                    _logger.LogWarning("Client not found with email: {Email}", email);
+                    _logger.LogWarning("🤔 Client not found with email: {Email}", email);
                     return new NotFoundObjectResult($"No client found with email: {email}");
                 }
+
+                _logger.LogInformation("📋 Retrieving appointment history for client: {ClientName} ({Email})", 
+                    $"{client.FirstName} {client.LastName}", email);
 
                 // Get all appointments for this client
                 var appointments = await _context.Appointments
@@ -53,16 +83,50 @@ namespace API
                         .ThenInclude(s => s.Category)
                     .Where(a => a.ClientId == client.Id)
                     .OrderByDescending(a => a.Time)
+                    .Select(a => new
+                    {
+                        a.Id,
+                        a.Time,
+                        Service = new
+                        {
+                            a.Service.Id,
+                            a.Service.Name,
+                            a.Service.Description,
+                            a.Service.Price,
+                            a.Service.Duration,
+                            Category = new
+                            {
+                                a.Service.Category.Id,
+                                a.Service.Category.Name
+                            }
+                        }
+                    })
                     .ToListAsync();
                 
-                _logger.LogInformation("Retrieved {Count} appointments for client with email {Email}", appointments.Count, email);
+                _logger.LogInformation("✅ Retrieved {Count} appointments for client with email {Email}", 
+                    appointments.Count, email);
                 
-                return new OkObjectResult(appointments);
+                return new OkObjectResult(new 
+                {
+                    Client = new
+                    {
+                        client.Id,
+                        client.FirstName,
+                        client.LastName,
+                        client.Email
+                    },
+                    Appointments = appointments,
+                    TotalCount = appointments.Count
+                });
             }
+            // Catch any unexpected exceptions
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving appointment history for client with email {Email}", email);
-                return new StatusCodeResult(StatusCodes.Status500InternalServerError);
+                _logger.LogError(ex, "💥 An unexpected error occurred while retrieving appointment history for email {Email}!", email);
+                return new ObjectResult("An unexpected error occurred while retrieving appointment history.")
+                {
+                    StatusCode = StatusCodes.Status500InternalServerError
+                };
             }
         }
     }

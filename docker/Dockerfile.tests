@@ -1,0 +1,39 @@
+# Dockerfile for running .NET tests
+FROM mcr.microsoft.com/dotnet/sdk:8.0
+
+# Create a non-root user for better security
+RUN groupadd -r testuser && useradd -r -g testuser -m testuser
+
+# Set environment variables to avoid .NET first-time use issues
+ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
+ENV DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1
+ENV DOTNET_NOLOGO=1
+ENV HOME=/home/testuser
+
+WORKDIR /app
+
+# Copy solution file and project files
+COPY tests/API.Tests/API.Tests.csproj tests/API.Tests/
+COPY src/backend/API/API.csproj src/backend/API/
+
+# Restore dependencies
+RUN dotnet restore tests/API.Tests/API.Tests.csproj
+
+# Copy all source code
+COPY . .
+
+# Create necessary directories with proper permissions
+RUN mkdir -p /app/tests/API.Tests/bin /app/tests/API.Tests/obj \
+    /app/src/backend/API/bin /app/src/backend/API/obj \
+    /app/tests/API.Tests/TestResults \
+    && chown -R testuser:testuser /app \
+    && chown -R testuser:testuser /home/testuser
+
+# Switch to non-root user
+USER testuser
+
+# Set working directory to tests
+WORKDIR /app/tests/API.Tests
+
+# Default command to keep container running
+CMD ["tail", "-f", "/dev/null"]

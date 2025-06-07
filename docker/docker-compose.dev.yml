@@ -1,0 +1,32 @@
+version: '3.8'
+services:
+  api:
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+    volumes:
+      # Mount the source code for development (optional - remove for production)
+      # - ../src/backend/API:/home/site/wwwroot:ro
+      # Mount logs directory for easier debugging
+      - api-logs:/tmp/LogFiles
+    networks:
+      - esthetics-network
+
+  postgres:
+    networks:
+      - esthetics-network
+    # Add additional development-specific postgres configuration if needed
+    environment:
+      POSTGRES_PASSWORD: Ieatbugsandsquashfrogs
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+      # Enable additional logging for development
+      POSTGRES_LOG_STATEMENT: all
+      POSTGRES_LOG_MIN_DURATION_STATEMENT: 0
+
+volumes:
+  api-logs:
+
+networks:
+  esthetics-network:
+    driver: bridge
