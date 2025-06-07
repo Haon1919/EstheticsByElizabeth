@@ -77,9 +77,11 @@ export interface AppointmentsByDateResponse {
 export interface ContactRequest {
   name: string;
   email: string;
-  phone: string;
+  phone?: string; // Optional phone number
   subject: string;
   message: string;
+  interestedService?: string; // Optional
+  preferredContactMethod?: string;
 }
 
 // Error response interface

@@ -98,26 +98,42 @@
             </div>
             
             <div class="form-group">
-              <label for="phone">Phone Number *</label>
+              <label for="phone">Phone Number</label>
               <input type="tel" id="phone" formControlName="phone" [class.is-invalid]="contactForm.get('phone')?.invalid && contactForm.get('phone')?.touched" [disabled]="isLoading">
               <div class="invalid-feedback" *ngIf="contactForm.get('phone')?.invalid && contactForm.get('phone')?.touched">
-                Please enter your phone number
+                Please enter a valid phone number
               </div>
             </div>
             
             <div class="form-group">
               <label for="subject">Subject *</label>
-              <select id="subject" formControlName="subject" [class.is-invalid]="contactForm.get('subject')?.invalid && contactForm.get('subject')?.touched" [disabled]="isLoading">
-                <option value="">-- Select a Subject --</option>
-                <option value="booking">Booking Information</option>
-                <option value="services">Service Inquiry</option>
-                <option value="pricing">Pricing Information</option>
-                <option value="feedback">Feedback</option>
-                <option value="other">Other</option>
-              </select>
+              <input type="text" id="subject" formControlName="subject" placeholder="What can we help you with?" [class.is-invalid]="contactForm.get('subject')?.invalid && contactForm.get('subject')?.touched" [disabled]="isLoading" maxlength="100">
               <div class="invalid-feedback" *ngIf="contactForm.get('subject')?.invalid && contactForm.get('subject')?.touched">
-                Please select a subject
+                <span *ngIf="contactForm.get('subject')?.errors?.['required']">Please enter a subject</span>
+                <span *ngIf="contactForm.get('subject')?.errors?.['maxlength']">Subject must be 100 characters or less</span>
               </div>
+            </div>
+
+            <div class="form-group">
+              <label for="interestedService">Interested Service (Optional)</label>
+              <select id="interestedService" formControlName="interestedService" [disabled]="isLoading">
+                <option value="">-- Select a Service (Optional) --</option>
+                <option value="Facial">Facial Treatments</option>
+                <option value="Body">Body Treatments</option>
+                <option value="Waxing">Waxing Services</option>
+                <option value="Consultation">Consultation</option>
+                <option value="Multiple">Multiple Services</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="preferredContactMethod">Preferred Contact Method</label>
+              <select id="preferredContactMethod" formControlName="preferredContactMethod" [disabled]="isLoading">
+                <option value="Email">Email</option>
+                <option value="Phone">Phone</option>
+                <option value="Text">Text Message</option>
+              </select>
             </div>
             
             <div class="form-group">

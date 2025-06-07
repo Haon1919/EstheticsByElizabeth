@@ -17,6 +17,7 @@ namespace API.Data // Adjust namespace
         public DbSet<Service> Services { get; set; } = null!;
         public DbSet<Appointment> Appointments { get; set; } = null!;
         public DbSet<ClientReviewFlag> ClientReviewFlags { get; set; } = null!;
+        public DbSet<ContactSubmission> ContactSubmissions { get; set; } = null!;
 
         // Optional: Configure model details using Fluent API (alternative/complement to Data Annotations)
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -29,6 +30,7 @@ namespace API.Data // Adjust namespace
             modelBuilder.Entity<Category>().ToTable("categories");
             modelBuilder.Entity<Appointment>().ToTable("appointments");
             modelBuilder.Entity<ClientReviewFlag>().ToTable("clientreviewflags");
+            modelBuilder.Entity<ContactSubmission>().ToTable("contactsubmissions");
 
             // Example: Configuring UNIQUE constraints using Fluent API (more robust than annotations)
             modelBuilder.Entity<Client>()

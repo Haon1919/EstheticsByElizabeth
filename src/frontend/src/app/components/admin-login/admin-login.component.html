@@ -1,0 +1,44 @@
+<main class="admin-login-page">
+  <section class="login-container">
+    <div class="container">
+      <div class="login-card">
+        <div class="login-header">
+          <h1>Admin Login</h1>
+          <p>Enter your password to access the admin panel</p>
+        </div>
+
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+          <div class="form-group">
+            <label for="password">Admin Password *</label>
+            <input 
+              type="password" 
+              id="password" 
+              formControlName="password" 
+              [class.is-invalid]="passwordControl?.invalid && passwordControl?.touched"
+              placeholder="Enter admin password"
+            >
+            <div class="invalid-feedback" *ngIf="passwordControl?.invalid && passwordControl?.touched">
+              Password is required
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary" [disabled]="isLoading">
+              <span *ngIf="isLoading">Logging in...</span>
+              <span *ngIf="!isLoading">Login</span>
+            </button>
+          </div>
+
+          <div class="alert alert-danger" *ngIf="errorMessage">
+            {{errorMessage}}
+          </div>
+        </form>
+
+        <div class="login-info">
+          <p><strong>Development Note:</strong> This is a hardcoded login for development purposes.</p>
+          <p>Password: <code>admin123</code></p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>

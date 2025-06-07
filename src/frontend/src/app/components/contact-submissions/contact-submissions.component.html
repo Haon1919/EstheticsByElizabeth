@@ -1,0 +1,216 @@
+<div class="contact-submissions-container">
+  <div class="header-section">
+    <h1>Contact Form Submissions</h1>
+    <div class="stats-bar">
+      <div class="stat-item">
+        <span class="stat-label">Total:</span>
+        <span class="stat-value">{{ filteredSubmissions.length }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Unread:</span>
+        <span class="stat-value unread">{{ getUnreadCount() }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Selected:</span>
+        <span class="stat-value">{{ selectedSubmissions.size }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls-section">
+    <div class="search-and-filter">
+      <div class="search-box">
+        <input 
+          type="text" 
+          [(ngModel)]="searchTerm" 
+          (input)="applyFilters()"
+          placeholder="Search by name, email, or message..."
+          class="search-input">
+        <i class="search-icon">🔍</i>
+      </div>
+      
+      <div class="filter-options">
+        <select [(ngModel)]="statusFilter" (change)="applyFilters()" class="filter-select">
+          <option value="">All Status</option>
+          <option value="unread">Unread</option>
+          <option value="read">Read</option>
+          <option value="responded">Responded</option>
+        </select>
+        
+        <select [(ngModel)]="serviceFilter" (change)="applyFilters()" class="filter-select">
+          <option value="">All Services</option>
+          <option value="Facial">Facial</option>
+          <option value="Massage">Massage</option>
+          <option value="Skincare Consultation">Skincare Consultation</option>
+          <option value="Body Treatment">Body Treatment</option>
+          <option value="Other">Other</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="bulk-actions" *ngIf="selectedSubmissions.size > 0">
+      <button 
+        (click)="markSelectedAsRead()" 
+        class="bulk-btn mark-read"
+        [disabled]="loading">
+        Mark as Read ({{ selectedSubmissions.size }})
+      </button>
+      <button 
+        (click)="deleteSelected()" 
+        class="bulk-btn delete"
+        [disabled]="loading">
+        Delete Selected ({{ selectedSubmissions.size }})
+      </button>
+    </div>
+  </div>
+
+  <div class="submissions-list" *ngIf="filteredSubmissions.length > 0; else noSubmissions">
+    <div class="list-header">
+      <div class="header-checkbox">
+        <input 
+          type="checkbox" 
+          [checked]="allFilteredSelected()"
+          [indeterminate]="someFilteredSelected() && !allFilteredSelected()"
+          (change)="toggleAllFiltered($event)"
+          id="select-all">
+        <label for="select-all"></label>
+      </div>
+      <div class="header-columns">
+        <span class="column-header name">Name & Contact</span>
+        <span class="column-header service">Service</span>
+        <span class="column-header date">Date</span>
+        <span class="column-header status">Status</span>
+        <span class="column-header actions">Actions</span>
+      </div>
+    </div>
+
+    <div class="submission-item" 
+         *ngFor="let submission of filteredSubmissions; trackBy: trackBySubmission"
+         [class.unread]="submission.status === 'unread'"
+         [class.selected]="selectedSubmissions.has(submission.id)">
+      
+      <div class="item-checkbox">
+        <input 
+          type="checkbox" 
+          [checked]="selectedSubmissions.has(submission.id)"
+          (change)="toggleSubmissionSelection(submission.id, $event)"
+          [id]="'checkbox-' + submission.id">
+        <label [for]="'checkbox-' + submission.id"></label>
+      </div>
+
+      <div class="item-content">
+        <div class="primary-info">
+          <div class="name-contact">
+            <h3 class="name">{{ submission.name }}</h3>
+            <p class="email">{{ submission.email }}</p>
+            <p class="phone" *ngIf="submission.phone">{{ submission.phone }}</p>
+          </div>
+          
+          <div class="service-info">
+            <span class="service-badge">{{ submission.interestedService }}</span>
+          </div>
+          
+          <div class="date-info">
+            <span class="date">{{ formatDate(submission.submittedAt) }}</span>
+            <span class="time">{{ formatTime(submission.submittedAt) }}</span>
+          </div>
+          
+          <div class="status-info">
+            <span class="status-badge" [class]="submission.status">
+              {{ submission.status | titlecase }}
+            </span>
+          </div>
+          
+          <div class="item-actions">
+            <button 
+              (click)="toggleSubmissionDetails(submission.id)"
+              class="action-btn view"
+              [class.active]="expandedSubmissions.has(submission.id)">
+              {{ expandedSubmissions.has(submission.id) ? 'Hide' : 'View' }}
+            </button>
+            <button 
+              (click)="markAsRead(submission.id)"
+              class="action-btn mark-read"
+              *ngIf="submission.status === 'unread'"
+              [disabled]="loading">
+              Mark Read
+            </button>
+            <button 
+              (click)="deleteSubmission(submission.id)"
+              class="action-btn delete"
+              [disabled]="loading">
+              Delete
+            </button>
+          </div>
+        </div>
+
+        <div class="expanded-details" *ngIf="expandedSubmissions.has(submission.id)">
+          <div class="message-section">
+            <h4>Message:</h4>
+            <p class="message-text">{{ submission.message }}</p>
+          </div>
+          
+          <div class="preferred-contact" *ngIf="submission.preferredContactMethod">
+            <h4>Preferred Contact Method:</h4>
+            <p>{{ submission.preferredContactMethod }}</p>
+          </div>
+
+          <div class="admin-notes-section">
+            <h4>Admin Notes:</h4>
+            <textarea 
+              [(ngModel)]="submission.adminNotes"
+              (blur)="updateAdminNotes(submission.id, submission.adminNotes || '')"
+              placeholder="Add notes about this submission..."
+              class="notes-textarea"
+              rows="3"></textarea>
+          </div>
+
+          <div class="metadata">
+            <div class="meta-item">
+              <strong>Submitted:</strong> {{ formatFullDate(submission.submittedAt) }}
+            </div>
+            <div class="meta-item" *ngIf="submission.readAt">
+              <strong>Read:</strong> {{ formatFullDate(submission.readAt) }}
+            </div>
+            <div class="meta-item" *ngIf="submission.respondedAt">
+              <strong>Responded:</strong> {{ formatFullDate(submission.respondedAt) }}
+            </div>
+          </div>
+
+          <div class="status-actions">
+            <button 
+              (click)="updateStatus(submission.id, 'read')"
+              class="status-btn read"
+              [disabled]="submission.status === 'read' || loading">
+              Mark as Read
+            </button>
+            <button 
+              (click)="updateStatus(submission.id, 'responded')"
+              class="status-btn responded"
+              [disabled]="submission.status === 'responded' || loading">
+              Mark as Responded
+            </button>
+            <button 
+              (click)="updateStatus(submission.id, 'unread')"
+              class="status-btn unread"
+              [disabled]="submission.status === 'unread' || loading">
+              Mark as Unread
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ng-template #noSubmissions>
+    <div class="no-submissions">
+      <div class="no-submissions-icon">📭</div>
+      <h3>No submissions found</h3>
+      <p>{{ getNoSubmissionsMessage() }}</p>
+    </div>
+  </ng-template>
+
+  <div class="loading-overlay" *ngIf="loading">
+    <div class="loading-spinner"></div>
+  </div>
+</div>

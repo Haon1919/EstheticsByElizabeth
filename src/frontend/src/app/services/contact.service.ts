@@ -11,23 +11,11 @@ export class ContactService {
   constructor(private apiService: ApiService) { }
 
   /**
-   * Submit contact form
-   * Note: This will try to use the API service, but if no contact endpoint exists,
-   * it will fall back to a mock submission for now
+   * Submit contact form to the backend API
    */
   submitContactForm(contactData: ContactRequest): Observable<any> {
-    // Try to submit via API first
-    try {
-      return this.apiService.submitContactForm(contactData);
-    } catch (error) {
-      // If API submission fails, fall back to mock success
-      console.log('Contact form submitted (mock):', contactData);
-      return of({ 
-        success: true, 
-        message: 'Contact form submitted successfully',
-        timestamp: new Date().toISOString()
-      });
-    }
+    // Submit via API service
+    return this.apiService.submitContactForm(contactData);
   }
 
   /**

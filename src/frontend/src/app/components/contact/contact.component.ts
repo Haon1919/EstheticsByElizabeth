@@ -25,8 +25,10 @@ export class ContactComponent {
     this.contactForm = this.fb.group({
       name: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
-      phone: ['', Validators.required],
-      subject: ['', Validators.required],
+      phone: [''], // Phone is optional
+      subject: ['', [Validators.required, Validators.maxLength(100)]],
+      interestedService: [''], // Optional
+      preferredContactMethod: ['Email'],
       message: ['', Validators.required]
     });
   }
@@ -42,20 +44,25 @@ export class ContactComponent {
         email: this.contactForm.get('email')?.value,
         phone: this.contactForm.get('phone')?.value,
         subject: this.contactForm.get('subject')?.value,
+        interestedService: this.contactForm.get('interestedService')?.value,
+        preferredContactMethod: this.contactForm.get('preferredContactMethod')?.value,
         message: this.contactForm.get('message')?.value
       };
 
       this.contactService.submitContactForm(contactData).subscribe({
         next: (response: any) => {
           console.log('Contact form submitted successfully:', response);
-          this.successMessage = 'Thank you for your message! We will get back to you soon.';
+          // Use the message from the API response, or fall back to default
+          this.successMessage = response?.message || 'Thank you for your message! We will get back to you soon.';
           this.isSubmitted = true;
           this.isLoading = false;
           this.contactForm.reset();
         },
         error: (error: any) => {
           console.error('Error submitting contact form:', error);
-          this.errorMessage = 'There was an error sending your message. Please try again or contact us directly.';
+          // Try to get error message from API response
+          const errorMsg = error?.error?.message || error?.message || 'There was an error sending your message. Please try again or contact us directly.';
+          this.errorMessage = errorMsg;
           this.isLoading = false;
         }
       });

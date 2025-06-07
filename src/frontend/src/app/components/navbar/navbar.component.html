@@ -4,18 +4,29 @@
       <a routerLink="/">{{title}}</a>
     </div>
     <div class="navbar-menu">
-      <ul>
+      <ul *ngIf="!isAuthenticated">
         <li><a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Home</a></li>
         <li><a routerLink="/services" routerLinkActive="active">Services</a></li>
         <li><a routerLink="/booking" routerLinkActive="active">Book Now</a></li>
         <li><a routerLink="/gallery" routerLinkActive="active">Gallery</a></li>
         <li><a routerLink="/contact" routerLinkActive="active">Contact</a></li>
       </ul>
+      <div *ngIf="isAuthenticated" class="admin-nav">
+        <ul class="admin-menu">
+          <li><a routerLink="/admin/submissions" routerLinkActive="active">Contact Submissions</a></li>
+        </ul>
+      </div>
     </div>
-    <div class="navbar-social">
-      <a href="https://instagram.com/" target="_blank"><i class="fab fa-instagram"></i></a>
-      <a href="https://facebook.com/" target="_blank"><i class="fab fa-facebook-f"></i></a>
-      <a href="https://tiktok.com/" target="_blank"><i class="fab fa-tiktok"></i></a>
+    <div class="navbar-right">
+      <div *ngIf="isAuthenticated" class="admin-section">
+        <div class="admin-badge">ADMIN</div>
+        <button class="logout-btn" (click)="logout()">Logout</button>
+      </div>
+      <div class="navbar-social" *ngIf="!isAuthenticated">
+        <a href="https://instagram.com/" target="_blank"><i class="fab fa-instagram"></i></a>
+        <a href="https://facebook.com/" target="_blank"><i class="fab fa-facebook-f"></i></a>
+        <a href="https://tiktok.com/" target="_blank"><i class="fab fa-tiktok"></i></a>
+      </div>
     </div>
   </div>
 </nav>

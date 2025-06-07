@@ -65,6 +65,74 @@
   color: #b27092;
 }
 
+/* Admin Navigation Styles */
+.admin-menu {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  align-items: center;
+}
+
+.admin-menu li {
+  margin: 0 1rem;
+}
+
+.admin-menu a {
+  color: #333;
+  text-decoration: none;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+.admin-menu a:hover,
+.admin-menu a.active {
+  color: #3498db;
+}
+
+.admin-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.logout-btn {
+  background: #e74c3c;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.logout-btn:hover {
+  background: #c0392b;
+  transform: translateY(-1px);
+}
+
+.admin-indicator {
+  display: flex;
+  align-items: center;
+}
+
+.admin-badge {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  box-shadow: 0 2px 4px rgba(52, 152, 219, 0.3);
+}
+
+/* Enhanced responsive styles for admin */
 @media (max-width: 768px) {
   .container {
     flex-direction: column;
@@ -78,5 +146,29 @@
   
   .navbar-menu li {
     margin: 0.5rem;
+  }
+  
+  .admin-menu {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .admin-menu li {
+    margin: 0.5rem;
+  }
+  
+  .admin-section {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: center;
+  }
+  
+  .navbar-right {
+    display: flex;
+    justify-content: center;
+  }
+  
+  .admin-indicator {
+    margin-top: 0.5rem;
   }
 }

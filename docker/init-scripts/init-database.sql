@@ -88,7 +88,32 @@ CREATE INDEX IF NOT EXISTS idx_clientreviewflags_status ON ClientReviewFlags (St
 -- Add index for timestamp-based sorting (if admins will often sort by date)
 CREATE INDEX IF NOT EXISTS idx_clientreviewflags_flagdate ON ClientReviewFlags (FlagDate);
 
--- Part 3: Seed data from InitialSetup.sql
+-- Part 3: Create ContactSubmissions table for contact form submissions
+
+-- Create the ContactSubmissions table for PostgreSQL
+CREATE TABLE IF NOT EXISTS ContactSubmissions (
+    Id SERIAL PRIMARY KEY,
+    Name VARCHAR(255) NOT NULL,
+    Email VARCHAR(255) NOT NULL,
+    Phone VARCHAR(30),
+    Subject VARCHAR(100) NOT NULL,
+    Message TEXT NOT NULL,
+    InterestedService VARCHAR(100), -- Optional
+    PreferredContactMethod VARCHAR(50) DEFAULT 'Email',
+    SubmittedAt TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    Status VARCHAR(20) NOT NULL DEFAULT 'unread' CHECK (Status IN ('unread', 'read', 'responded')),
+    ReadAt TIMESTAMPTZ,
+    RespondedAt TIMESTAMPTZ,
+    AdminNotes TEXT
+);
+
+-- Add indexes for ContactSubmissions table
+CREATE INDEX IF NOT EXISTS idx_contactsubmissions_submittedat ON ContactSubmissions (SubmittedAt);
+CREATE INDEX IF NOT EXISTS idx_contactsubmissions_status ON ContactSubmissions (Status);
+CREATE INDEX IF NOT EXISTS idx_contactsubmissions_email ON ContactSubmissions (Email);
+CREATE INDEX IF NOT EXISTS idx_contactsubmissions_interestedservice ON ContactSubmissions (InterestedService);
+
+-- Part 4: Seed data from InitialSetup.sql
 
 -- Seed Categories
 INSERT INTO Categories (Id, Name) VALUES
@@ -123,3 +148,4 @@ SELECT setval(pg_get_serial_sequence('services', 'id'), (SELECT COALESCE(MAX(id)
 SELECT setval(pg_get_serial_sequence('clients', 'id'), (SELECT COALESCE(MAX(id), 1) FROM clients), true);
 SELECT setval(pg_get_serial_sequence('appointments', 'id'), (SELECT COALESCE(MAX(id), 1) FROM appointments), true);
 SELECT setval(pg_get_serial_sequence('clientreviewflags', 'id'), (SELECT COALESCE(MAX(id), 1) FROM clientreviewflags), true);
+SELECT setval(pg_get_serial_sequence('contactsubmissions', 'id'), (SELECT COALESCE(MAX(id), 1) FROM contactsubmissions), true);
