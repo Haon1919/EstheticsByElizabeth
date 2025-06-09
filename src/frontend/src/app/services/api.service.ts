@@ -121,7 +121,7 @@ export class ApiService {
   }
 
   deleteContactSubmission(submissionId: string): Observable<any> {
-    return this.http.delete(`${this.baseUrl}/debug/contacts/${submissionId}`)
+    return this.http.delete(`${this.baseUrl}/manage/contacts/${submissionId}`)
       .pipe(catchError(this.handleError));
   }
 
