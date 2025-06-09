@@ -3,10 +3,11 @@ using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using API.Data;
-using API.Attributes;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
+
 
 namespace API.Functions
 {
@@ -17,40 +18,22 @@ namespace API.Functions
     public class GetCategories
     {
         private readonly ILogger<GetCategories> _logger;
-        private readonly ProjectContext _context;        public GetCategories(ILogger<GetCategories> logger, ProjectContext context)
+        private readonly ProjectContext _context;
+        
+        public GetCategories(ILogger<GetCategories> logger, ProjectContext context)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _context = context ?? throw new ArgumentNullException(nameof(context));
-        }
-
-        /// <summary>
+        }        /// <summary>
         /// 🏷️ The Magical Category Retrieval Ritual 🏷️
         /// Azure Function triggered by HTTP GET to retrieve all service categories.
         /// </summary>
         [Function("GetCategories")]
-        [Cors]
         public async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "options", Route = "categories")] HttpRequest req)
-        {
-            _logger.LogInformation("🏷️ Service categories request received.");
-              // Handle CORS preflight request
-            if (req.Method.Equals("OPTIONS", StringComparison.OrdinalIgnoreCase))
-            {
-                _logger.LogInformation("🌐 Handling CORS preflight request");
-                
-                var response = new OkResult();
-                req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
-                req.HttpContext.Response.Headers.Add("Access-Control-Allow-Methods", "GET, OPTIONS");
-                req.HttpContext.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization");
-                req.HttpContext.Response.Headers.Add("Access-Control-Max-Age", "86400");
-                
-                return response;
-            }
-              // Add CORS headers to all responses
-            req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
-            req.HttpContext.Response.Headers.Add("Access-Control-Allow-Methods", "GET, OPTIONS");
-            req.HttpContext.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization");
-              try
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "categories")] HttpRequest req)
+        {            _logger.LogInformation("🏷️ Service categories request received.");
+
+            try
             {
                 _logger.LogInformation("🔍 Retrieving all service categories from database");
                 

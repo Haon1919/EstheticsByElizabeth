@@ -6,6 +6,7 @@ import { GalleryComponent } from './components/gallery/gallery.component';
 import { ContactComponent } from './components/contact/contact.component';
 import { AdminLoginComponent } from './components/admin-login/admin-login.component';
 import { ContactSubmissionsComponent } from './components/contact-submissions/contact-submissions.component';
+import { AdminAppointmentsComponent } from './components/admin-appointments/admin-appointments.component';
 import { AuthGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
@@ -18,6 +19,11 @@ export const routes: Routes = [
   { 
     path: 'admin/submissions', 
     component: ContactSubmissionsComponent,
+    canActivate: [AuthGuard]
+  },
+  { 
+    path: 'admin/appointments', 
+    component: AdminAppointmentsComponent,
     canActivate: [AuthGuard]
   },
   { 

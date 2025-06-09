@@ -68,7 +68,9 @@ export interface AppointmentHistoryResponse {
 }
 
 export interface AppointmentsByDateResponse {
-  date: string;
+  startDate: string;
+  endDate: string;
+  isDateRange: boolean;
   appointments: Appointment[];
   totalCount: number;
 }
@@ -88,4 +90,43 @@ export interface ContactRequest {
 export interface ErrorResponse {
   message: string;
   statusCode?: number;
+}
+
+// Contact Submissions interfaces for admin panel
+export interface ContactSubmission {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  subject: string;
+  message: string;
+  interestedService?: string;
+  preferredContactMethod?: string;
+  submittedAt: string;
+  status: 'unread' | 'read' | 'responded';
+  readAt?: string;
+  respondedAt?: string;
+  adminNotes?: string;
+}
+
+export interface ContactSubmissionsResponse {
+  success: boolean;
+  data: ContactSubmission[];
+  pagination: {
+    page: number;
+    pageSize: number;
+    totalCount: number;
+    totalPages: number;
+  };
+  filters: {
+    status?: string;
+    search?: string;
+  };
+}
+
+export interface ContactSubmissionsParams {
+  page?: number;
+  pageSize?: number;
+  status?: 'unread' | 'read' | 'responded';
+  search?: string;
 }

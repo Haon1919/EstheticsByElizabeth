@@ -10,6 +10,14 @@ RUN dotnet restore
 
 # Copy source code and build
 COPY . .
+# Debug: List files after copying source
+RUN echo "=== DEBUG: Files in build stage /src ===" && \
+    ls -la /src && \
+    echo "=== DEBUG: Contents of local.settings.json in build stage ===" && \
+    cat /src/local.settings.json || echo "local.settings.json not found in build stage" && \
+    echo "=== END BUILD DEBUG ==="
+# Explicitly ensure local.settings.json is copied
+COPY local.settings.json .
 RUN dotnet build "API.csproj" -c Release -o /app/build
 RUN dotnet publish "API.csproj" -c Release -o /app/publish --no-restore
 
@@ -22,10 +30,20 @@ WORKDIR /home/site/wwwroot
 # Copy the published application from build stage
 COPY --from=build /app/publish .
 
+# Copy local.settings.json for development environment
+COPY --from=build /src/local.settings.json .
+
+# Debug: List files to verify what was copied
+RUN echo "=== DEBUG: Files in /home/site/wwwroot ===" && \
+    ls -la /home/site/wwwroot && \
+    echo "=== END DEBUG ==="
+
 # Expose the port that Azure Functions uses
 EXPOSE 80
 
-# Set environment variables for Azure Functions
+# Environment variables for Azure Functions with CORS configuration
 ENV AzureWebJobsScriptRoot=/home/site/wwwroot \
     AzureFunctionsJobHost__Logging__Console__IsEnabled=true \
-    FUNCTIONS_WORKER_RUNTIME=dotnet-isolated
+    FUNCTIONS_WORKER_RUNTIME=dotnet-isolated \
+    ASPNETCORE_ENVIRONMENT=Development \
+    Host__CORS=*

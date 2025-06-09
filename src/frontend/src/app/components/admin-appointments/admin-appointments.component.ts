@@ -1,0 +1,460 @@
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import { AppointmentService } from '../../services/appointment.service';
+import { AuthService } from '../../services/auth.service';
+import { ServiceManagementService } from '../../services/service-management.service';
+import { 
+  Appointment, 
+  AppointmentsByDateResponse, 
+  AppointmentHistoryResponse, 
+  Service,
+  CreateAppointmentRequest,
+  Client
+} from '../../models/api-models';
+
+@Component({
+  selector: 'app-admin-appointments',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  templateUrl: './admin-appointments.component.html',
+  styleUrls: ['./admin-appointments.component.css']
+})
+export class AdminAppointmentsComponent implements OnInit {
+  // Active tab
+  activeTab: 'calendar' | 'search' | 'schedule' = 'calendar';
+  
+  // Loading states
+  loading = false;
+  searchLoading = false;
+  scheduleLoading = false;
+  
+  // Calendar view
+  selectedDate: string = '';
+  selectedEndDate: string = '';
+  isDateRangeMode: boolean = false;
+  appointments: Appointment[] = [];
+  appointmentResponse: AppointmentsByDateResponse | null = null;
+  
+  // Client search
+  searchEmail: string = '';
+  searchResults: AppointmentHistoryResponse | null = null;
+  
+  // Schedule new appointment
+  newAppointment = {
+    client: {
+      firstName: '',
+      lastName: '',
+      email: '',
+      phoneNumber: ''
+    },
+    serviceId: 0,
+    date: '',
+    time: ''
+  };
+  
+  // Available services and time slots
+  services: Service[] = [];
+  availableTimes: string[] = [];
+  
+  // Error handling
+  errorMessage = '';
+  successMessage = '';
+
+  constructor(
+    private appointmentService: AppointmentService,
+    private authService: AuthService,
+    private serviceManagementService: ServiceManagementService,
+    private router: Router
+  ) {}
+
+  ngOnInit(): void {
+    // Check authentication
+    if (!this.authService.isAuthenticated()) {
+      this.router.navigate(['/admin']);
+      return;
+    }
+
+    // Initialize with today's date
+    this.selectedDate = this.formatDateForInput(new Date());
+    this.selectedEndDate = this.formatDateForInput(new Date());
+    this.newAppointment.date = this.selectedDate;
+    
+    // Load initial data
+    this.loadAppointmentsByDate();
+    this.loadServices();
+    this.generateTimeSlots();
+  }
+
+  // Tab management
+  switchTab(tab: 'calendar' | 'search' | 'schedule'): void {
+    this.activeTab = tab;
+    this.clearMessages();
+  }
+
+  // Calendar view methods
+  setDateMode(isRange: boolean): void {
+    if (this.isDateRangeMode !== isRange) {
+      this.isDateRangeMode = isRange;
+      if (!this.isDateRangeMode) {
+        // Reset end date to start date when switching back to single date mode
+        this.selectedEndDate = this.selectedDate;
+      }
+      this.loadAppointmentsByDate();
+    }
+  }
+
+  toggleDateRangeMode(): void {
+    this.isDateRangeMode = !this.isDateRangeMode;
+    if (!this.isDateRangeMode) {
+      // Reset end date to start date when switching back to single date mode
+      this.selectedEndDate = this.selectedDate;
+    }
+    this.loadAppointmentsByDate();
+  }
+
+  loadAppointmentsByDate(): void {
+    if (!this.selectedDate) return;
+    
+    this.loading = true;
+    this.clearMessages();
+
+    if (this.isDateRangeMode && this.selectedEndDate && this.selectedEndDate !== this.selectedDate) {
+      // Load date range
+      this.appointmentService.getAppointmentsByDateRange(this.selectedDate, this.selectedEndDate).subscribe({
+        next: (response: AppointmentsByDateResponse) => {
+          this.appointmentResponse = response;
+          this.appointments = response.appointments;
+          this.loading = false;
+        },
+        error: (error) => {
+          console.error('Error loading appointments:', error);
+          this.errorMessage = 'Failed to load appointments for the selected date range.';
+          this.loading = false;
+        }
+      });
+    } else {
+      // Load single date
+      this.appointmentService.getAppointmentsByDate(this.selectedDate).subscribe({
+        next: (response: AppointmentsByDateResponse) => {
+          this.appointmentResponse = response;
+          this.appointments = response.appointments;
+          this.loading = false;
+        },
+        error: (error) => {
+          console.error('Error loading appointments:', error);
+          this.errorMessage = 'Failed to load appointments for the selected date.';
+          this.loading = false;
+        }
+      });
+    }
+  }
+
+  onDateChange(): void {
+    // If end date is before start date, adjust it
+    if (this.selectedEndDate < this.selectedDate) {
+      this.selectedEndDate = this.selectedDate;
+    }
+    this.loadAppointmentsByDate();
+  }
+
+  onEndDateChange(): void {
+    // If end date is before start date, adjust start date
+    if (this.selectedEndDate < this.selectedDate) {
+      this.selectedDate = this.selectedEndDate;
+    }
+    this.loadAppointmentsByDate();
+  }
+
+  // Client search methods
+  searchClientAppointments(): void {
+    if (!this.searchEmail.trim()) {
+      this.errorMessage = 'Please enter a client email address.';
+      return;
+    }
+
+    this.searchLoading = true;
+    this.clearMessages();
+
+    this.appointmentService.getClientAppointmentHistory(this.searchEmail.trim()).subscribe({
+      next: (response: AppointmentHistoryResponse) => {
+        this.searchResults = response;
+        if (response.appointments.length === 0) {
+          this.errorMessage = 'No appointments found for this client.';
+        }
+        this.searchLoading = false;
+      },
+      error: (error) => {
+        console.error('Error searching client appointments:', error);
+        this.errorMessage = 'Failed to load client appointment history.';
+        this.searchLoading = false;
+      }
+    });
+  }
+
+  // Schedule new appointment methods
+  loadServices(): void {
+    this.serviceManagementService.loadServices().subscribe({
+      next: (services: Service[]) => {
+        this.services = services.filter(service => 
+          service.price !== undefined && service.price !== null && service.price > 0
+        );
+      },
+      error: (error) => {
+        console.error('Error loading services:', error);
+        this.errorMessage = 'Failed to load services.';
+      }
+    });
+  }
+
+  generateTimeSlots(): void {
+    const times = [];
+    for (let i = 9; i <= 18; i++) {
+      times.push(`${i.toString().padStart(2, '0')}:00`);
+      if (i < 18) {
+        times.push(`${i.toString().padStart(2, '0')}:30`);
+      }
+    }
+    this.availableTimes = times;
+  }
+
+  scheduleNewAppointment(): void {
+    if (!this.validateNewAppointment()) {
+      return;
+    }
+
+    this.scheduleLoading = true;
+    this.clearMessages();
+
+    // Combine date and time
+    const appointmentDateTime = new Date(`${this.newAppointment.date}T${this.newAppointment.time}:00`);
+
+    const appointmentData: CreateAppointmentRequest = {
+      client: {
+        firstName: this.newAppointment.client.firstName,
+        lastName: this.newAppointment.client.lastName,
+        email: this.newAppointment.client.email,
+        phoneNumber: this.newAppointment.client.phoneNumber
+      },
+      serviceId: this.newAppointment.serviceId,
+      time: appointmentDateTime.toISOString()
+    };
+
+    this.appointmentService.scheduleAppointment(appointmentData).subscribe({
+      next: (response) => {
+        this.successMessage = 'Appointment scheduled successfully!';
+        this.resetNewAppointmentForm();
+        this.scheduleLoading = false;
+        
+        // Refresh calendar if on the same date
+        if (this.selectedDate === this.newAppointment.date) {
+          this.loadAppointmentsByDate();
+        }
+      },
+      error: (error) => {
+        console.error('Error scheduling appointment:', error);
+        this.errorMessage = error.error?.message || 'Failed to schedule appointment.';
+        this.scheduleLoading = false;
+      }
+    });
+  }
+
+  validateNewAppointment(): boolean {
+    if (!this.newAppointment.client.firstName.trim()) {
+      this.errorMessage = 'First name is required.';
+      return false;
+    }
+    if (!this.newAppointment.client.lastName.trim()) {
+      this.errorMessage = 'Last name is required.';
+      return false;
+    }
+    if (!this.newAppointment.client.email.trim()) {
+      this.errorMessage = 'Email is required.';
+      return false;
+    }
+    if (!this.newAppointment.serviceId) {
+      this.errorMessage = 'Please select a service.';
+      return false;
+    }
+    if (!this.newAppointment.date) {
+      this.errorMessage = 'Please select a date.';
+      return false;
+    }
+    if (!this.newAppointment.time) {
+      this.errorMessage = 'Please select a time.';
+      return false;
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(this.newAppointment.client.email)) {
+      this.errorMessage = 'Please enter a valid email address.';
+      return false;
+    }
+
+    return true;
+  }
+
+  resetNewAppointmentForm(): void {
+    this.newAppointment = {
+      client: {
+        firstName: '',
+        lastName: '',
+        email: '',
+        phoneNumber: ''
+      },
+      serviceId: 0,
+      date: this.formatDateForInput(new Date()),
+      time: ''
+    };
+  }
+
+  // Cancel appointment
+  cancelAppointment(appointmentId: number): void {
+    if (!confirm('Are you sure you want to cancel this appointment?')) {
+      return;
+    }
+
+    this.loading = true;
+    this.clearMessages();
+
+    this.appointmentService.cancelAppointment(appointmentId).subscribe({
+      next: () => {
+        this.successMessage = 'Appointment cancelled successfully.';
+        this.loadAppointmentsByDate(); // Refresh the list
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error cancelling appointment:', error);
+        this.errorMessage = 'Failed to cancel appointment.';
+        this.loading = false;
+      }
+    });
+  }
+
+  // Utility methods
+  formatDate(dateString: string): string {
+    try {
+      if (!dateString) return 'No date selected';
+      
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) {
+        return 'No date selected';
+      }
+      return date.toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+    } catch (error) {
+      return 'No date selected';
+    }
+  }
+
+  formatDateRange(): string {
+    if (!this.appointmentResponse) {
+      // Fallback to selectedDate if appointmentResponse is not available
+      if (this.selectedDate) {
+        if (this.isDateRangeMode && this.selectedEndDate && this.selectedEndDate !== this.selectedDate) {
+          const startDate = this.formatDate(this.selectedDate + 'T00:00:00');
+          const endDate = this.formatDate(this.selectedEndDate + 'T00:00:00');
+          return `${startDate} - ${endDate}`;
+        } else {
+          return this.formatDate(this.selectedDate + 'T00:00:00');
+        }
+      }
+      return 'Select a date';
+    }
+    
+    if (this.appointmentResponse.isDateRange) {
+      const startDate = this.formatDate(this.appointmentResponse.startDate + 'T00:00:00');
+      const endDate = this.formatDate(this.appointmentResponse.endDate + 'T00:00:00');
+      return `${startDate} - ${endDate}`;
+    } else {
+      return this.formatDate(this.appointmentResponse.startDate + 'T00:00:00');
+    }
+  }
+
+  getDateRangeText(): string {
+    if (!this.appointmentResponse) return 'Select a date';
+    
+    if (this.appointmentResponse.isDateRange) {
+      return `${this.appointmentResponse.startDate} to ${this.appointmentResponse.endDate}`;
+    } else {
+      return this.appointmentResponse.startDate;
+    }
+  }
+
+  getDateRangeDays(): number {
+    if (!this.appointmentResponse || !this.appointmentResponse.isDateRange) return 1;
+    
+    const start = new Date(this.appointmentResponse.startDate);
+    const end = new Date(this.appointmentResponse.endDate);
+    const diffTime = Math.abs(end.getTime() - start.getTime());
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+  }
+
+  formatTime(dateString: string): string {
+    return new Date(dateString).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
+  formatDateForInput(date: Date): string {
+    return date.toISOString().split('T')[0];
+  }
+
+  getServiceName(serviceId: number): string {
+    const service = this.services.find(s => s.id === serviceId);
+    return service ? service.name : `Service ID ${serviceId}`;
+  }
+
+  getServicePrice(serviceId: number): number {
+    const service = this.services.find(s => s.id === serviceId);
+    return service?.price || 0;
+  }
+
+  clearMessages(): void {
+    this.errorMessage = '';
+    this.successMessage = '';
+  }
+
+  logout(): void {
+    this.authService.logout();
+    this.router.navigate(['/admin']);
+  }
+
+  trackByAppointment(index: number, appointment: Appointment): number {
+    return appointment.id;
+  }
+
+  // Helper methods for template
+  isUpcoming(appointmentTime: string): boolean {
+    return new Date(appointmentTime) > new Date();
+  }
+
+  getAppointmentStatusClass(appointmentTime: string): string {
+    return this.isUpcoming(appointmentTime) ? 'upcoming' : 'completed';
+  }
+
+  getAppointmentStatusText(appointmentTime: string): string {
+    return this.isUpcoming(appointmentTime) ? 'Upcoming' : 'Completed';
+  }
+
+  getStatsDateDisplay(): string {
+    if (!this.selectedDate) {
+      return 'Select a date';
+    }
+    
+    if (this.isDateRangeMode && this.selectedEndDate && this.selectedEndDate !== this.selectedDate) {
+      const startDate = this.formatDate(this.selectedDate + 'T00:00:00');
+      const endDate = this.formatDate(this.selectedEndDate + 'T00:00:00');
+      return `${startDate} - ${endDate}`;
+    } else {
+      return this.formatDate(this.selectedDate + 'T00:00:00');
+    }
+  }
+}

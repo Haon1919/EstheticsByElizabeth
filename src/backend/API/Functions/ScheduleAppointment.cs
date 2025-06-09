@@ -30,28 +30,10 @@ namespace API.Functions
         }        /// <summary>
         /// 🧙‍♂️ The Magical Appointment Scheduling Ritual 🧙‍♂️
         /// Azure Function triggered by HTTP POST to schedule an appointment.
-        /// </summary>
-        [Function("ScheduleAppointment")]
-        public async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", "options", Route = "appointments")] HttpRequest req)        {
+        /// </summary>        
+        [Function("ScheduleAppointment")]        public async Task<IActionResult> Run(
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "appointments")] HttpRequest req)        {
             _logger.LogInformation("✨ Appointment scheduling request received.");
-
-            // Handle CORS preflight request
-            if (req.Method.Equals("OPTIONS", StringComparison.OrdinalIgnoreCase))
-            {
-                _logger.LogInformation("🌐 Handling CORS preflight request");
-                
-                var response = new OkResult();
-                req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
-                req.HttpContext.Response.Headers.Add("Access-Control-Allow-Methods", "POST, OPTIONS");
-                req.HttpContext.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization");
-                req.HttpContext.Response.Headers.Add("Access-Control-Max-Age", "86400");
-                
-                return response;
-            }            // Add CORS headers to all responses
-            req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
-            req.HttpContext.Response.Headers.Add("Access-Control-Allow-Methods", "POST, OPTIONS");
-            req.HttpContext.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
             try
             {

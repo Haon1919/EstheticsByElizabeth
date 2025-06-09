@@ -14,6 +14,8 @@ import {
   AppointmentHistoryResponse,
   AppointmentsByDateResponse,
   ContactRequest,
+  ContactSubmissionsResponse,
+  ContactSubmissionsParams,
   ErrorResponse
 } from '../models/api-models';
 
@@ -58,6 +60,12 @@ export class ApiService {
       .pipe(catchError(this.handleError));
   }
 
+  getAppointmentsByDateRange(startDate: string, endDate: string): Observable<AppointmentsByDateResponse> {
+    const params = new HttpParams().set('endDate', endDate);
+    return this.http.get<AppointmentsByDateResponse>(`${this.baseUrl}/appointments/date/${startDate}`, { params })
+      .pipe(catchError(this.handleError));
+  }
+
   getAppointmentHistory(email: string): Observable<AppointmentHistoryResponse> {
     const params = new HttpParams().set('email', email);
     return this.http.get<AppointmentHistoryResponse>(`${this.baseUrl}/appointments/history`, { params })
@@ -73,6 +81,47 @@ export class ApiService {
   submitContactForm(contactData: ContactRequest): Observable<any> {
     // Note: This assumes a contact endpoint exists or will be created
     return this.http.post(`${this.baseUrl}/contact`, contactData)
+      .pipe(catchError(this.handleError));
+  }
+
+  // Contact Submissions methods for admin panel
+  getContactSubmissions(params?: ContactSubmissionsParams): Observable<ContactSubmissionsResponse> {
+    let httpParams = new HttpParams();
+    
+    if (params?.page) {
+      httpParams = httpParams.set('page', params.page.toString());
+    }
+    if (params?.pageSize) {
+      httpParams = httpParams.set('pageSize', params.pageSize.toString());
+    }
+    if (params?.status) {
+      httpParams = httpParams.set('status', params.status);
+    }
+    if (params?.search) {
+      httpParams = httpParams.set('search', params.search);
+    }
+
+    return this.http.get<ContactSubmissionsResponse>(`${this.baseUrl}/manage/contacts`, { params: httpParams })
+      .pipe(catchError(this.handleError));
+  }
+
+  updateContactSubmissionStatus(submissionId: string, status: 'unread' | 'read' | 'responded', adminNotes?: string): Observable<any> {
+    const payload: any = { status };
+    if (adminNotes) {
+      payload.adminNotes = adminNotes;
+    }
+    
+    return this.http.put(`${this.baseUrl}/manage/contacts/${submissionId}/status`, payload)
+      .pipe(catchError(this.handleError));
+  }
+
+  updateContactSubmissionNotes(submissionId: string, notes: string): Observable<any> {
+    return this.http.put(`${this.baseUrl}/manage/contacts/${submissionId}/notes`, { adminNotes: notes })
+      .pipe(catchError(this.handleError));
+  }
+
+  deleteContactSubmission(submissionId: string): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/debug/contacts/${submissionId}`)
       .pipe(catchError(this.handleError));
   }
 

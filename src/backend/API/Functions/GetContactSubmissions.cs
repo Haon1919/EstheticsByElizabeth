@@ -7,7 +7,7 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using API.Data;
-using API.Attributes;
+
 
 namespace API.Functions
 {
@@ -31,30 +31,10 @@ namespace API.Functions
         /// Azure Function triggered by HTTP GET to retrieve contact submissions for admin review.
         /// </summary>
         [Function("GetContactSubmissions")]
-        [Cors]
         public async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "options", Route = "manage/contacts")] HttpRequest req)
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "manage/contacts")] HttpRequest req)
         {
             _logger.LogInformation("📋 Contact submissions retrieval request received");
-
-            // Handle CORS preflight request
-            if (req.Method.Equals("OPTIONS", StringComparison.OrdinalIgnoreCase))
-            {
-                _logger.LogInformation("🌐 Handling CORS preflight request");
-                
-                var response = new OkResult();
-                req.HttpContext.Response.Headers["Access-Control-Allow-Origin"] = "*";
-                req.HttpContext.Response.Headers["Access-Control-Allow-Methods"] = "GET, OPTIONS";
-                req.HttpContext.Response.Headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization";
-                req.HttpContext.Response.Headers["Access-Control-Max-Age"] = "86400";
-                
-                return response;
-            }
-
-            // Add CORS headers to all responses
-            req.HttpContext.Response.Headers["Access-Control-Allow-Origin"] = "*";
-            req.HttpContext.Response.Headers["Access-Control-Allow-Methods"] = "GET, OPTIONS";
-            req.HttpContext.Response.Headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization";
 
             try
             {

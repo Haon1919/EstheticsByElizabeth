@@ -26,32 +26,12 @@ namespace API.Functions
         /// <summary>
         /// 📚 The Magical History Retrieval Ritual 📚
         /// Azure Function triggered by HTTP GET to retrieve client appointment history.
-        /// </summary>
+        /// </summary>        
         [Function("GetAppointmentHistoryByClient")]
         public async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "options", Route = "appointments/history")] HttpRequest req)
-        {
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "appointments/history")] HttpRequest req)        {
             _logger.LogInformation("📚 Client appointment history request received.");
 
-            // Handle CORS preflight request
-            if (req.Method.Equals("OPTIONS", StringComparison.OrdinalIgnoreCase))
-            {
-                _logger.LogInformation("🌐 Handling CORS preflight request");
-                
-                var response = new OkResult();
-                req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
-                req.HttpContext.Response.Headers.Add("Access-Control-Allow-Methods", "GET, OPTIONS");
-                req.HttpContext.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization");
-                req.HttpContext.Response.Headers.Add("Access-Control-Max-Age", "86400");
-                
-                return response;
-            }
-
-            // Add CORS headers to all responses
-            req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
-            req.HttpContext.Response.Headers.Add("Access-Control-Allow-Methods", "GET, OPTIONS");
-            req.HttpContext.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization");
-            
             // Get the client email from the query string
             string email = req.Query["email"];
             
@@ -59,7 +39,9 @@ namespace API.Functions
             {
                 _logger.LogWarning("🚫 No email parameter provided.");
                 return new BadRequestObjectResult("Please provide an email parameter.");
-            }            try
+            }
+
+            try
             {
                 _logger.LogInformation("🔍 Searching for client with email: {Email}", email);
                 

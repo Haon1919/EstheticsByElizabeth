@@ -1,27 +1,20 @@
-// Required Usings
+// Required Usings for Azure Functions Isolated Process
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging; // Needed for LogLevel and LogTo
 using Microsoft.EntityFrameworkCore; // Needed for EF Core configuration
 using API.Data; // Your DbContext namespace
-using API.Middleware; // For CORS middleware
 using Npgsql; // Needed for UseNpgsql and options
 using System; // Needed for TimeSpan, StringComparison etc.
 using System.Text.Json; // Needed for JsonSerializerOptions
 using System.Text.Json.Serialization; // Needed for ReferenceHandler and JsonIgnoreCondition
 
-// Optional Usings (Consider removing if not used elsewhere)
-// using System.Diagnostics;
-
-// 🏰 Welcome to the Enchanted Kingdom of API 🏰 (Optional fun comment)
-// Where databases are slain, exceptions are tamed, and appointments are scheduled with magical precision!
+Console.WriteLine("🔧 [STARTUP] Configuring Azure Functions Host (Isolated Process Mode)");
 
 var host = new HostBuilder()
     .ConfigureFunctionsWebApplication()
     .ConfigureFunctionsWorkerDefaults(builder => {
-        // Add CORS middleware to the Functions Worker pipeline
-        builder.UseMiddleware<API.Middleware.CorsMiddleware>();
         
         // Configure JSON options for Functions Worker
         builder.Services.Configure<JsonSerializerOptions>(options =>
@@ -36,13 +29,37 @@ var host = new HostBuilder()
             options.SerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
             options.SerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
         });
-    })
-    .ConfigureAppConfiguration((context, config) =>
+    })    .ConfigureAppConfiguration((context, config) =>
     {
         // Load configuration from local settings file
         config.AddJsonFile("local.settings.json", optional: true, reloadOnChange: true);
     })
     .ConfigureServices((context, services) => {
+        // --- Log Configuration Structure ---
+        Console.WriteLine("📋 [STARTUP] Configuration Structure:");
+        Console.WriteLine($"📁 [CONFIG] FUNCTIONS_WORKER_RUNTIME: {context.Configuration["Values:FUNCTIONS_WORKER_RUNTIME"] ?? "[not set]"}");
+        Console.WriteLine($"📁 [CONFIG] ConnectionStrings:DefaultConnection: {(string.IsNullOrEmpty(context.Configuration["Values:ConnectionStrings:DefaultConnection"]) ? "[not set]" : "[configured]")}");
+        Console.WriteLine($"📁 [CONFIG] AzureWebJobsStorage: {(string.IsNullOrEmpty(context.Configuration["Values:AzureWebJobsStorage"]) ? "[not set]" : "[configured]")}");
+        
+        // --- Check if local.settings.json is being loaded ---
+        Console.WriteLine("🔍 [DEBUG] Checking local.settings.json loading:");
+        Console.WriteLine($"🏠 [CONFIG] Host:CORS from config: {context.Configuration["Host:CORS"] ?? "[not set]"}");
+        Console.WriteLine($"🏠 [CONFIG] Host:LocalHttpPort from config: {context.Configuration["Host:LocalHttpPort"] ?? "[not set]"}");
+        Console.WriteLine($"🌍 [ENV] Host__CORS environment variable: {Environment.GetEnvironmentVariable("Host__CORS") ?? "[not set]"}");
+        Console.WriteLine($"🌍 [ENV] ASPNETCORE_ENVIRONMENT: {Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "[not set]"}");
+        Console.WriteLine($"🌍 [ENV] AZURE_FUNCTIONS_ENVIRONMENT: {Environment.GetEnvironmentVariable("AZURE_FUNCTIONS_ENVIRONMENT") ?? "[not set]"}");
+        
+        // Check all configuration providers
+        Console.WriteLine("🔍 [DEBUG] Configuration providers:");
+        foreach (var provider in context.Configuration.AsEnumerable().Take(30))
+        {
+            if (!string.IsNullOrEmpty(provider.Key))
+            {
+                var value = provider.Value?.Length > 50 ? $"{provider.Value.Substring(0, 50)}..." : provider.Value;
+                Console.WriteLine($"    🔑 {provider.Key}: {value ?? "[null]"}");
+            }
+        }
+        
         // --- Connection String Handling ---
         Console.WriteLine("🔍 Locating database connection string...");
 
@@ -100,30 +117,14 @@ var host = new HostBuilder()
                 {
                     // Simple console log with timestamp
                     Console.WriteLine($"[EFCore SQL] {DateTime.UtcNow:HH:mm:ss.fff} {message}");
-                }
-            },
+                }            },
             LogLevel.Information); // Set the minimum log level for messages from EF Core
-        });        // Register the ClientReviewService
-        services.AddScoped<API.Services.ClientReviewService>();        // Add CORS configuration for ASP.NET Core integration in Azure Functions
-        services.AddCors(options =>
-        {
-            options.AddDefaultPolicy(builder =>
-            {
-                builder
-                    .WithOrigins(
-                        "http://localhost:3000",
-                        "http://localhost:4200", 
-                        "http://127.0.0.1:3000",
-                        "http://127.0.0.1:4200"
-                    )
-                    .AllowAnyMethod()
-                    .AllowAnyHeader()
-                    .AllowCredentials();
-            });
-        });        // Register the CORS middleware
-        services.AddTransient<CorsMiddleware>();
+        });
 
-        // Azure Functions CORS is configured in host.json file
+        // Register the ClientReviewService
+        services.AddScoped<API.Services.ClientReviewService>();
+        
+        Console.WriteLine("✅ [STARTUP] All services registered successfully");
 
         // Removed the separate Polly policy definition and registration.
         // EF Core's EnableRetryOnFailure is now handling database retries.
@@ -131,5 +132,5 @@ var host = new HostBuilder()
     .Build();
 
 // Launch the Azure Functions host application
-Console.WriteLine("🚀 Starting Azure Functions Host...");
+Console.WriteLine("🚀 [STARTUP] Starting Azure Functions Host (Isolated Process Mode with Host-Level CORS from local.settings.json)");
 host.Run();

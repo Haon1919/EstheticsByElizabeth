@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using API.Data;
 using API.DTOs;
 using API.Entities;
-using API.Attributes;
+
 
 namespace API.Functions
 {
@@ -34,30 +34,10 @@ namespace API.Functions
         /// Azure Function triggered by HTTP POST to handle contact form submissions.
         /// </summary>
         [Function("SubmitContactForm")]
-        [Cors]
         public async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", "options", Route = "contact")] HttpRequest req)
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "contact")] HttpRequest req)
         {
             _logger.LogInformation("📧 Contact form submission received.");
-
-            // Handle CORS preflight request
-            if (req.Method.Equals("OPTIONS", StringComparison.OrdinalIgnoreCase))
-            {
-                _logger.LogInformation("🌐 Handling CORS preflight request");
-                
-                var response = new OkResult();
-                req.HttpContext.Response.Headers["Access-Control-Allow-Origin"] = "*";
-                req.HttpContext.Response.Headers["Access-Control-Allow-Methods"] = "POST, OPTIONS";
-                req.HttpContext.Response.Headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization";
-                req.HttpContext.Response.Headers["Access-Control-Max-Age"] = "86400";
-                
-                return response;
-            }
-
-            // Add CORS headers to all responses
-            req.HttpContext.Response.Headers["Access-Control-Allow-Origin"] = "*";
-            req.HttpContext.Response.Headers["Access-Control-Allow-Methods"] = "POST, OPTIONS";
-            req.HttpContext.Response.Headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization";
 
             try
             {

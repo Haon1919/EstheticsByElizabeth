@@ -30,6 +30,13 @@ export class AppointmentService {
   }
 
   /**
+   * Get appointments for a date range
+   */
+  getAppointmentsByDateRange(startDate: string, endDate: string): Observable<AppointmentsByDateResponse> {
+    return this.apiService.getAppointmentsByDateRange(startDate, endDate);
+  }
+
+  /**
    * Get appointment history for a client by email
    */
   getClientAppointmentHistory(email: string): Observable<AppointmentHistoryResponse> {

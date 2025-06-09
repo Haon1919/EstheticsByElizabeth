@@ -8,36 +8,35 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using API.Data;
-using API.Entities;
 
 
 namespace API.Functions
 {
     /// <summary>
-    /// 📝 Contact Submission Status Updater 📝
-    /// Handles updating the status of contact form submissions in the admin panel.
+    /// 📝 Contact Submission Notes Updater 📝
+    /// Handles updating admin notes for contact form submissions.
     /// </summary>
-    public class UpdateContactSubmissionStatus
+    public class UpdateContactSubmissionNotes
     {
-        private readonly ILogger<UpdateContactSubmissionStatus> _logger;
+        private readonly ILogger<UpdateContactSubmissionNotes> _logger;
         private readonly ProjectContext _context;
 
-        public UpdateContactSubmissionStatus(ILogger<UpdateContactSubmissionStatus> logger, ProjectContext context)
+        public UpdateContactSubmissionNotes(ILogger<UpdateContactSubmissionNotes> logger, ProjectContext context)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
         /// <summary>
-        /// 🔄 The Status Update Magic 🔄
-        /// Azure Function triggered by HTTP PUT to update contact submission status.
+        /// 📝 The Notes Update Magic 📝
+        /// Azure Function triggered by HTTP PUT to update contact submission notes.
         /// </summary>
-        [Function("UpdateContactSubmissionStatus")]
+        [Function("UpdateContactSubmissionNotes")]
         public async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "manage/contacts/{id}/status")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "manage/contacts/{id}/notes")] HttpRequest req,
             string id)
         {
-            _logger.LogInformation("📝 Contact submission status update request received for ID: {Id}", id);
+            _logger.LogInformation("📝 Contact submission notes update request received for ID: {Id}", id);
 
             try
             {
@@ -63,30 +62,19 @@ namespace API.Functions
                     });
                 }
 
-                var updateRequest = JsonSerializer.Deserialize<UpdateStatusRequest>(
+                var updateRequest = JsonSerializer.Deserialize<UpdateNotesRequest>(
                     requestBody,
                     new JsonSerializerOptions 
                     { 
                         PropertyNameCaseInsensitive = true 
                     });
 
-                if (updateRequest == null || string.IsNullOrWhiteSpace(updateRequest.Status))
+                if (updateRequest == null)
                 {
                     _logger.LogWarning("📭 Invalid request data");
                     return new BadRequestObjectResult(new { 
                         success = false, 
-                        message = "Status is required" 
-                    });
-                }
-
-                // Validate status value
-                var validStatuses = new[] { "unread", "read", "responded" };
-                if (!Array.Exists(validStatuses, s => s == updateRequest.Status))
-                {
-                    _logger.LogWarning("📭 Invalid status value: {Status}", updateRequest.Status);
-                    return new BadRequestObjectResult(new { 
-                        success = false, 
-                        message = "Status must be 'unread', 'read', or 'responded'" 
+                        message = "Invalid request data" 
                     });
                 }
 
@@ -103,49 +91,28 @@ namespace API.Functions
                     });
                 }
 
-                var now = DateTimeOffset.UtcNow;
-                var previousStatus = submission.Status;
+                var previousNotes = submission.AdminNotes;
 
-                // Update the status and set appropriate timestamps
-                submission.Status = updateRequest.Status;
-
-                if (updateRequest.Status == "read" && previousStatus == "unread")
-                {
-                    submission.ReadAt = now;
-                }
-                else if (updateRequest.Status == "responded")
-                {
-                    if (submission.ReadAt == null)
-                    {
-                        submission.ReadAt = now;
-                    }
-                    submission.RespondedAt = now;
-                }
-
-                // Update admin notes if provided
-                if (!string.IsNullOrWhiteSpace(updateRequest.AdminNotes))
-                {
-                    submission.AdminNotes = updateRequest.AdminNotes.Trim();
-                }
+                // Update admin notes
+                submission.AdminNotes = string.IsNullOrWhiteSpace(updateRequest.AdminNotes) 
+                    ? null 
+                    : updateRequest.AdminNotes.Trim();
 
                 await _context.SaveChangesAsync();
 
-                _logger.LogInformation("✅ Contact submission {Id} status updated from {PreviousStatus} to {NewStatus}", 
-                    submissionId, previousStatus, updateRequest.Status);
+                _logger.LogInformation("✅ Contact submission {Id} notes updated", submissionId);
 
                 return new OkObjectResult(new
                 {
                     success = true,
-                    message = "Status updated successfully",
+                    message = "Notes updated successfully",
                     submissionId = submission.Id,
-                    previousStatus = previousStatus,
-                    newStatus = submission.Status,
-                    updatedAt = now
+                    updatedAt = DateTimeOffset.UtcNow
                 });
             }
             catch (JsonException ex)
             {
-                _logger.LogError(ex, "📭 Failed to parse JSON in status update request");
+                _logger.LogError(ex, "📭 Failed to parse JSON in notes update request");
                 return new BadRequestObjectResult(new { 
                     success = false, 
                     message = "Invalid JSON format in request" 
@@ -153,10 +120,10 @@ namespace API.Functions
             }
             catch (DbUpdateException ex)
             {
-                _logger.LogError(ex, "💾 Database error while updating contact submission status");
+                _logger.LogError(ex, "💾 Database error while updating contact submission notes");
                 return new ObjectResult(new { 
                     success = false, 
-                    message = "A database error occurred while updating the status. Please try again later." 
+                    message = "A database error occurred while updating the notes. Please try again later." 
                 })
                 {
                     StatusCode = StatusCodes.Status500InternalServerError
@@ -164,10 +131,10 @@ namespace API.Functions
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "💥 Unexpected error occurred while updating contact submission status");
+                _logger.LogError(ex, "💥 Unexpected error occurred while updating contact submission notes");
                 return new ObjectResult(new { 
                     success = false, 
-                    message = "An unexpected error occurred while updating the status. Please try again later." 
+                    message = "An unexpected error occurred while updating the notes. Please try again later." 
                 })
                 {
                     StatusCode = StatusCodes.Status500InternalServerError
@@ -176,9 +143,8 @@ namespace API.Functions
         }
     }
 
-    public class UpdateStatusRequest
+    public class UpdateNotesRequest
     {
-        public string Status { get; set; } = string.Empty;
-        public string? AdminNotes { get; set; }
+        public string AdminNotes { get; set; } = string.Empty;
     }
 }

@@ -6,76 +6,98 @@ using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using API.Data;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace API.Functions
-{
-    /// <summary>
+{    /// <summary>
     /// 📅 The Daily Schedule Oracle 📅
-    /// Retrieves all appointments for a specific date.
+    /// Retrieves all appointments for a specific date or date range.
+    /// Supports single date: /appointments/date/2024-01-15
+    /// Supports date range: /appointments/date/2024-01-15?endDate=2024-01-20
     /// </summary>
     public class GetAppointmentsByDate
     {
         private readonly ILogger<GetAppointmentsByDate> _logger;
-        private readonly ProjectContext _context;        public GetAppointmentsByDate(ILogger<GetAppointmentsByDate> logger, ProjectContext context)
+        private readonly ProjectContext _context;
+        
+        public GetAppointmentsByDate(ILogger<GetAppointmentsByDate> logger, ProjectContext context)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _context = context ?? throw new ArgumentNullException(nameof(context));
-        }
-
-        /// <summary>
-        /// 📅 The Magical Daily Schedule Ritual 📅
-        /// Azure Function triggered by HTTP GET to retrieve appointments for a specific date.
+            _context = context ?? throw new ArgumentNullException(nameof(context));        }        /// <summary>
+        /// 📅 The Magical Daily/Range Schedule Ritual 📅
+        /// Azure Function triggered by HTTP GET to retrieve appointments for a specific date or date range.
+        /// Supports both single date (/appointments/date/2024-01-15) and date range (/appointments/date/2024-01-15?endDate=2024-01-20)
         /// </summary>
         [Function("GetAppointmentsByDate")]
         public async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "options", Route = "appointments/date/{date}")] HttpRequest req,
-            string date)
-        {
-            _logger.LogInformation("📅 Daily appointments request received for date: {Date}", date);
-
-            // Handle CORS preflight request
-            if (req.Method.Equals("OPTIONS", StringComparison.OrdinalIgnoreCase))
-            {
-                _logger.LogInformation("🌐 Handling CORS preflight request");
-                
-                var response = new OkResult();
-                req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
-                req.HttpContext.Response.Headers.Add("Access-Control-Allow-Methods", "GET, OPTIONS");
-                req.HttpContext.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization");
-                req.HttpContext.Response.Headers.Add("Access-Control-Max-Age", "86400");
-                
-                return response;
-            }
-
-            // Add CORS headers to all responses
-            req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
-            req.HttpContext.Response.Headers.Add("Access-Control-Allow-Methods", "GET, OPTIONS");
-            req.HttpContext.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization");
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "appointments/date/{date}")] HttpRequest req,
+            string date)        {
+            // Check for date range parameters
+            var endDateParam = req.Query["endDate"].ToString();
+            var isDateRange = !string.IsNullOrEmpty(endDateParam);
             
+            _logger.LogInformation("📅 Appointments request received for {RequestType}: {Date}{EndDate}", 
+                isDateRange ? "date range" : "single date", 
+                date, 
+                isDateRange ? $" to {endDateParam}" : "");
+
             if (string.IsNullOrEmpty(date))
             {
                 _logger.LogWarning("🚫 No date parameter provided.");
                 return new BadRequestObjectResult("Please provide a date parameter (YYYY-MM-DD).");
-            }            try
+            }
+
+            try
             {
-                if (!DateTime.TryParse(date, out DateTime parsedDate))
+                // Parse start date
+                if (!DateTime.TryParse(date, out DateTime parsedStartDate))
                 {
-                    _logger.LogWarning("🚫 Invalid date format: {Date}", date);
-                    return new BadRequestObjectResult("Invalid date format. Please use YYYY-MM-DD.");
+                    _logger.LogWarning("🚫 Invalid start date format: {Date}", date);
+                    return new BadRequestObjectResult("Invalid start date format. Please use YYYY-MM-DD.");
                 }
 
-                _logger.LogInformation("🔍 Searching for appointments on date: {Date}", parsedDate.ToString("yyyy-MM-dd"));
+                DateTime parsedEndDate = parsedStartDate;
+                
+                // Parse end date if provided (for date range)
+                if (isDateRange)
+                {
+                    if (!DateTime.TryParse(endDateParam, out parsedEndDate))
+                    {
+                        _logger.LogWarning("🚫 Invalid end date format: {EndDate}", endDateParam);
+                        return new BadRequestObjectResult("Invalid end date format. Please use YYYY-MM-DD.");
+                    }
+                    
+                    // Validate date range
+                    if (parsedEndDate < parsedStartDate)
+                    {
+                        _logger.LogWarning("🚫 End date cannot be before start date: {StartDate} to {EndDate}", 
+                            parsedStartDate.ToString("yyyy-MM-dd"), parsedEndDate.ToString("yyyy-MM-dd"));
+                        return new BadRequestObjectResult("End date cannot be before start date.");
+                    }
+                    
+                    // Limit range to prevent excessive data requests (max 31 days)
+                    var daysDifference = (parsedEndDate - parsedStartDate).Days;
+                    if (daysDifference > 31)
+                    {
+                        _logger.LogWarning("🚫 Date range too large: {Days} days. Maximum allowed is 31 days.", daysDifference);
+                        return new BadRequestObjectResult("Date range cannot exceed 31 days.");
+                    }
+                }
 
-                // Get appointments for the specified date
-                var startDate = new DateTimeOffset(parsedDate.Year, parsedDate.Month, parsedDate.Day, 0, 0, 0, TimeSpan.Zero);
-                var endDate = startDate.AddDays(1);
+                var dateRangeText = isDateRange 
+                    ? $"{parsedStartDate:yyyy-MM-dd} to {parsedEndDate:yyyy-MM-dd}"
+                    : $"{parsedStartDate:yyyy-MM-dd}";
+                    
+                _logger.LogInformation("🔍 Searching for appointments on {DateRange}", dateRangeText);
 
-                var appointments = await _context.Appointments
+                // Set up date range for query
+                var startDate = new DateTimeOffset(parsedStartDate.Year, parsedStartDate.Month, parsedStartDate.Day, 0, 0, 0, TimeSpan.Zero);
+                var endDate = new DateTimeOffset(parsedEndDate.Year, parsedEndDate.Month, parsedEndDate.Day, 23, 59, 59, 999, TimeSpan.Zero).AddMilliseconds(1);                var appointments = await _context.Appointments
                     .Include(a => a.Client)
                     .Include(a => a.Service)
                         .ThenInclude(s => s.Category)
-                    .Where(a => a.Time >= startDate && a.Time < endDate)
+                    .Where(a => a.Time >= startDate && a.Time <= endDate)
                     .OrderBy(a => a.Time)
                     .Select(a => new
                     {
@@ -105,20 +127,24 @@ namespace API.Functions
                     })
                     .ToListAsync();
                 
-                _logger.LogInformation("✅ Retrieved {Count} appointments for date {Date}", 
-                    appointments.Count, parsedDate.ToString("yyyy-MM-dd"));
+                _logger.LogInformation("✅ Retrieved {Count} appointments for {DateRange}", 
+                    appointments.Count, dateRangeText);
                 
-                return new OkObjectResult(new
+                // Build response object
+                var response = new
                 {
-                    Date = parsedDate.ToString("yyyy-MM-dd"),
+                    StartDate = parsedStartDate.ToString("yyyy-MM-dd"),
+                    EndDate = parsedEndDate.ToString("yyyy-MM-dd"),
+                    IsDateRange = isDateRange,
                     Appointments = appointments,
                     TotalCount = appointments.Count
-                });
-            }
-            // Catch any unexpected exceptions
+                };
+                
+                return new OkObjectResult(response);
+            }            // Catch any unexpected exceptions
             catch (Exception ex)
             {
-                _logger.LogError(ex, "💥 An unexpected error occurred while retrieving appointments for date {Date}!", date);
+                _logger.LogError(ex, "💥 An unexpected error occurred while retrieving appointments for date range {Date}!", date);
                 return new ObjectResult("An unexpected error occurred while retrieving appointments.")
                 {
                     StatusCode = StatusCodes.Status500InternalServerError

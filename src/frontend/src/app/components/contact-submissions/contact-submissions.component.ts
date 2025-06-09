@@ -2,7 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { ContactSubmissionService, ContactSubmission } from '../../services/contact-submission.service';
+import { ContactSubmissionService } from '../../services/contact-submission.service';
+import { ContactSubmission } from '../../models/api-models';
 import { AuthService } from '../../services/auth.service';
 
 @Component({

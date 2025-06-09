@@ -1,0 +1,372 @@
+<main class="admin-appointments-container">
+  <!-- Header Section -->
+  <div class="header-section">
+    <h1>Appointment Management</h1>
+    <div class="stats-bar">
+      <div class="stat-item">
+        <span class="stat-label">{{ isDateRangeMode ? 'Total Appointments' : 'Today\'s Appointments' }}</span>
+        <span class="stat-value">{{ appointments.length }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">{{ isDateRangeMode ? 'Date Range' : 'Selected Date' }}</span>
+        <span class="stat-value">{{ getStatsDateDisplay() }}</span>
+      </div>
+      <div class="stat-item" *ngIf="isDateRangeMode && appointmentResponse?.isDateRange">
+        <span class="stat-label">Days</span>
+        <span class="stat-value">{{ getDateRangeDays() }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab Navigation -->
+  <div class="tab-navigation">
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'calendar'"
+      (click)="switchTab('calendar')">
+      <i class="fas fa-calendar-alt"></i>
+      Calendar View
+    </button>
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'search'"
+      (click)="switchTab('search')">
+      <i class="fas fa-search"></i>
+      Client Search
+    </button>
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'schedule'"
+      (click)="switchTab('schedule')">
+      <i class="fas fa-plus"></i>
+      Schedule New
+    </button>
+  </div>
+
+  <!-- Alert Messages -->
+  <div class="alert alert-success" *ngIf="successMessage">
+    {{ successMessage }}
+  </div>
+  <div class="alert alert-error" *ngIf="errorMessage">
+    {{ errorMessage }}
+  </div>
+
+  <!-- Calendar Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'calendar'">
+    <div class="calendar-controls">
+      <div class="date-mode-toggle">
+        <button 
+          class="toggle-btn" 
+          [class.active]="!isDateRangeMode"
+          (click)="setDateMode(false)">
+          <i class="fas fa-calendar-day"></i>
+          Single Date
+        </button>
+        <button 
+          class="toggle-btn" 
+          [class.active]="isDateRangeMode"
+          (click)="setDateMode(true)">
+          <i class="fas fa-calendar-week"></i>
+          Date Range
+        </button>
+      </div>
+      
+      <div class="date-picker">
+        <div class="date-input-group">
+          <label for="selectedDate">{{ isDateRangeMode ? 'Start Date:' : 'Select Date:' }}</label>
+          <input 
+            type="date" 
+            id="selectedDate" 
+            [(ngModel)]="selectedDate" 
+            (change)="onDateChange()"
+            class="date-input">
+        </div>
+        
+        <div class="date-input-group" *ngIf="isDateRangeMode">
+          <label for="selectedEndDate">End Date:</label>
+          <input 
+            type="date" 
+            id="selectedEndDate" 
+            [(ngModel)]="selectedEndDate" 
+            (change)="onEndDateChange()"
+            [min]="selectedDate"
+            class="date-input">
+        </div>
+      </div>
+    </div>
+
+    <div class="appointments-list" *ngIf="!loading">
+      <div class="list-header">
+        <h3>Appointments for {{ getStatsDateDisplay() }}</h3>
+        <span class="appointment-count">{{ appointments.length }} appointment(s)</span>
+      </div>
+
+      <div class="empty-state" *ngIf="appointments.length === 0">
+        <i class="fas fa-calendar-day"></i>
+        <h4>No appointments scheduled</h4>
+        <p>There are no appointments scheduled for {{ isDateRangeMode ? 'this date range' : 'this date' }}.</p>
+      </div>
+
+      <div class="appointment-card" *ngFor="let appointment of appointments; trackBy: trackByAppointment">
+        <div class="appointment-header">
+          <div class="appointment-time">
+            <i class="fas fa-clock"></i>
+            {{ formatTime(appointment.time) }}
+          </div>
+          <div class="appointment-actions">
+            <button 
+              class="action-btn cancel"
+              (click)="cancelAppointment(appointment.id)"
+              title="Cancel Appointment">
+              <i class="fas fa-times"></i>
+              Cancel
+            </button>
+          </div>
+        </div>
+        
+        <div class="appointment-details">
+          <div class="detail-row">
+            <span class="detail-label">Client:</span>
+            <span class="detail-value">{{ appointment.client.firstName }} {{ appointment.client.lastName }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Email:</span>
+            <span class="detail-value">{{ appointment.client.email }}</span>
+          </div>
+          <div class="detail-row" *ngIf="appointment.client.phoneNumber">
+            <span class="detail-label">Phone:</span>
+            <span class="detail-value">{{ appointment.client.phoneNumber }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Service:</span>
+            <span class="detail-value">{{ getServiceName(appointment.service.id) }}</span>
+          </div>
+          <div class="detail-row">
+            <span class="detail-label">Price:</span>
+            <span class="detail-value">${{ getServicePrice(appointment.service.id) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="loading-spinner" *ngIf="loading">
+      <i class="fas fa-spinner fa-spin"></i>
+      <span>Loading appointments...</span>
+    </div>
+  </div>
+
+  <!-- Client Search Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'search'">
+    <div class="search-section">
+      <div class="search-form">
+        <div class="form-group">
+          <label for="searchEmail">Client Email Address:</label>
+          <div class="search-input-group">
+            <input 
+              type="email" 
+              id="searchEmail" 
+              [(ngModel)]="searchEmail" 
+              placeholder="Enter client email address"
+              class="search-input"
+              (keyup.enter)="searchClientAppointments()">
+            <button 
+              class="search-btn" 
+              (click)="searchClientAppointments()"
+              [disabled]="searchLoading">
+              <i class="fas fa-search" *ngIf="!searchLoading"></i>
+              <i class="fas fa-spinner fa-spin" *ngIf="searchLoading"></i>
+              Search
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="search-results" *ngIf="searchResults">
+        <div class="client-info">
+          <h3>Client Information</h3>
+          <div class="client-details">
+            <div class="detail-row">
+              <span class="detail-label">Name:</span>
+              <span class="detail-value">{{ searchResults.client.firstName }} {{ searchResults.client.lastName }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Email:</span>
+              <span class="detail-value">{{ searchResults.client.email }}</span>
+            </div>
+            <div class="detail-row" *ngIf="searchResults.client.phoneNumber">
+              <span class="detail-label">Phone:</span>
+              <span class="detail-value">{{ searchResults.client.phoneNumber }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Total Appointments:</span>
+              <span class="detail-value">{{ searchResults.totalCount }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="appointment-history">
+          <h3>Appointment History</h3>
+          <div class="empty-state" *ngIf="searchResults.appointments.length === 0">
+            <i class="fas fa-history"></i>
+            <h4>No appointment history</h4>
+            <p>This client has no appointment history.</p>
+          </div>
+
+          <div class="appointment-card" *ngFor="let appointment of searchResults.appointments; trackBy: trackByAppointment">
+            <div class="appointment-header">
+              <div class="appointment-time">
+                <i class="fas fa-clock"></i>
+                {{ formatDate(appointment.time) }} at {{ formatTime(appointment.time) }}
+              </div>
+              <div class="appointment-actions">
+                <button 
+                  class="action-btn cancel"
+                  (click)="cancelAppointment(appointment.id)"
+                  title="Cancel Appointment"
+                  *ngIf="isUpcoming(appointment.time)">
+                  <i class="fas fa-times"></i>
+                  Cancel
+                </button>
+              </div>
+            </div>
+            
+            <div class="appointment-details">
+              <div class="detail-row">
+                <span class="detail-label">Service:</span>
+                <span class="detail-value">{{ getServiceName(appointment.service.id) }}</span>
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">Price:</span>
+                <span class="detail-value">${{ getServicePrice(appointment.service.id) }}</span>
+              </div>
+              <div class="appointment-status" [class]="getAppointmentStatusClass(appointment.time)">
+                {{ getAppointmentStatusText(appointment.time) }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Schedule New Tab -->
+  <div class="tab-content" *ngIf="activeTab === 'schedule'">
+    <div class="schedule-form">
+      <h3>Schedule New Appointment</h3>
+      
+      <form class="appointment-form">
+        <!-- Client Information -->
+        <div class="form-section">
+          <h4>Client Information</h4>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="firstName">First Name *</label>
+              <input 
+                type="text" 
+                id="firstName" 
+                [(ngModel)]="newAppointment.client.firstName" 
+                name="firstName"
+                placeholder="Enter first name"
+                class="form-input">
+            </div>
+            <div class="form-group">
+              <label for="lastName">Last Name *</label>
+              <input 
+                type="text" 
+                id="lastName" 
+                [(ngModel)]="newAppointment.client.lastName" 
+                name="lastName"
+                placeholder="Enter last name"
+                class="form-input">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="email">Email Address *</label>
+              <input 
+                type="email" 
+                id="email" 
+                [(ngModel)]="newAppointment.client.email" 
+                name="email"
+                placeholder="Enter email address"
+                class="form-input">
+            </div>
+            <div class="form-group">
+              <label for="phoneNumber">Phone Number</label>
+              <input 
+                type="tel" 
+                id="phoneNumber" 
+                [(ngModel)]="newAppointment.client.phoneNumber" 
+                name="phoneNumber"
+                placeholder="Enter phone number"
+                class="form-input">
+            </div>
+          </div>
+        </div>
+
+        <!-- Appointment Details -->
+        <div class="form-section">
+          <h4>Appointment Details</h4>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="serviceId">Service *</label>
+              <select 
+                id="serviceId" 
+                [(ngModel)]="newAppointment.serviceId" 
+                name="serviceId"
+                class="form-select">
+                <option value="0">-- Select a Service --</option>
+                <option *ngFor="let service of services" [value]="service.id">
+                  {{ service.name }} - ${{ service.price }}
+                </option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="appointmentDate">Date *</label>
+              <input 
+                type="date" 
+                id="appointmentDate" 
+                [(ngModel)]="newAppointment.date" 
+                name="appointmentDate"
+                class="form-input">
+            </div>
+            <div class="form-group">
+              <label for="appointmentTime">Time *</label>
+              <select 
+                id="appointmentTime" 
+                [(ngModel)]="newAppointment.time" 
+                name="appointmentTime"
+                class="form-select">
+                <option value="">-- Select a Time --</option>
+                <option *ngFor="let time of availableTimes" [value]="time">
+                  {{ time }}
+                </option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+          <button 
+            type="button" 
+            class="btn btn-secondary"
+            (click)="resetNewAppointmentForm()">
+            Reset Form
+          </button>
+          <button 
+            type="button" 
+            class="btn btn-primary"
+            (click)="scheduleNewAppointment()"
+            [disabled]="scheduleLoading">
+            <i class="fas fa-calendar-plus" *ngIf="!scheduleLoading"></i>
+            <i class="fas fa-spinner fa-spin" *ngIf="scheduleLoading"></i>
+            {{ scheduleLoading ? 'Scheduling...' : 'Schedule Appointment' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</main>
