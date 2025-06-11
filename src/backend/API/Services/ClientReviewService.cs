@@ -194,9 +194,9 @@ namespace API.Services
                     return false;
                 }
 
-                // Check for existing ban flags
+                // Check for existing flags (any status) - we'll update the most recent one
                 var existingFlag = await _context.ClientReviewFlags
-                    .Where(rf => rf.ClientId == clientId && (rf.Status == "Banned" || rf.Status == "Rejected"))
+                    .Where(rf => rf.ClientId == clientId)
                     .OrderByDescending(rf => rf.FlagDate)
                     .FirstOrDefaultAsync();
 
@@ -213,21 +213,41 @@ namespace API.Services
                 }
                 else if (existingFlag != null && !isBanned)
                 {
-                    // Update existing flag to approved status to unban
-                    existingFlag.Status = "Approved";
-                    existingFlag.ReviewedBy = adminName ?? "Admin";
-                    existingFlag.ReviewDate = DateTimeOffset.UtcNow;
-                    existingFlag.AdminComments = comments ?? "Ban removed by administrator";
-                    
-                    _logger.LogInformation("Removed ban for client ID {ClientId}", clientId);
+                    // Only unban if the existing flag is actually banned
+                    if (existingFlag.Status == "Banned")
+                    {
+                        existingFlag.Status = "Approved";
+                        existingFlag.ReviewedBy = adminName ?? "Admin";
+                        existingFlag.ReviewDate = DateTimeOffset.UtcNow;
+                        existingFlag.AdminComments = comments ?? "Ban removed by administrator";
+                        
+                        _logger.LogInformation("Removed ban for client ID {ClientId}", clientId);
+                    }
+                    else
+                    {
+                        _logger.LogInformation("Client ID {ClientId} is not currently banned (status: {Status})", clientId, existingFlag.Status);
+                        return true; // Not an error, just nothing to do
+                    }
                 }
                 else if (isBanned)
                 {
+                    // Find any existing appointment for this client to satisfy the foreign key constraint
+                    var clientAppointment = await _context.Appointments
+                        .Where(a => a.ClientId == clientId)
+                        .OrderByDescending(a => a.Time)
+                        .FirstOrDefaultAsync();
+
+                    if (clientAppointment == null)
+                    {
+                        _logger.LogWarning("Cannot create ban flag for client ID {ClientId} - no appointments found", clientId);
+                        return false;
+                    }
+
                     // Create new ban flag
                     var reviewFlag = new ClientReviewFlag
                     {
                         ClientId = clientId,
-                        AppointmentId = 0, // No specific appointment for manual bans
+                        AppointmentId = clientAppointment.Id, // Use existing appointment to satisfy FK constraint
                         FlagReason = reason ?? "Manual ban by administrator",
                         FlagDate = DateTimeOffset.UtcNow,
                         Status = "Banned",
@@ -238,7 +258,7 @@ namespace API.Services
                     };
 
                     _context.ClientReviewFlags.Add(reviewFlag);
-                    _logger.LogInformation("Created new ban flag for client ID {ClientId}", clientId);
+                    _logger.LogInformation("Created new ban flag for client ID {ClientId} using appointment ID {AppointmentId}", clientId, clientAppointment.Id);
                 }
                 else
                 {

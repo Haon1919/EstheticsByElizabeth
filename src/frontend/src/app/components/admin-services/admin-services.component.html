@@ -1,0 +1,252 @@
+<main class="admin-services-container">
+  <!-- Header Section -->
+  <div class="header-section" *ngIf="!showAddForm">
+    <h1>Service Management</h1>
+    <div class="header-actions">
+      <button class="btn btn-primary" (click)="showAddServiceForm()" [disabled]="loading">
+        <i class="fas fa-plus"></i>
+        Add New Service
+      </button>
+    </div>
+  </div>
+
+  <!-- Alert Messages -->
+  <div class="alert alert-success" *ngIf="successMessage">
+    <i class="fas fa-check-circle"></i>
+    {{ successMessage }}
+  </div>
+  <div class="alert alert-error" *ngIf="errorMessage">
+    <i class="fas fa-exclamation-circle"></i>
+    {{ errorMessage }}
+  </div>
+
+  <!-- Filters Section -->
+  <div class="filters-section" *ngIf="!showAddForm">
+    <div class="filters-row">
+      <div class="filter-group">
+        <label for="categoryFilter">Filter by Category:</label>
+        <select 
+          id="categoryFilter" 
+          [(ngModel)]="selectedCategoryFilter" 
+          (change)="onCategoryFilterChange()"
+          class="filter-select">
+          <option [value]="null">All Categories</option>
+          <option *ngFor="let category of categories" [value]="category.id">
+            {{ category.name }}
+          </option>
+        </select>
+      </div>
+      
+      <div class="filter-group">
+        <label for="searchInput">Search Services:</label>
+        <input 
+          type="text" 
+          id="searchInput"
+          [(ngModel)]="searchQuery" 
+          (input)="onSearchChange()"
+          placeholder="Search by name, description, or category..."
+          class="search-input">
+      </div>
+      
+      <div class="filter-button-wrapper">
+        <button class="btn btn-outline" (click)="clearFilters()">
+          <i class="fas fa-times"></i>
+          Clear Filters
+        </button>
+      </div>
+    </div>
+    
+    <div class="results-summary">
+      Showing {{ filteredServices.length }} of {{ services.length }} services
+    </div>
+  </div>
+
+  <div class="form-section" *ngIf="showAddForm">
+    <div class="form-header">
+      <h2>{{ isEditMode ? 'Edit Service' : 'Add New Service' }}</h2>
+      <div class="form-header-actions">
+        <button type="submit" form="serviceForm" class="btn btn-primary" [disabled]="loading || serviceForm.invalid">
+          <i class="fas fa-spinner fa-spin" *ngIf="loading"></i>
+          <i class="fas fa-save" *ngIf="!loading"></i>
+          {{ loading ? 'Saving...' : (isEditMode ? 'Update Service' : 'Create Service') }}
+        </button>
+        <button class="btn btn-outline" (click)="cancelForm()">
+          <i class="fas fa-times"></i>
+          Cancel
+        </button>
+      </div>
+    </div>
+    
+    <form id="serviceForm" [formGroup]="serviceForm" (ngSubmit)="submitForm()" class="service-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="name">Service Name *</label>
+          <input 
+            type="text" 
+            id="name" 
+            formControlName="name"
+            class="form-input"
+            [class.is-invalid]="serviceForm.get('name')?.invalid && serviceForm.get('name')?.touched"
+            placeholder="Enter service name">
+          <div class="invalid-feedback" *ngIf="serviceForm.get('name')?.invalid && serviceForm.get('name')?.touched">
+            <span *ngIf="serviceForm.get('name')?.errors?.['required']">Service name is required</span>
+            <span *ngIf="serviceForm.get('name')?.errors?.['maxlength']">Service name cannot exceed 255 characters</span>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="categoryId">Category *</label>
+          <select 
+            id="categoryId" 
+            formControlName="categoryId"
+            class="form-select"
+            [class.is-invalid]="serviceForm.get('categoryId')?.invalid && serviceForm.get('categoryId')?.touched">
+            <option value="">Select a category</option>
+            <option *ngFor="let category of categories" [value]="category.id">
+              {{ category.name }}
+            </option>
+          </select>
+          <div class="invalid-feedback" *ngIf="serviceForm.get('categoryId')?.invalid && serviceForm.get('categoryId')?.touched">
+            Please select a category
+          </div>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="description">Description</label>
+        <textarea 
+          id="description" 
+          formControlName="description"
+          class="form-textarea"
+          [class.is-invalid]="serviceForm.get('description')?.invalid && serviceForm.get('description')?.touched"
+          placeholder="Enter service description"
+          rows="3"></textarea>
+        <div class="invalid-feedback" *ngIf="serviceForm.get('description')?.invalid && serviceForm.get('description')?.touched">
+          <span *ngIf="serviceForm.get('description')?.errors?.['maxlength']">Description cannot exceed 2000 characters</span>
+        </div>
+      </div>
+      
+      <div class="form-row">
+        <div class="form-group">
+          <label for="price">Price ($)</label>
+          <input 
+            type="number" 
+            id="price" 
+            formControlName="price"
+            class="form-input"
+            [class.is-invalid]="serviceForm.get('price')?.invalid && serviceForm.get('price')?.touched"
+            placeholder="0.00"
+            step="0.01"
+            min="0"
+            max="9999.99">
+          <div class="invalid-feedback" *ngIf="serviceForm.get('price')?.invalid && serviceForm.get('price')?.touched">
+            <span *ngIf="serviceForm.get('price')?.errors?.['min']">Price must be 0 or greater</span>
+            <span *ngIf="serviceForm.get('price')?.errors?.['max']">Price cannot exceed $9999.99</span>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label for="duration">Duration (minutes)</label>
+          <input 
+            type="number" 
+            id="duration" 
+            formControlName="duration"
+            class="form-input"
+            [class.is-invalid]="serviceForm.get('duration')?.invalid && serviceForm.get('duration')?.touched"
+            placeholder="60"
+            min="1"
+            max="480">
+          <div class="invalid-feedback" *ngIf="serviceForm.get('duration')?.invalid && serviceForm.get('duration')?.touched">
+            <span *ngIf="serviceForm.get('duration')?.errors?.['min']">Duration must be at least 1 minute</span>
+            <span *ngIf="serviceForm.get('duration')?.errors?.['max']">Duration cannot exceed 480 minutes (8 hours)</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="website">Website URL</label>
+        <input 
+          type="url" 
+          id="website" 
+          formControlName="website"
+          class="form-input"
+          [class.is-invalid]="serviceForm.get('website')?.invalid && serviceForm.get('website')?.touched"
+          placeholder="https://example.com">
+        <div class="invalid-feedback" *ngIf="serviceForm.get('website')?.invalid && serviceForm.get('website')?.touched">
+          <span *ngIf="serviceForm.get('website')?.errors?.['pattern']">Please enter a valid URL starting with http:// or https://</span>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Services List -->
+  <div class="services-section" *ngIf="!showAddForm">
+    <div class="loading-spinner" *ngIf="loading">
+      <i class="fas fa-spinner fa-spin"></i>
+      <span>Loading services...</span>
+    </div>
+
+    <div class="services-list" *ngIf="!loading">
+      <!-- Group by category -->
+      <div class="category-group" *ngFor="let category of getUniqueCategories()">
+        <h3 class="category-header">
+          <i class="fas fa-tag"></i>
+          {{ category.name }}
+          <span class="service-count">({{ getServicesByCategory(category.id).length }})</span>
+        </h3>
+        
+        <div class="services-grid">
+          <div class="service-card" *ngFor="let service of getServicesByCategory(category.id)">
+            <div class="service-header">
+              <h4 class="service-name">{{ service.name }}</h4>
+              <div class="service-actions">
+                <button class="action-btn edit" (click)="editService(service)" title="Edit Service">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="action-btn delete" (click)="deleteService(service)" title="Delete Service">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </div>
+            
+            <div class="service-details">
+              <p class="service-description" *ngIf="service.description">
+                {{ service.description }}
+              </p>
+              <p class="service-description no-description" *ngIf="!service.description">
+                No description provided
+              </p>
+              
+              <div class="service-meta">
+                <div class="meta-item">
+                  <i class="fas fa-dollar-sign"></i>
+                  <span>{{ formatPrice(service.price) }}</span>
+                </div>
+                <div class="meta-item" *ngIf="service.duration">
+                  <i class="fas fa-clock"></i>
+                  <span>{{ formatDuration(service.duration) }}</span>
+                </div>
+                <div class="meta-item" *ngIf="service.website">
+                  <i class="fas fa-external-link-alt"></i>
+                  <a [href]="service.website" target="_blank" rel="noopener noreferrer">Website</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- No services message -->
+      <div class="no-services" *ngIf="filteredServices.length === 0 && !loading">
+        <i class="fas fa-spa"></i>
+        <h3>No services found</h3>
+        <p *ngIf="searchQuery || selectedCategoryFilter">Try adjusting your filters or search criteria.</p>
+        <p *ngIf="!searchQuery && !selectedCategoryFilter">No services have been created yet.</p>
+        <button class="btn btn-primary" (click)="showAddServiceForm()">
+          <i class="fas fa-plus"></i>
+          Add Your First Service
+        </button>
+      </div>
+    </div>
+  </div>
+</main>

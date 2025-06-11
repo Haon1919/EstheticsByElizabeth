@@ -18,6 +18,7 @@ namespace API.Data // Adjust namespace
         public DbSet<Appointment> Appointments { get; set; } = null!;
         public DbSet<ClientReviewFlag> ClientReviewFlags { get; set; } = null!;
         public DbSet<ContactSubmission> ContactSubmissions { get; set; } = null!;
+        public DbSet<GalleryImage> GalleryImages { get; set; } = null!;
 
         // Optional: Configure model details using Fluent API (alternative/complement to Data Annotations)
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -31,6 +32,7 @@ namespace API.Data // Adjust namespace
             modelBuilder.Entity<Appointment>().ToTable("appointments");
             modelBuilder.Entity<ClientReviewFlag>().ToTable("clientreviewflags");
             modelBuilder.Entity<ContactSubmission>().ToTable("contactsubmissions");
+            modelBuilder.Entity<GalleryImage>().ToTable("galleryimages");
 
             // Example: Configuring UNIQUE constraints using Fluent API (more robust than annotations)
             modelBuilder.Entity<Client>()
@@ -72,6 +74,28 @@ namespace API.Data // Adjust namespace
                 .WithMany()
                 .HasForeignKey(rf => rf.AppointmentId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            // Configure GalleryImage column mappings for PostgreSQL case-sensitivity
+            modelBuilder.Entity<GalleryImage>()
+                .Property(g => g.Id).HasColumnName("id");
+            modelBuilder.Entity<GalleryImage>()
+                .Property(g => g.Src).HasColumnName("src");
+            modelBuilder.Entity<GalleryImage>()
+                .Property(g => g.Alt).HasColumnName("alt");
+            modelBuilder.Entity<GalleryImage>()
+                .Property(g => g.Category).HasColumnName("category");
+            modelBuilder.Entity<GalleryImage>()
+                .Property(g => g.Title).HasColumnName("title");
+            modelBuilder.Entity<GalleryImage>()
+                .Property(g => g.Description).HasColumnName("description");
+            modelBuilder.Entity<GalleryImage>()
+                .Property(g => g.IsActive).HasColumnName("isactive");
+            modelBuilder.Entity<GalleryImage>()
+                .Property(g => g.SortOrder).HasColumnName("sortorder");
+            modelBuilder.Entity<GalleryImage>()
+                .Property(g => g.UploadedAt).HasColumnName("uploadedat");
+            modelBuilder.Entity<GalleryImage>()
+                .Property(g => g.UpdatedAt).HasColumnName("updatedat");
         }
     }
 }

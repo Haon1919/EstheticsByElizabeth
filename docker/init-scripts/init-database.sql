@@ -113,6 +113,28 @@ CREATE INDEX IF NOT EXISTS idx_contactsubmissions_status ON ContactSubmissions (
 CREATE INDEX IF NOT EXISTS idx_contactsubmissions_email ON ContactSubmissions (Email);
 CREATE INDEX IF NOT EXISTS idx_contactsubmissions_interestedservice ON ContactSubmissions (InterestedService);
 
+-- Part 3: Create GalleryImages table for admin gallery management
+
+-- Create the GalleryImages table for PostgreSQL
+CREATE TABLE IF NOT EXISTS GalleryImages (
+    Id SERIAL PRIMARY KEY,              -- Use SERIAL for auto-incrementing PK in PostgreSQL
+    Src VARCHAR(500) NOT NULL,          -- Image source URL
+    Alt VARCHAR(255) NOT NULL,          -- Alt text for accessibility
+    Category VARCHAR(50) NOT NULL,      -- Category for filtering (e.g., 'facial', 'before-after', 'facility')
+    Title VARCHAR(255),                 -- Optional title
+    Description VARCHAR(1000),          -- Optional description
+    IsActive BOOLEAN NOT NULL DEFAULT TRUE,  -- Whether image is publicly visible
+    SortOrder INT NOT NULL DEFAULT 0,   -- Order for display
+    UploadedAt TIMESTAMPTZ NOT NULL DEFAULT NOW(),  -- Upload timestamp
+    UpdatedAt TIMESTAMPTZ               -- Last update timestamp
+);
+
+-- Add indexes for GalleryImages table
+CREATE INDEX IF NOT EXISTS idx_galleryimages_category ON GalleryImages (Category);
+CREATE INDEX IF NOT EXISTS idx_galleryimages_isactive ON GalleryImages (IsActive);
+CREATE INDEX IF NOT EXISTS idx_galleryimages_sortorder ON GalleryImages (SortOrder);
+CREATE INDEX IF NOT EXISTS idx_galleryimages_uploadedat ON GalleryImages (UploadedAt);
+
 -- Part 4: Seed data from InitialSetup.sql
 
 -- Seed Categories
@@ -142,6 +164,114 @@ INSERT INTO Services (Id, CategoryId, Name, Description, Duration, Price, Websit
 (402, 4, 'Bioelements', 'A professional skincare brand offering customized skincare solutions for all skin types.', NULL, NULL, 'https://www.bioelements.com/')
 ON CONFLICT (Id) DO NOTHING; -- Avoid errors if IDs already exist
 
+-- Part 5: Seed test data for client review system testing
+-- Test clients with different review states for comprehensive testing:
+-- ID 7 (Sarah Johnson): Has pending review flag
+-- ID 8 (Emma Davis): Has approved review flag  
+-- ID 10 (Lisa Brown): No review flags
+-- ID 11 (Michael Wilson): Has rejected review flag
+-- ID 12 (Marcus Thompson): Has banned review flags (multiple)
+-- ID 15 (David Anderson): No review flags - clean state
+
+-- Seed test clients
+INSERT INTO Clients (Id, FirstName, LastName, Email, PhoneNumber) VALUES
+(2, 'John', 'Doe', 'john.doe@email.com', '555-0101'),
+(3, 'Jane', 'Smith', 'jane.smith@email.com', '555-0102'),
+(4, 'Mike', 'Johnson', 'mike.johnson@email.com', '555-0103'),
+(5, 'Sarah', 'Wilson', 'sarah.wilson@email.com', '555-0104'),
+(6, 'Bob', 'Brown', 'bob.brown@email.com', '555-0105'),
+(7, 'Sarah', 'Johnson', 'sarah.johnson@email.com', '555-123-4567'),
+(8, 'Emma', 'Davis', 'emma.davis@email.com', '555-987-6543'),
+(10, 'Lisa', 'Brown', 'lisa.brown@email.com', '555-321-0987'),
+(11, 'Michael', 'Wilson', 'michael.wilson@email.com', '555-456-7890'),
+-- Additional test clients for different review states
+(12, 'Marcus', 'Thompson', 'marcus.thompson@email.com', '555-000-0001'),
+(15, 'David', 'Anderson', 'david.anderson@email.com', '555-000-0004')
+ON CONFLICT (Id) DO NOTHING;
+
+-- Seed test appointments
+INSERT INTO Appointments (Id, ClientId, ServiceId, Time) VALUES
+(2, 7, 101, '2025-06-15 10:00:00+00'),
+(3, 7, 102, '2025-06-15 14:00:00+00'),
+(4, 8, 201, '2025-06-16 11:00:00+00'),
+(5, 8, 202, '2025-06-16 11:30:00+00'),
+(7, 10, 102, '2025-06-18 13:00:00+00'),
+(8, 11, 101, '2025-06-20 10:00:00+00'),
+(9, 11, 202, '2025-06-20 14:00:00+00'),
+-- Additional appointments for test clients with different review states
+(10, 12, 101, '2025-06-17 09:00:00+00'), -- Marcus Thompson appointment
+(11, 12, 201, '2025-06-17 10:00:00+00'), -- Marcus Thompson second appointment
+(14, 15, 201, '2025-06-22 16:00:00+00')  -- Clean client appointment
+ON CONFLICT (Id) DO NOTHING;
+
+-- Seed test client review flags
+INSERT INTO ClientReviewFlags (Id, ClientId, AppointmentId, FlagReason, FlagDate, ReviewedBy, ReviewDate, Status, AdminComments, AutoFlags) VALUES
+-- Existing test data
+(2, 7, 3, 'Multiple bookings detected: Client attempted to book 2 appointments on 2025-06-15', '2025-06-10 14:23:34.120134+00', NULL, NULL, 'Pending', NULL, 1),
+(3, 8, 5, 'Multiple bookings detected: Client attempted to book 2 appointments on 2025-06-16', '2025-06-10 14:23:58.077211+00', 'Admin', '2025-06-10 14:34:00.317465+00', 'Approved', 'We talked and she is ok', 1),
+(7, 11, 9, 'Multiple bookings detected: Client attempted to book 2 appointments on 2025-06-20', '2025-06-10 14:45:32.482941+00', 'Admin', '2025-06-10 15:02:31.89886+00', 'Rejected', 'felt mean', 1),
+-- Additional test data for different review states
+(10, 12, 10, 'Inappropriate behavior during previous appointment', '2025-06-09 10:00:00+00', 'Admin', '2025-06-09 10:30:00+00', 'Banned', 'Client was rude to staff and refused to follow safety protocols', 1)
+ON CONFLICT (Id) DO NOTHING;
+
+-- Seed test contact submissions
+INSERT INTO ContactSubmissions (Id, Name, Email, Phone, Subject, Message, InterestedService, PreferredContactMethod, SubmittedAt, Status, ReadAt, RespondedAt, AdminNotes) VALUES
+-- Unread submissions (recent)
+(1, 'Jessica Williams', 'jessica.williams@email.com', '555-101-2345', 'Facial Treatment Inquiry', 'Hi! I''m interested in learning more about your signature facial treatments. I have sensitive skin and would like to know what options you recommend. Also, do you offer consultations?', 'Signature Facial', 'Email', '2025-06-10 09:30:00+00', 'unread', NULL, NULL, NULL),
+
+(2, 'Robert Chen', 'robert.chen@gmail.com', '555-202-3456', 'Booking Question', 'Hello, I''m trying to book an appointment for my wife for a dermaplane treatment. What''s your availability like for next week? She prefers morning appointments if possible.', 'Dermaplane + mini facial', 'Phone', '2025-06-10 11:15:00+00', 'unread', NULL, NULL, NULL),
+
+(3, 'Amanda Rodriguez', 'amanda.r.wellness@yahoo.com', NULL, 'Skincare Consultation', 'I''ve been struggling with acne for years and heard great things about your treatments. Could we schedule a consultation to discuss the best approach for my skin type? I''m particularly interested in chemical peels.', 'Chemical peels', 'Email', '2025-06-09 16:45:00+00', 'unread', NULL, NULL, NULL),
+
+-- Read but not responded
+(4, 'Michael Thompson', 'mthompson.business@outlook.com', '555-303-4567', 'Corporate Wellness Program', 'We''re looking to set up a corporate wellness program for our employees and would like to include facial treatments. Could you provide information about group bookings and potential discounts for bulk appointments?', NULL, 'Email', '2025-06-08 14:20:00+00', 'read', '2025-06-09 08:30:00+00', NULL, 'Interesting opportunity - need to discuss pricing structure'),
+
+(5, 'Sophie Turner', 'sophie.turner@email.com', '555-404-5678', 'Wedding Prep Services', 'I''m getting married in 3 months and want to start a skincare routine to look my best. What would you recommend for bridal prep? I''m thinking about regular facials leading up to the big day.', 'Signature Facial', 'Phone', '2025-06-07 10:30:00+00', 'read', '2025-06-08 09:15:00+00', NULL, 'Perfect candidate for our bridal package - follow up needed'),
+
+-- Responded submissions
+(6, 'Carlos Martinez', 'carlos.martinez@email.com', '555-505-6789', 'Back Facial Questions', 'I work out regularly and have been getting breakouts on my back. Do your back facial treatments help with this? What''s the process like and how many sessions would I need?', 'Back Facial', 'Email', '2025-06-05 13:45:00+00', 'responded', '2025-06-05 15:20:00+00', '2025-06-06 10:30:00+00', 'Responded with detailed treatment plan and pricing. Scheduled consultation for June 12th.'),
+
+(7, 'Patricia Davis', 'patricia.davis@email.com', '555-606-7890', 'Product Recommendations', 'After my recent facial, you mentioned some SkinCeuticals products that would be good for my skin. Could you email me the specific product names and where I can purchase them?', NULL, 'Email', '2025-06-03 11:20:00+00', 'responded', '2025-06-03 14:15:00+00', '2025-06-03 16:45:00+00', 'Sent product recommendations and provided purchase links. Client very satisfied.'),
+
+(8, 'Daniel Kim', 'daniel.kim@email.com', '555-707-8901', 'Men''s Skincare Services', 'Do you offer services specifically designed for men? I''m new to professional skincare and not sure what would be appropriate. Any guidance would be appreciated.', 'Signature Facial', 'Phone', '2025-06-01 09:15:00+00', 'responded', '2025-06-01 11:30:00+00', '2025-06-01 14:20:00+00', 'Explained our gender-neutral approach and customized treatments. Booked appointment for June 15th.'),
+
+-- Older submissions for historical data
+(9, 'Linda Wilson', 'linda.wilson@email.com', '555-808-9012', 'Eyebrow Waxing Appointment', 'I''d like to schedule regular eyebrow waxing appointments. What''s your availability like and do you offer any packages for regular clients?', 'Eyebrow wax', 'Email', '2025-05-28 16:30:00+00', 'responded', '2025-05-29 09:00:00+00', '2025-05-29 11:15:00+00', 'Set up monthly standing appointment. Client very happy with service.'),
+
+(10, 'James Rodriguez', 'james.rodriguez@email.com', '555-909-0123', 'Gift Certificate Inquiry', 'I want to buy a gift certificate for my mother''s birthday. She loves facials and I think she''d really enjoy your signature treatment. How do I go about purchasing one?', 'Signature Facial', 'Phone', '2025-05-25 12:45:00+00', 'responded', '2025-05-26 08:20:00+00', '2025-05-26 10:30:00+00', 'Helped set up gift certificate. Mother booked appointment and loved the service!')
+ON CONFLICT (Id) DO NOTHING;
+
+-- Part 7: Seed sample gallery images for testing admin gallery functionality
+
+INSERT INTO GalleryImages (Id, Src, Alt, Category, Title, Description, IsActive, SortOrder, UploadedAt) VALUES
+-- Facial treatment images
+(1, '/assets/images/gallery/facial-treatment-1.jpg', 'Client receiving signature facial treatment', 'facial', 'Signature Facial Treatment', 'Our most popular facial treatment in progress, showcasing our serene treatment room environment.', true, 1, '2025-01-01 10:00:00+00'),
+(2, '/assets/images/gallery/facial-treatment-2.jpg', 'Relaxing facial mask application', 'facial', 'Custom Facial Mask', 'Applying a customized facial mask tailored to specific skin needs.', true, 2, '2025-01-01 11:00:00+00'),
+(3, '/assets/images/gallery/dermaplane-treatment.jpg', 'Dermaplaning procedure in action', 'facial', 'Dermaplaning Treatment', 'Professional dermaplaning to remove dead skin cells and achieve smooth, radiant skin.', true, 3, '2025-01-01 12:00:00+00'),
+
+-- Before and after results
+(4, '/assets/images/gallery/before-after-acne-1.jpg', 'Before and after acne treatment results', 'before-after', 'Acne Treatment Results', 'Dramatic improvement in skin clarity after a series of customized facial treatments.', true, 1, '2025-01-02 10:00:00+00'),
+(5, '/assets/images/gallery/before-after-aging-1.jpg', 'Before and after anti-aging treatment', 'before-after', 'Anti-Aging Results', 'Visible reduction in fine lines and improved skin texture after specialized treatments.', true, 2, '2025-01-02 11:00:00+00'),
+(6, '/assets/images/gallery/before-after-hyperpigmentation.jpg', 'Before and after hyperpigmentation treatment', 'before-after', 'Hyperpigmentation Treatment', 'Significant improvement in skin tone and reduction of dark spots.', true, 3, '2025-01-02 12:00:00+00'),
+
+-- Facility and environment photos
+(7, '/assets/images/gallery/treatment-room-1.jpg', 'Peaceful treatment room with soft lighting', 'facility', 'Treatment Room', 'Our tranquil treatment rooms designed for ultimate relaxation and comfort.', true, 1, '2025-01-03 10:00:00+00'),
+(8, '/assets/images/gallery/reception-area.jpg', 'Welcoming reception and waiting area', 'facility', 'Reception Area', 'Modern and welcoming reception area where your spa experience begins.', true, 2, '2025-01-03 11:00:00+00'),
+(9, '/assets/images/gallery/product-display.jpg', 'Professional skincare products on display', 'facility', 'Professional Products', 'High-quality skincare products from trusted brands like SkinCeuticals and Bioelements.', true, 3, '2025-01-03 12:00:00+00'),
+
+-- Waxing services
+(10, '/assets/images/gallery/eyebrow-waxing.jpg', 'Precision eyebrow waxing service', 'waxing', 'Eyebrow Waxing', 'Expert eyebrow shaping for perfectly defined brows.', true, 1, '2025-01-04 10:00:00+00'),
+(11, '/assets/images/gallery/waxing-setup.jpg', 'Clean waxing station setup', 'waxing', 'Professional Waxing Setup', 'Hygienic and professional waxing environment ensuring client comfort and safety.', true, 2, '2025-01-04 11:00:00+00'),
+
+-- Seasonal/promotional content (some inactive for rotation)
+(12, '/assets/images/gallery/summer-glow-promo.jpg', 'Summer skincare promotion image', 'promotional', 'Summer Glow Package', 'Special summer skincare package for radiant, sun-ready skin.', false, 1, '2025-01-05 10:00:00+00'),
+(13, '/assets/images/gallery/bridal-package.jpg', 'Bridal skincare preparation', 'promotional', 'Bridal Skincare Package', 'Complete bridal preparation skincare routine for your special day.', true, 1, '2025-01-05 11:00:00+00'),
+
+-- Educational content
+(14, '/assets/images/gallery/skincare-consultation.jpg', 'Skincare consultation in progress', 'educational', 'Skincare Consultation', 'Personalized skincare analysis and treatment planning session.', true, 1, '2025-01-06 10:00:00+00'),
+(15, '/assets/images/gallery/product-education.jpg', 'Client learning about skincare products', 'educational', 'Product Education', 'Learning about proper skincare routine and product application techniques.', true, 2, '2025-01-06 11:00:00+00')
+ON CONFLICT (Id) DO NOTHING;
+
 -- Reset sequences to proper values
 SELECT setval(pg_get_serial_sequence('categories', 'id'), (SELECT COALESCE(MAX(id), 1) FROM categories), true);
 SELECT setval(pg_get_serial_sequence('services', 'id'), (SELECT COALESCE(MAX(id), 1) FROM services), true);
@@ -149,3 +279,4 @@ SELECT setval(pg_get_serial_sequence('clients', 'id'), (SELECT COALESCE(MAX(id),
 SELECT setval(pg_get_serial_sequence('appointments', 'id'), (SELECT COALESCE(MAX(id), 1) FROM appointments), true);
 SELECT setval(pg_get_serial_sequence('clientreviewflags', 'id'), (SELECT COALESCE(MAX(id), 1) FROM clientreviewflags), true);
 SELECT setval(pg_get_serial_sequence('contactsubmissions', 'id'), (SELECT COALESCE(MAX(id), 1) FROM contactsubmissions), true);
+SELECT setval(pg_get_serial_sequence('galleryimages', 'id'), (SELECT COALESCE(MAX(id), 1) FROM galleryimages), true);

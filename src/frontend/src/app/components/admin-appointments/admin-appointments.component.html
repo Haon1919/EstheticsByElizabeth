@@ -205,20 +205,50 @@
         </div>
 
         <div class="appointment-history">
-          <h3>Appointment History</h3>
-          <div class="empty-state" *ngIf="searchResults.appointments.length === 0">
+          <div class="history-header">
+            <h3>Appointment History</h3>
+            <div class="service-filter" *ngIf="searchResults && searchResults.appointments.length > 0">
+              <label for="serviceFilter">Filter by Service:</label>
+              <select 
+                id="serviceFilter" 
+                [(ngModel)]="selectedServiceFilter" 
+                (change)="onServiceFilterChange()"
+                class="form-select">
+                <option value="0">All Services</option>
+                <option *ngFor="let service of uniqueServicesInHistory" [value]="service.id">
+                  {{ service.name }}
+                </option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="empty-state" *ngIf="filteredAppointments.length === 0 && searchResults.appointments.length === 0">
             <i class="fas fa-history"></i>
             <h4>No appointment history</h4>
             <p>This client has no appointment history.</p>
           </div>
 
-          <div class="appointment-card" *ngFor="let appointment of searchResults.appointments; trackBy: trackByAppointment">
+          <div class="empty-state" *ngIf="filteredAppointments.length === 0 && searchResults.appointments.length > 0">
+            <i class="fas fa-filter"></i>
+            <h4>No appointments for selected service</h4>
+            <p>This client has no appointments for the selected service type.</p>
+          </div>
+
+          <div class="appointment-card" *ngFor="let appointment of filteredAppointments; trackBy: trackByAppointment">
             <div class="appointment-header">
               <div class="appointment-time">
                 <i class="fas fa-clock"></i>
                 {{ formatDate(appointment.time) }} at {{ formatTime(appointment.time) }}
               </div>
               <div class="appointment-actions">
+                <button 
+                  class="action-btn rebook"
+                  (click)="rebookAppointment(appointment)"
+                  title="Re-book this service"
+                  *ngIf="isMostRecentForService(appointment)">
+                  <i class="fas fa-redo"></i>
+                  Re-book
+                </button>
                 <button 
                   class="action-btn cancel"
                   (click)="cancelAppointment(appointment.id)"

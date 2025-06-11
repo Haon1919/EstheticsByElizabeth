@@ -46,6 +46,7 @@ export interface Service {
   price?: number;
   duration?: number;
   category: Category;
+  website?: string;
 }
 
 export interface CreateAppointmentRequest {
@@ -129,4 +130,126 @@ export interface ContactSubmissionsParams {
   pageSize?: number;
   status?: 'unread' | 'read' | 'responded';
   search?: string;
+}
+
+// Client Review and Ban Management interfaces
+export interface ClientReviewFlag {
+  id: number;
+  clientId: number;
+  appointmentId: number;
+  flagReason: string;
+  flagDate: string;
+  status: 'Pending' | 'Approved' | 'Rejected' | 'Banned';
+  reviewDate?: string;
+  reviewedBy?: string;
+  adminComments?: string;
+  autoFlags: number;
+  client: Client;
+  appointment: {
+    id: number;
+    time: string;
+    serviceId: number;
+  };
+}
+
+export interface UpdateReviewFlagRequest {
+  status: 'Pending' | 'Approved' | 'Rejected' | 'Banned';
+  reviewedBy?: string;
+  adminComments?: string;
+}
+
+export interface BanClientRequest {
+  isBanned: boolean;
+  reason?: string;
+  adminName?: string;
+  comments?: string;
+}
+
+export interface ClientManagementResponse {
+  success: boolean;
+  data: ClientReviewFlag[];
+  totalCount: number;
+  filters: {
+    status?: string;
+    clientId?: string;
+  };
+}
+
+export interface ClientBanResponse {
+  success: boolean;
+  message: string;
+  unbannedFlags?: number;
+}
+
+// Service Management interfaces for admin panel
+export interface CreateServiceRequest {
+  name: string;
+  description?: string;
+  price?: number;
+  duration?: number;
+  categoryId: number;
+  website?: string;
+}
+
+export interface UpdateServiceRequest {
+  name?: string;
+  description?: string;
+  price?: number;
+  duration?: number;
+  categoryId?: number;
+  website?: string;
+}
+
+// Gallery Management interfaces for admin panel
+export interface GalleryImage {
+  id: number;
+  src: string;
+  alt: string;
+  category: string;
+  title?: string;
+  description?: string;
+  isActive: boolean;
+  sortOrder: number;
+  uploadedAt: string;
+  updatedAt?: string;
+}
+
+export interface CreateGalleryImageRequest {
+  src: string;
+  alt: string;
+  category: string;
+  title?: string;
+  description?: string;
+  isActive?: boolean;
+  sortOrder?: number;
+}
+
+export interface UpdateGalleryImageRequest {
+  src?: string;
+  alt?: string;
+  category?: string;
+  title?: string;
+  description?: string;
+  isActive?: boolean;
+  sortOrder?: number;
+}
+
+export interface GalleryImageResponse {
+  success: boolean;
+  data: GalleryImage[];
+  totalCount: number;
+  categories: string[];
+}
+
+export interface GalleryCategory {
+  id: string;
+  name: string;
+  count: number;
+}
+
+export interface UploadImageResponse {
+  success: boolean;
+  url: string;
+  filename: string;
+  message?: string;
 }

@@ -40,7 +40,7 @@ namespace API.Functions
         /// </summary>
         [Function("GetClientReviewFlags")]
         public async Task<IActionResult> GetFlags(
-            [HttpTrigger(AuthorizationLevel.Function, "get", Route = "client-reviews")] HttpRequest req)
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "client-reviews")] HttpRequest req)
         {
             _logger.LogInformation("📋 Fetching client review flags");
 
@@ -107,7 +107,7 @@ namespace API.Functions
         /// </summary>
         [Function("GetClientReviewFlag")]
         public async Task<IActionResult> GetFlag(
-            [HttpTrigger(AuthorizationLevel.Function, "get", Route = "client-reviews/{id}")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "client-reviews/{id}")] HttpRequest req,
             string id)
         {
             _logger.LogInformation("🔍 Fetching client review flag with ID: {FlagId}", id);
@@ -174,7 +174,7 @@ namespace API.Functions
         /// </summary>
         [Function("UpdateClientReviewFlag")]
         public async Task<IActionResult> UpdateFlag(
-            [HttpTrigger(AuthorizationLevel.Function, "put", Route = "client-reviews/{id}")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "client-reviews/{id}")] HttpRequest req,
             string id)
         {
             _logger.LogInformation("✏️ Updating client review flag with ID: {FlagId}", id);
@@ -224,7 +224,7 @@ namespace API.Functions
         /// </summary>
         [Function("GetClientPendingReviews")]
         public async Task<IActionResult> GetClientPendingReviews(
-            [HttpTrigger(AuthorizationLevel.Function, "get", Route = "clients/{clientId}/reviews")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "clients/{clientId}/reviews")] HttpRequest req,
             string clientId)
         {
             _logger.LogInformation("👤 Fetching pending reviews for client ID: {ClientId}", clientId);
@@ -278,7 +278,7 @@ namespace API.Functions
         /// </summary>
         [Function("BanClient")]
         public async Task<IActionResult> BanClient(
-            [HttpTrigger(AuthorizationLevel.Function, "post", Route = "clients/{clientId}/ban")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "clients/{clientId}/ban")] HttpRequest req,
             string clientId)
         {
             _logger.LogInformation("🚫 Processing ban request for client ID: {ClientId}", clientId);
@@ -333,7 +333,7 @@ namespace API.Functions
         /// </summary>
         [Function("CreateClientReviewFlag")]
         public async Task<IActionResult> CreateFlag(
-            [HttpTrigger(AuthorizationLevel.Function, "post", Route = "client-reviews")] HttpRequest req)
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "client-reviews")] HttpRequest req)
         {
             _logger.LogInformation("➕ Creating new client review flag");
 
@@ -404,7 +404,7 @@ namespace API.Functions
         /// </summary>
         [Function("DeleteClientReviewFlag")]
         public async Task<IActionResult> DeleteFlag(
-            [HttpTrigger(AuthorizationLevel.Function, "delete", Route = "client-reviews/{id}")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "client-reviews/{id}")] HttpRequest req,
             string id)
         {
             _logger.LogInformation("🗑️ Deleting client review flag with ID: {FlagId}", id);

@@ -1,0 +1,276 @@
+<div class="client-management-container">
+  <div class="header-section">
+    <h1>Client Review & Ban Management</h1>
+    <div class="stats-bar">
+      <div class="stat-item">
+        <span class="stat-label">Total Flags:</span>
+        <span class="stat-value">{{ filteredFlags.length }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Pending Review:</span>
+        <span class="stat-value pending">{{ getPendingCount() }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Banned Clients:</span>
+        <span class="stat-value banned">{{ getBannedClientsCount() }}</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Selected:</span>
+        <span class="stat-value">{{ selectedFlags.size }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab Navigation -->
+  <div class="tab-navigation">
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'all'"
+      (click)="switchTab('all')">
+      <i class="fas fa-list"></i>
+      All Flags
+    </button>
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'pending'"
+      (click)="switchTab('pending')">
+      <i class="fas fa-clock"></i>
+      Pending Review ({{ getPendingCount() }})
+    </button>
+    <button 
+      class="tab-btn" 
+      [class.active]="activeTab === 'banned'"
+      (click)="switchTab('banned')">
+      <i class="fas fa-ban"></i>
+      Banned Clients ({{ getBannedClientsCount() }})
+    </button>
+  </div>
+
+  <div class="controls-section">
+    <div class="search-and-filter">
+      <div class="search-box">
+        <input 
+          type="text" 
+          [(ngModel)]="searchTerm" 
+          (input)="applyFilters()"
+          placeholder="Search by client name, email, or flag reason..."
+          class="search-input">
+        <i class="search-icon">🔍</i>
+      </div>
+      
+      <div class="filter-options">
+        <select [(ngModel)]="statusFilter" (change)="applyFilters()" class="filter-select">
+          <option value="">All Status</option>
+          <option value="Pending">Pending</option>
+          <option value="Approved">Approved</option>
+          <option value="Rejected">Rejected</option>
+          <option value="Banned">Banned</option>
+        </select>
+        
+        <input 
+          type="text" 
+          [(ngModel)]="clientFilter" 
+          (input)="applyFilters()"
+          placeholder="Filter by client..."
+          class="filter-input">
+      </div>
+    </div>
+
+    <div class="bulk-actions" *ngIf="selectedFlags.size > 0">
+      <button 
+        (click)="bulkApprove()" 
+        class="bulk-btn approve"
+        [disabled]="loading">
+        <i class="fas fa-check"></i>
+        Approve Selected ({{ selectedFlags.size }})
+      </button>
+      <button 
+        (click)="bulkReject()" 
+        class="bulk-btn reject"
+        [disabled]="loading">
+        <i class="fas fa-times"></i>
+        Reject Selected ({{ selectedFlags.size }})
+      </button>
+    </div>
+  </div>
+
+  <div class="flags-list" *ngIf="filteredFlags.length > 0; else noFlags">
+    <div class="list-header">
+      <div class="header-checkbox">
+        <input 
+          type="checkbox" 
+          [checked]="allFilteredSelected()"
+          [indeterminate]="someFilteredSelected() && !allFilteredSelected()"
+          (change)="toggleAllFiltered($event)"
+          id="select-all">
+        <label for="select-all"></label>
+      </div>
+      <div class="header-columns">
+        <span class="column-header client">Client Information</span>
+        <span class="column-header reason">Flag Reason</span>
+        <span class="column-header date">Flag Date</span>
+        <span class="column-header status">Status</span>
+        <span class="column-header actions">Actions</span>
+      </div>
+    </div>
+
+    <div class="flag-item" 
+         *ngFor="let flag of filteredFlags; trackBy: trackByFlag"
+         [class.pending]="flag.status === 'Pending'"
+         [class.banned]="flag.status === 'Banned'"
+         [class.selected]="selectedFlags.has(flag.id)">
+      
+      <div class="item-checkbox">
+        <input 
+          type="checkbox" 
+          [checked]="selectedFlags.has(flag.id)"
+          (change)="toggleFlagSelection(flag.id, $event)"
+          [id]="'checkbox-' + flag.id">
+        <label [for]="'checkbox-' + flag.id"></label>
+      </div>
+
+      <div class="item-content">
+        <div class="primary-info">
+          <div class="client-info">
+            <h3 class="client-name">{{ flag.client.firstName }} {{ flag.client.lastName }}</h3>
+            <p class="client-email">{{ flag.client.email }}</p>
+            <p class="client-phone" *ngIf="flag.client.phoneNumber">{{ flag.client.phoneNumber }}</p>
+            <div class="client-status" *ngIf="isClientBanned(flag.clientId)">
+              <span class="banned-badge">BANNED</span>
+            </div>
+          </div>
+          
+          <div class="reason-info">
+            <p class="flag-reason">{{ flag.flagReason }}</p>
+            <div class="auto-flags" *ngIf="flag.autoFlags > 1">
+              <span class="auto-flag-badge">Auto-flagged {{ flag.autoFlags }}x</span>
+            </div>
+          </div>
+          
+          <div class="date-info">
+            <span class="date">{{ formatDate(flag.flagDate) }}</span>
+            <span class="time">{{ formatTime(flag.flagDate) }}</span>
+            <div class="appointment-link" *ngIf="flag.appointmentId">
+              <small>Appointment #{{ flag.appointmentId }}</small>
+            </div>
+          </div>
+          
+          <div class="status-info">
+            <span class="status-badge" [class]="flag.status.toLowerCase()">
+              {{ flag.status }}
+            </span>
+            <div class="reviewed-info" *ngIf="flag.reviewedBy">
+              <small>by {{ flag.reviewedBy }}</small>
+              <small *ngIf="flag.reviewDate">{{ formatDate(flag.reviewDate) }}</small>
+            </div>
+          </div>
+          
+          <div class="item-actions">
+            <button 
+              (click)="toggleFlagDetails(flag.id)"
+              class="action-btn view"
+              [class.active]="expandedFlags.has(flag.id)">
+              <i class="fas fa-eye"></i>
+              {{ expandedFlags.has(flag.id) ? 'Hide' : 'Details' }}
+            </button>
+            
+            <button 
+              (click)="approveFlag(flag.id)"
+              class="action-btn approve"
+              *ngIf="flag.status === 'Pending'"
+              [disabled]="actionLoading.has(flag.id)">
+              <i class="fas fa-check"></i>
+              Approve
+            </button>
+            
+            <button 
+              (click)="rejectFlag(flag.id)"
+              class="action-btn reject"
+              *ngIf="flag.status === 'Pending'"
+              [disabled]="actionLoading.has(flag.id)">
+              <i class="fas fa-times"></i>
+              Reject
+            </button>
+            
+            <button 
+              (click)="banClient(flag.clientId, flag.id)"
+              class="action-btn ban"
+              *ngIf="!isClientBanned(flag.clientId)"
+              [disabled]="actionLoading.has(flag.id)">
+              <i class="fas fa-ban"></i>
+              Ban Client
+            </button>
+            
+            <button 
+              (click)="unbanClient(flag.clientId)"
+              class="action-btn unban"
+              *ngIf="isClientBanned(flag.clientId)"
+              [disabled]="loading">
+              <i class="fas fa-unlock"></i>
+              Unban Client
+            </button>
+          </div>
+        </div>
+
+        <div class="expanded-details" *ngIf="expandedFlags.has(flag.id)">
+          <div class="review-details" *ngIf="flag.reviewedBy">
+            <h4>Review Information:</h4>
+            <div class="review-info-grid">
+              <div class="review-item">
+                <strong>Reviewed By:</strong> {{ flag.reviewedBy }}
+              </div>
+              <div class="review-item" *ngIf="flag.reviewDate">
+                <strong>Review Date:</strong> {{ formatFullDate(flag.reviewDate) }}
+              </div>
+              <div class="review-item full-width" *ngIf="flag.adminComments">
+                <strong>Admin Comments:</strong>
+                <p class="admin-comments">{{ flag.adminComments }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="appointment-details" *ngIf="flag.appointment">
+            <h4>Related Appointment:</h4>
+            <div class="appointment-info-grid">
+              <div class="appointment-item">
+                <strong>Appointment ID:</strong> {{ flag.appointment.id }}
+              </div>
+              <div class="appointment-item">
+                <strong>Appointment Time:</strong> {{ formatFullDate(flag.appointment.time) }}
+              </div>
+              <div class="appointment-item">
+                <strong>Service ID:</strong> {{ flag.appointment.serviceId }}
+              </div>
+            </div>
+          </div>
+
+          <div class="client-history">
+            <h4>Client Flag History:</h4>
+            <div class="flag-history">
+              <div class="history-item" *ngFor="let clientFlag of getClientFlags(flag.clientId)">
+                <span class="history-date">{{ formatDate(clientFlag.flagDate) }}</span>
+                <span class="history-status" [class]="clientFlag.status.toLowerCase()">{{ clientFlag.status }}</span>
+                <span class="history-reason">{{ clientFlag.flagReason }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ng-template #noFlags>
+    <div class="no-flags">
+      <div class="no-flags-icon">🚩</div>
+      <h3>No review flags found</h3>
+      <p>{{ getNoFlagsMessage() }}</p>
+    </div>
+  </ng-template>
+
+  <div class="loading-overlay" *ngIf="loading">
+    <div class="loading-spinner">
+      <i class="fas fa-spinner fa-spin"></i>
+      <span>Loading...</span>
+    </div>
+  </div>
+</div>

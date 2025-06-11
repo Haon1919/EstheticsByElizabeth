@@ -16,7 +16,19 @@ import {
   ContactRequest,
   ContactSubmissionsResponse,
   ContactSubmissionsParams,
-  ErrorResponse
+  ErrorResponse,
+  ClientReviewFlag,
+  UpdateReviewFlagRequest,
+  BanClientRequest,
+  ClientBanResponse,
+  CreateServiceRequest,
+  UpdateServiceRequest,
+  GalleryImageResponse,
+  GalleryImage,
+  CreateGalleryImageRequest,
+  UpdateGalleryImageRequest,
+  UploadImageResponse,
+  GalleryCategory
 } from '../models/api-models';
 
 @Injectable({
@@ -122,6 +134,107 @@ export class ApiService {
 
   deleteContactSubmission(submissionId: string): Observable<any> {
     return this.http.delete(`${this.baseUrl}/manage/contacts/${submissionId}`)
+      .pipe(catchError(this.handleError));
+  }
+
+  // Client Management methods for admin panel
+  getClientReviewFlags(status?: string): Observable<ClientReviewFlag[]> {
+    let params = new HttpParams();
+    if (status) {
+      params = params.set('status', status);
+    }
+    
+    return this.http.get<ClientReviewFlag[]>(`${this.baseUrl}/client-reviews`, { params })
+      .pipe(catchError(this.handleError));
+  }
+
+  getClientReviewFlag(flagId: number): Observable<ClientReviewFlag> {
+    return this.http.get<ClientReviewFlag>(`${this.baseUrl}/client-reviews/${flagId}`)
+      .pipe(catchError(this.handleError));
+  }
+
+  updateClientReviewFlag(flagId: number, updateData: UpdateReviewFlagRequest): Observable<any> {
+    return this.http.put(`${this.baseUrl}/client-reviews/${flagId}`, updateData)
+      .pipe(catchError(this.handleError));
+  }
+
+  banClient(clientId: number, banData: BanClientRequest): Observable<any> {
+    return this.http.post(`${this.baseUrl}/clients/${clientId}/ban`, banData)
+      .pipe(catchError(this.handleError));
+  }
+
+  unbanClient(clientId: number): Observable<ClientBanResponse> {
+    return this.http.delete<ClientBanResponse>(`${this.baseUrl}/clients/${clientId}/ban`)
+      .pipe(catchError(this.handleError));
+  }
+
+  getClientPendingReviews(clientId: number): Observable<ClientReviewFlag[]> {
+    return this.http.get<ClientReviewFlag[]>(`${this.baseUrl}/clients/${clientId}/reviews`)
+      .pipe(catchError(this.handleError));
+  }
+
+  // Service Management methods for admin panel
+  createService(serviceData: CreateServiceRequest): Observable<any> {
+    return this.http.post(`${this.baseUrl}/manage/services`, serviceData)
+      .pipe(catchError(this.handleError));
+  }
+
+  updateService(serviceId: number, serviceData: UpdateServiceRequest): Observable<any> {
+    return this.http.put(`${this.baseUrl}/manage/services/${serviceId}`, serviceData)
+      .pipe(catchError(this.handleError));
+  }
+
+  deleteService(serviceId: number): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/manage/services/${serviceId}`)
+      .pipe(catchError(this.handleError));
+  }
+
+  // Gallery Management methods for admin panel
+  getGalleryImages(category?: string): Observable<GalleryImageResponse> {
+    let params = new HttpParams();
+    if (category) {
+      params = params.set('category', category);
+    }
+    
+    return this.http.get<GalleryImageResponse>(`${this.baseUrl}/manage/gallery`, { params })
+      .pipe(catchError(this.handleError));
+  }
+
+  getGalleryImage(imageId: number): Observable<GalleryImage> {
+    return this.http.get<GalleryImage>(`${this.baseUrl}/manage/gallery/${imageId}`)
+      .pipe(catchError(this.handleError));
+  }
+
+  createGalleryImage(imageData: CreateGalleryImageRequest): Observable<GalleryImage> {
+    return this.http.post<GalleryImage>(`${this.baseUrl}/manage/gallery`, imageData)
+      .pipe(catchError(this.handleError));
+  }
+
+  updateGalleryImage(imageId: number, imageData: UpdateGalleryImageRequest): Observable<GalleryImage> {
+    return this.http.put<GalleryImage>(`${this.baseUrl}/manage/gallery/${imageId}`, imageData)
+      .pipe(catchError(this.handleError));
+  }
+
+  deleteGalleryImage(imageId: number): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/manage/gallery/${imageId}`)
+      .pipe(catchError(this.handleError));
+  }
+
+  uploadGalleryImage(file: File): Observable<UploadImageResponse> {
+    const formData = new FormData();
+    formData.append('image', file);
+    
+    return this.http.post<UploadImageResponse>(`${this.baseUrl}/manage/gallery/upload`, formData)
+      .pipe(catchError(this.handleError));
+  }
+
+  updateGalleryImageOrder(imageIds: number[]): Observable<any> {
+    return this.http.put(`${this.baseUrl}/manage/gallery/reorder`, { imageIds })
+      .pipe(catchError(this.handleError));
+  }
+
+  getGalleryCategories(): Observable<GalleryCategory[]> {
+    return this.http.get<GalleryCategory[]>(`${this.baseUrl}/manage/gallery/categories`)
       .pipe(catchError(this.handleError));
   }
 

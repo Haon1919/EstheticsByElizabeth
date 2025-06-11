@@ -40,6 +40,9 @@ export class AdminAppointmentsComponent implements OnInit {
   // Client search
   searchEmail: string = '';
   searchResults: AppointmentHistoryResponse | null = null;
+  selectedServiceFilter: number = 0; // 0 means all services
+  filteredAppointments: Appointment[] = [];
+  uniqueServicesInHistory: Service[] = []; // Services that appear in the client's history
   
   // Schedule new appointment
   newAppointment = {
@@ -85,12 +88,22 @@ export class AdminAppointmentsComponent implements OnInit {
     this.loadAppointmentsByDate();
     this.loadServices();
     this.generateTimeSlots();
+    
+    // Initialize filtered appointments
+    this.filteredAppointments = [];
   }
 
   // Tab management
   switchTab(tab: 'calendar' | 'search' | 'schedule'): void {
     this.activeTab = tab;
     this.clearMessages();
+    
+    // Reset search filters when switching to search tab
+    if (tab === 'search') {
+      this.selectedServiceFilter = 0;
+      this.filteredAppointments = [];
+      this.uniqueServicesInHistory = [];
+    }
   }
 
   // Calendar view methods
@@ -180,6 +193,8 @@ export class AdminAppointmentsComponent implements OnInit {
     this.appointmentService.getClientAppointmentHistory(this.searchEmail.trim()).subscribe({
       next: (response: AppointmentHistoryResponse) => {
         this.searchResults = response;
+        this.extractUniqueServices(); // Extract unique services from history
+        this.applyServiceFilter(); // Apply filter after loading data
         if (response.appointments.length === 0) {
           this.errorMessage = 'No appointments found for this client.';
         }
@@ -191,6 +206,92 @@ export class AdminAppointmentsComponent implements OnInit {
         this.searchLoading = false;
       }
     });
+  }
+
+  extractUniqueServices(): void {
+    if (!this.searchResults) {
+      this.uniqueServicesInHistory = [];
+      return;
+    }
+
+    // Extract unique services from appointment history
+    const serviceMap = new Map<number, Service>();
+    
+    this.searchResults.appointments.forEach(appointment => {
+      if (!serviceMap.has(appointment.service.id)) {
+        serviceMap.set(appointment.service.id, appointment.service);
+      }
+    });
+
+    this.uniqueServicesInHistory = Array.from(serviceMap.values());
+    console.log('Unique services in history:', this.uniqueServicesInHistory);
+  }
+
+  applyServiceFilter(): void {
+    if (!this.searchResults) {
+      this.filteredAppointments = [];
+      return;
+    }
+
+    console.log('Applying service filter. Selected filter:', this.selectedServiceFilter);
+    console.log('Available appointments:', this.searchResults.appointments.length);
+
+    if (this.selectedServiceFilter === 0) {
+      // Show all appointments
+      this.filteredAppointments = [...this.searchResults.appointments];
+      console.log('Showing all appointments:', this.filteredAppointments.length);
+    } else {
+      // Filter by selected service
+      this.filteredAppointments = this.searchResults.appointments.filter(
+        appointment => {
+          console.log(`Comparing appointment service ID ${appointment.service.id} with filter ${this.selectedServiceFilter}`);
+          return appointment.service.id === this.selectedServiceFilter;
+        }
+      );
+      console.log('Filtered appointments:', this.filteredAppointments.length);
+    }
+  }
+
+  onServiceFilterChange(): void {
+    // Convert string value to number (HTML select returns string)
+    this.selectedServiceFilter = Number(this.selectedServiceFilter);
+    this.applyServiceFilter();
+  }
+
+  // Check if this is the most recent appointment for this service
+  isMostRecentForService(appointment: Appointment): boolean {
+    if (!this.searchResults) return false;
+    
+    // Find all appointments for the same service
+    const serviceAppointments = this.searchResults.appointments.filter(
+      app => app.service.id === appointment.service.id
+    );
+    
+    // Sort by time descending and check if this is the first (most recent)
+    serviceAppointments.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime());
+    
+    return serviceAppointments.length > 0 && serviceAppointments[0].id === appointment.id;
+  }
+
+  // Re-book appointment with same service and client
+  rebookAppointment(appointment: Appointment): void {
+    // Switch to schedule tab and pre-populate form
+    this.activeTab = 'schedule';
+    
+    // Pre-populate the form with client and service data
+    this.newAppointment = {
+      client: {
+        firstName: appointment.client.firstName,
+        lastName: appointment.client.lastName,
+        email: appointment.client.email,
+        phoneNumber: appointment.client.phoneNumber || ''
+      },
+      serviceId: appointment.service.id,
+      date: this.formatDateForInput(new Date()),
+      time: ''
+    };
+    
+    this.successMessage = `Pre-filled form for ${appointment.client.firstName} ${appointment.client.lastName} - ${appointment.service.name}`;
   }
 
   // Schedule new appointment methods

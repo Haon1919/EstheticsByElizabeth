@@ -1,0 +1,346 @@
+<main class="admin-gallery-container">
+  <!-- Header Section -->
+  <div class="header-section">
+    <div class="header-content">
+      <h1>Gallery Management</h1>
+      <p>Manage your gallery images, categories, and display settings</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-primary" (click)="startCreate()">
+        <i class="fas fa-plus"></i>
+        Add New Image
+      </button>
+    </div>
+  </div>
+
+  <!-- Stats Bar -->
+  <div class="stats-bar">
+    <div class="stat-item">
+      <span class="stat-label">Total Images</span>
+      <span class="stat-value">{{ images.length }}</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">Active Images</span>
+      <span class="stat-value">{{ activeImagesCount }}</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">Categories</span>
+      <span class="stat-value">{{ availableCategories.length }}</span>
+    </div>
+    <div class="stat-item" *ngIf="selectedImages.size > 0">
+      <span class="stat-label">Selected</span>
+      <span class="stat-value">{{ selectedImages.size }}</span>
+    </div>
+  </div>
+
+  <!-- Alert Messages -->
+  <div class="alert alert-success" *ngIf="successMessage">
+    <i class="fas fa-check-circle"></i>
+    {{ successMessage }}
+    <button class="alert-close" (click)="clearMessages()">×</button>
+  </div>
+  
+  <div class="alert alert-error" *ngIf="errorMessage">
+    <i class="fas fa-exclamation-circle"></i>
+    {{ errorMessage }}
+    <button class="alert-close" (click)="clearMessages()">×</button>
+  </div>
+
+  <!-- Gallery Filters -->
+  <div class="gallery-filters">
+    <h3>Filter by Category</h3>
+    <div class="filter-buttons">
+      <button 
+        *ngFor="let category of categories" 
+        class="filter-btn"
+        [class.active]="selectedCategory === category.id"
+        (click)="filterByCategory(category.id)">
+        {{ category.name }} 
+        <span class="count">({{ category.count }})</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Bulk Actions -->
+  <div class="bulk-actions" *ngIf="selectedImages.size > 0">
+    <div class="bulk-info">
+      <span>{{ selectedImages.size }} image(s) selected</span>
+    </div>
+    <div class="bulk-buttons">
+      <button class="btn btn-secondary" (click)="clearSelection()">
+        Clear Selection
+      </button>
+      <button class="btn btn-danger" (click)="deleteSelectedImages()">
+        <i class="fas fa-trash"></i>
+        Delete Selected
+      </button>
+    </div>
+  </div>
+
+  <!-- Create/Edit Form -->
+  <div class="image-form-section" *ngIf="createMode || editMode">
+    <div class="form-container">
+      <div class="form-header">
+        <h3>{{ createMode ? 'Add New Image' : 'Edit Image' }}</h3>
+        <button class="close-btn" (click)="cancelEdit()">×</button>
+      </div>
+      
+      <form class="image-form">
+        <!-- Image Upload Section -->
+        <div class="form-section" *ngIf="createMode">
+          <h4>Upload Image</h4>
+          <div class="upload-area">
+            <input 
+              type="file" 
+              id="imageFile" 
+              accept="image/*" 
+              (change)="onFileSelected($event)"
+              class="file-input">
+            <label for="imageFile" class="file-label">
+              <i class="fas fa-cloud-upload-alt"></i>
+              <span>{{ selectedFile ? selectedFile.name : 'Choose Image File' }}</span>
+              <small>Supports: JPG, PNG, GIF (Max 5MB)</small>
+            </label>
+            <div *ngIf="selectedFile && !uploading && !imageForm.src" class="file-selected">
+              <i class="fas fa-check-circle"></i>
+              <span>File selected: {{ selectedFile.name }}</span>
+              <small>Uploading automatically to get URL...</small>
+            </div>
+            <div *ngIf="uploading" class="file-uploading">
+              <i class="fas fa-spinner fa-spin"></i>
+              <span>Uploading {{ selectedFile?.name }}...</span>
+              <small>Please wait while we upload your image</small>
+            </div>
+            <div *ngIf="selectedFile && imageForm.src" class="file-uploaded">
+              <i class="fas fa-check-circle"></i>
+              <span>Image uploaded successfully!</span>
+              <small>URL has been populated below. Complete the form and save.</small>
+            </div>
+          </div>
+        </div>
+
+        <!-- Image Details Section -->
+        <div class="form-section">
+          <h4>Image Details</h4>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="imageUrl">
+                {{ createMode && selectedFile ? 'Image URL (auto-populated from upload)' : 'Image URL *' }}
+              </label>
+              <input 
+                type="url" 
+                id="imageUrl" 
+                [(ngModel)]="imageForm.src" 
+                name="src"
+                [placeholder]="createMode && selectedFile ? 'URL will be populated automatically after upload' : 'https://example.com/image.jpg'"
+                class="form-input"
+                [disabled]="createMode && !!selectedFile"
+                [required]="!createMode || !selectedFile">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="altText">Alt Text *</label>
+              <input 
+                type="text" 
+                id="altText" 
+                [(ngModel)]="imageForm.alt" 
+                name="alt"
+                placeholder="Describe the image for accessibility"
+                class="form-input"
+                required>
+            </div>
+            <div class="form-group">
+              <label for="category">Category *</label>
+              <select 
+                id="category" 
+                [(ngModel)]="imageForm.category" 
+                name="category"
+                class="form-select"
+                required>
+                <option *ngFor="let cat of availableCategories" [value]="cat.id">
+                  {{ cat.name }}
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="title">Title (Optional)</label>
+              <input 
+                type="text" 
+                id="title" 
+                [(ngModel)]="imageForm.title" 
+                name="title"
+                placeholder="Image title"
+                class="form-input">
+            </div>
+            <div class="form-group">
+              <label for="sortOrder">Sort Order</label>
+              <input 
+                type="number" 
+                id="sortOrder" 
+                [(ngModel)]="imageForm.sortOrder" 
+                name="sortOrder"
+                placeholder="0"
+                class="form-input"
+                min="0">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group full-width">
+              <label for="description">Description (Optional)</label>
+              <textarea 
+                id="description" 
+                [(ngModel)]="imageForm.description" 
+                name="description"
+                placeholder="Image description"
+                class="form-textarea"
+                rows="3"></textarea>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="checkbox-label">
+                <input 
+                  type="checkbox" 
+                  [(ngModel)]="imageForm.isActive" 
+                  name="isActive">
+                <span class="checkmark"></span>
+                Image is active (visible on gallery page)
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Preview Section -->
+        <div class="form-section" *ngIf="imageForm.src">
+          <h4>Preview</h4>
+          <div class="image-preview">
+            <img [src]="imageForm.src" [alt]="imageForm.alt" class="preview-image">
+            <div class="preview-details">
+              <p><strong>Category:</strong> {{ getCategoryName(imageForm.category) }}</p>
+              <p><strong>Title:</strong> {{ imageForm.title || 'No title' }}</p>
+              <p><strong>Status:</strong> 
+                <span [class]="imageForm.isActive ? 'status-active' : 'status-inactive'">
+                  {{ imageForm.isActive ? 'Active' : 'Inactive' }}
+                </span>
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" (click)="cancelEdit()">
+            Cancel
+          </button>
+          <button type="button" class="btn btn-primary" (click)="saveImage()" [disabled]="loading">
+            <i class="fas fa-save" *ngIf="!loading"></i>
+            <i class="fas fa-spinner fa-spin" *ngIf="loading"></i>
+            {{ loading ? 'Saving...' : (createMode ? 'Create Gallery Item' : 'Update Image') }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Gallery Grid -->
+  <div class="gallery-section" *ngIf="!createMode && !editMode">
+    <div class="gallery-header">
+      <h3>
+        {{ selectedCategory === 'all' ? 'All Images' : getCategoryName(selectedCategory) }}
+        <span class="count">({{ filteredImages.length }})</span>
+      </h3>
+      <div class="gallery-actions">
+        <button class="btn btn-outline" (click)="selectAllVisible()" *ngIf="filteredImages.length > 0">
+          <i class="fas fa-check-square"></i>
+          Select All
+        </button>
+        <button class="btn btn-outline" (click)="loadGalleryData()">
+          <i class="fas fa-sync-alt"></i>
+          Refresh
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-spinner" *ngIf="loading">
+      <i class="fas fa-spinner fa-spin"></i>
+      <span>Loading gallery images...</span>
+    </div>
+
+    <!-- Empty State -->
+    <div class="empty-state" *ngIf="!loading && filteredImages.length === 0">
+      <i class="fas fa-images"></i>
+      <h4>No images found</h4>
+      <p *ngIf="selectedCategory === 'all'">Get started by adding your first image to the gallery.</p>
+      <p *ngIf="selectedCategory !== 'all'">No images found in the {{ getCategoryName(selectedCategory) }} category.</p>
+      <button class="btn btn-primary" (click)="startCreate()">
+        <i class="fas fa-plus"></i>
+        Add First Image
+      </button>
+    </div>
+
+    <!-- Gallery Grid -->
+    <div class="gallery-grid" *ngIf="!loading && filteredImages.length > 0">
+      <div 
+        class="gallery-item" 
+        *ngFor="let image of filteredImages; trackBy: trackByImageId"
+        [class.selected]="isImageSelected(image.id)"
+        [class.inactive]="!image.isActive"
+        draggable="true"
+        (dragstart)="onDragStart($event, image.id)"
+        (dragover)="onDragOver($event)"
+        (drop)="onDrop($event, image.id)">
+        
+        <!-- Selection Checkbox -->
+        <div class="selection-checkbox">
+          <input 
+            type="checkbox" 
+            [checked]="isImageSelected(image.id)"
+            (change)="toggleImageSelection(image.id)">
+        </div>
+
+        <!-- Image -->
+        <div class="image-container">
+          <img [src]="image.src" [alt]="image.alt" class="gallery-image">
+          <div class="image-overlay">
+            <div class="overlay-actions">
+              <button class="action-btn edit" (click)="startEdit(image)" title="Edit Image">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button 
+                class="action-btn toggle" 
+                (click)="toggleImageStatus(image)" 
+                [title]="image.isActive ? 'Deactivate Image' : 'Activate Image'">
+                <i [class]="image.isActive ? 'fas fa-eye-slash' : 'fas fa-eye'"></i>
+              </button>
+              <button class="action-btn delete" (click)="deleteImage(image.id)" title="Delete Image">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Image Details -->
+        <div class="image-details">
+          <div class="image-title">{{ image.title || image.alt }}</div>
+          <div class="image-meta">
+            <span class="category">{{ getCategoryName(image.category) }}</span>
+            <span class="status" [class]="image.isActive ? 'status-active' : 'status-inactive'">
+              {{ image.isActive ? 'Active' : 'Inactive' }}
+            </span>
+          </div>
+          <div class="image-info">
+            <small>Sort: {{ image.sortOrder }} | Added: {{ formatDate(image.uploadedAt) }}</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>

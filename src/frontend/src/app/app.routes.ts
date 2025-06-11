@@ -7,6 +7,9 @@ import { ContactComponent } from './components/contact/contact.component';
 import { AdminLoginComponent } from './components/admin-login/admin-login.component';
 import { ContactSubmissionsComponent } from './components/contact-submissions/contact-submissions.component';
 import { AdminAppointmentsComponent } from './components/admin-appointments/admin-appointments.component';
+import { ClientManagementComponent } from './components/client-management/client-management.component';
+import { AdminServicesComponent } from './components/admin-services/admin-services.component';
+import { AdminGalleryComponent } from './components/admin-gallery/admin-gallery.component';
 import { AuthGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
@@ -24,6 +27,21 @@ export const routes: Routes = [
   { 
     path: 'admin/appointments', 
     component: AdminAppointmentsComponent,
+    canActivate: [AuthGuard]
+  },
+  { 
+    path: 'admin/clients', 
+    component: ClientManagementComponent,
+    canActivate: [AuthGuard]
+  },
+  { 
+    path: 'admin/services', 
+    component: AdminServicesComponent,
+    canActivate: [AuthGuard]
+  },
+  { 
+    path: 'admin/gallery', 
+    component: AdminGalleryComponent,
     canActivate: [AuthGuard]
   },
   { 
