@@ -5,7 +5,8 @@ import {
   CreateAppointmentRequest,
   Appointment,
   AppointmentHistoryResponse,
-  AppointmentsByDateResponse 
+  AppointmentsByDateResponse,
+  EarliestAppointmentDateResponse 
 } from '../models/api-models';
 
 @Injectable({
@@ -48,6 +49,13 @@ export class AppointmentService {
    */
   cancelAppointment(appointmentId: number): Observable<any> {
     return this.apiService.cancelAppointment(appointmentId);
+  }
+
+  /**
+   * Get the earliest appointment date from the database
+   */
+  getEarliestAppointmentDate(): Observable<EarliestAppointmentDateResponse> {
+    return this.apiService.getEarliestAppointmentDate();
   }
 
   /**

@@ -40,10 +40,18 @@ namespace API.Entities // Replace YourProjectName with your actual project names
         [Column("price")] // Specify SQL data type for precision
         public decimal? Price { get; set; }
 
+        // AppointmentBufferTime is nullable INT in the DB schema  
+        [Column("appointmentbuffertime")]
+        public int? AppointmentBufferTime { get; set; } // Nullable int - number of weeks until next appointment for rescheduling
+
         [StringLength(2048)]
         // Website is nullable in the DB schema
         [Column("website")]
         public string? Website { get; set; }
+
+        // AfterCareInstructions is nullable in the DB schema
+        [Column("aftercareinstructions")]
+        public string? AfterCareInstructions { get; set; }
 
         // --- Navigation Properties for Relationships ---
 

@@ -28,14 +28,27 @@ services:
       - AZURE_FUNCTIONS_ENVIRONMENT=Development
       - FUNCTIONS_WORKER_RUNTIME=dotnet-isolated
       - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=postgres;Username=postgres;Password=Ieatbugsandsquashfrogs;TrustServerCertificate=true;SslMode=Disable
-      - AzureWebJobsStorage=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:10000/devstoreaccount1;QueueEndpoint=http://127.0.0.1:10001/devstoreaccount1;TableEndpoint=http://127.0.0.1:10002/devstoreaccount1;
+      - AzureWebJobsStorage=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;QueueEndpoint=http://azurite:10001/devstoreaccount1;TableEndpoint=http://azurite:10002/devstoreaccount1;
       - AzureFunctionsJobHost__CORS=*
       - AzureFunctionsJobHost__CorsCredentials=false
+      - Values__ImageStorage__Provider=MinIO
+      - Values__ImageStorage__MinIO__Endpoint=minio:9000
+      - Values__ImageStorage__MinIO__PublicEndpoint=localhost:9000
+      - Values__ImageStorage__MinIO__AccessKey=minioadmin
+      - Values__ImageStorage__MinIO__SecretKey=minioadmin123
+      - Values__ImageStorage__MinIO__BucketName=gallery-images
+      - Values__ImageStorage__MinIO__UseSSL=false
     ports:
       - "80:80"
+    volumes:
+      - uploads_data:/app/uploads
     depends_on:
       postgres:
         condition: service_healthy
+      minio:
+        condition: service_healthy
+      azurite:
+        condition: service_started
     restart: unless-stopped
 
   tests:
@@ -49,5 +62,64 @@ services:
       - testing
     command: tail -f /dev/null
 
+  minio:
+    image: quay.io/minio/minio:latest
+    container_name: esthetics-minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - "MINIO_ROOT_USER=minioadmin"
+      - "MINIO_ROOT_PASSWORD=minioadmin123"
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  minio-setup:
+    image: minio/mc:latest
+    container_name: esthetics-minio-setup
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      until (/usr/bin/mc alias set minio http://minio:9000 minioadmin minioadmin123) do echo '...waiting...' && sleep 1; done;
+      /usr/bin/mc mb minio/gallery-images;
+      /usr/bin/mc anonymous set public minio/gallery-images;
+      exit 0;
+      "
+
+  image-uploader:
+    build:
+      context: .
+      dockerfile: Dockerfile.image-uploader
+    container_name: esthetics-image-uploader
+    depends_on:
+      minio-setup:
+        condition: service_completed_successfully
+    volumes:
+      - ../src/frontend/public:/app/source-images/frontend/public:ro
+      - ../src/frontend/assets:/app/source-images/frontend/assets:ro
+      - ../src/frontend/src/assets:/app/source-images/frontend/src/assets:ro
+    restart: "no"
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite:latest
+    container_name: esthetics-azurite
+    ports:
+      - "10000:10000"
+      - "10001:10001"
+      - "10002:10002"
+    volumes:
+      - azurite_data:/data
+    command: azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0 --location /data --debug /data/debug.log
+
 volumes:
   postgres-data:
+  minio_data:
+  uploads_data:
+  azurite_data:

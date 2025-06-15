@@ -1,0 +1,27 @@
+# 🏭 Production Configuration Example for Azure Blob Storage 🏭
+# Add these to your Azure Function App Settings when deploying to production
+
+# For Azure Blob Storage (Production)
+ImageStorage__Provider=Azure
+ImageStorage__Azure__ConnectionString=DefaultEndpointsProtocol=https;AccountName=yourstorageaccount;AccountKey=...;EndpointSuffix=core.windows.net
+ImageStorage__Azure__ContainerName=gallery-images
+
+# For AWS S3 (Alternative Production Option)  
+ImageStorage__Provider=S3
+ImageStorage__S3__AccessKey=YOUR_AWS_ACCESS_KEY
+ImageStorage__S3__SecretKey=YOUR_AWS_SECRET_KEY
+ImageStorage__S3__BucketName=gallery-images
+ImageStorage__S3__Region=us-east-1
+
+# For Development with MinIO
+ImageStorage__Provider=MinIO
+ImageStorage__MinIO__Endpoint=localhost:9000
+ImageStorage__MinIO__AccessKey=minioadmin
+ImageStorage__MinIO__SecretKey=minioadmin123
+ImageStorage__MinIO__BucketName=gallery-images
+ImageStorage__MinIO__UseSSL=false
+
+# For Local Development Fallback
+ImageStorage__Provider=Local
+ImageStorage__LocalPath=./wwwroot/uploads/gallery
+ImageStorage__BaseUrl=https://yourdomain.com/uploads/gallery

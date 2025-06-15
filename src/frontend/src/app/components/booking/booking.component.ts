@@ -34,7 +34,8 @@ export class BookingComponent implements OnInit {
       service: ['', Validators.required],
       date: ['', Validators.required],
       time: ['', Validators.required],
-      name: ['', Validators.required],
+      firstName: ['', Validators.required],
+      lastName: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
       phone: ['', Validators.required],
       notes: [''],
@@ -111,7 +112,8 @@ export class BookingComponent implements OnInit {
     if (this.bookingForm.get('service')?.valid && 
         this.bookingForm.get('date')?.valid && 
         this.bookingForm.get('time')?.valid && 
-        this.bookingForm.get('name')?.valid && 
+        this.bookingForm.get('firstName')?.valid && 
+        this.bookingForm.get('lastName')?.valid && 
         this.bookingForm.get('email')?.valid && 
         this.bookingForm.get('phone')?.valid) {
       this.isPaymentStep = true;
@@ -129,11 +131,9 @@ export class BookingComponent implements OnInit {
       this.isLoading = true;
       this.errorMessage = '';
 
-      // Parse the name field into first and last name
-      const fullName = this.bookingForm.get('name')?.value?.trim() || '';
-      const nameParts = fullName.split(' ');
-      const firstName = nameParts[0] || '';
-      const lastName = nameParts.slice(1).join(' ') || '';
+      // Get first and last name directly from form fields
+      const firstName = this.bookingForm.get('firstName')?.value?.trim() || '';
+      const lastName = this.bookingForm.get('lastName')?.value?.trim() || '';
 
       // Combine date and time into a proper DateTime format
       const dateValue = this.bookingForm.get('date')?.value;

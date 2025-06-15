@@ -172,31 +172,10 @@ export class AdminGalleryComponent implements OnInit {
       this.selectedFile = file;
       this.clearMessages();
       
-      // Immediately upload the file to get the URL
-      this.uploadFileForPreview();
+      // Clear URL field since we'll upload with metadata in one step
+      this.imageForm.src = '';
+      this.successMessage = `File selected: ${file.name}. Complete the form and save to upload and create gallery item.`;
     }
-  }
-
-  uploadFileForPreview(): void {
-    if (!this.selectedFile) {
-      return;
-    }
-    
-    this.uploading = true;
-    
-    this.apiService.uploadGalleryImage(this.selectedFile).subscribe({
-      next: (response: UploadImageResponse) => {
-        // Populate the URL field with the uploaded image URL
-        this.imageForm.src = response.url;
-        this.uploading = false;
-        this.successMessage = 'Image uploaded! URL populated. Complete the form and save to create gallery item.';
-      },
-      error: (error: any) => {
-        console.error('Upload error:', error);
-        this.errorMessage = 'Failed to upload image. Please try again.';
-        this.uploading = false;
-      }
-    });
   }
 
   // CRUD operations
@@ -233,22 +212,29 @@ export class AdminGalleryComponent implements OnInit {
     this.clearMessages();
     
     if (this.createMode) {
-      // For create mode, the URL should already be populated from file upload or manual entry
-      this.apiService.createGalleryImage(this.imageForm).subscribe({
-        next: (image: GalleryImage) => {
-          this.images.push(image);
-          this.filterByCategory(this.selectedCategory);
-          this.updateCategoryCounts();
-          this.successMessage = 'Image created successfully!';
-          this.cancelEdit();
-          this.loading = false;
-        },
-        error: (error: any) => {
-          console.error('Create error:', error);
-          this.errorMessage = 'Failed to create image. Please try again.';
-          this.loading = false;
-        }
-      });
+      // Check if we have a file to upload (new one-step approach)
+      if (this.selectedFile) {
+        console.log('fart')
+        this.createImageWithFileUpload();
+      } else {
+        console.log('fart2')
+        // Fallback to metadata-only approach (for manual URL entry)
+        this.apiService.createGalleryImage(this.imageForm).subscribe({
+          next: (image: GalleryImage) => {
+            this.images.push(image);
+            this.filterByCategory(this.selectedCategory);
+            this.updateCategoryCounts();
+            this.successMessage = 'Image created successfully!';
+            this.cancelEdit();
+            this.loading = false;
+          },
+          error: (error: any) => {
+            console.error('Create error:', error);
+            this.errorMessage = 'Failed to create image. Please try again.';
+            this.loading = false;
+          }
+        });
+      }
     } else if (this.editMode && this.editingImage) {
       this.apiService.updateGalleryImage(this.editingImage.id, this.imageForm).subscribe({
         next: (updatedImage: GalleryImage) => {
@@ -269,6 +255,43 @@ export class AdminGalleryComponent implements OnInit {
         }
       });
     }
+  }
+
+  // New method: Create image with file upload in one step
+  private createImageWithFileUpload(): void {
+    if (!this.selectedFile) {
+      this.errorMessage = 'No file selected for upload.';
+      this.loading = false;
+      return;
+    }
+
+    // Create FormData with file + metadata
+    const formData = new FormData();
+    formData.append('image', this.selectedFile);
+    formData.append('alt', this.imageForm.alt);
+    formData.append('category', this.imageForm.category);
+    formData.append('title', this.imageForm.title || '');
+    formData.append('description', this.imageForm.description || '');
+    formData.append('isActive', (this.imageForm.isActive ?? true).toString());
+    formData.append('sortOrder', (this.imageForm.sortOrder ?? 0).toString());
+
+    // Send FormData directly to createGalleryImage endpoint
+    // The backend will detect multipart form data and handle both upload + database creation
+    this.apiService.createGalleryImageWithFile(formData).subscribe({
+      next: (image: GalleryImage) => {
+        this.images.push(image);
+        this.filterByCategory(this.selectedCategory);
+        this.updateCategoryCounts();
+        this.successMessage = 'Image uploaded and created successfully!';
+        this.cancelEdit();
+        this.loading = false;
+      },
+      error: (error: any) => {
+        console.error('Create with file error:', error);
+        this.errorMessage = 'Failed to upload and create image. Please try again.';
+        this.loading = false;
+      }
+    });
   }
 
   deleteImage(imageId: number): void {

@@ -16,39 +16,42 @@ namespace API.Functions
     /// Retrieves all available services with their categories.
     /// </summary>
     public class GetServiceList
-    {
-        private readonly ILogger<GetServiceList> _logger;
+    {        private readonly ILogger<GetServiceList> _logger;
         private readonly ProjectContext _context;
         
-        public GetServiceList(ILogger<GetServiceList> logger, ProjectContext context)
-        {
+        public GetServiceList(ILogger<GetServiceList> logger, ProjectContext context)        {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _context = context ?? throw new ArgumentNullException(nameof(context));        }
-          /// <summary>
+            _context = context ?? throw new ArgumentNullException(nameof(context));
+        }
+        
+        /// <summary>
         /// 💅 The Magical Service Menu Ritual 💅
         /// Azure Function triggered by HTTP GET to retrieve all available services.
         /// </summary>
         [Function("GetServiceList")]
         public async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "services")] HttpRequest req)        {
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "services")] HttpRequest req)
+        {
             _logger.LogInformation("💅 Service list request received.");
             
             try
             {
                 _logger.LogInformation("🔍 Retrieving all services with categories from database");
-                
-                var services = await _context.Services
+                  var services = await _context.Services
                     .Include(s => s.Category)
                     .AsNoTracking()
                     .OrderBy(s => s.Category.Name)
-                        .ThenBy(s => s.Name)
+                    .ThenBy(s => s.Name)
                     .Select(s => new
                     {
                         s.Id,
                         s.Name,
                         s.Description,
+                        s.AfterCareInstructions,
                         s.Price,
                         s.Duration,
+                        s.AppointmentBufferTime,
+                        s.Website,
                         Category = new
                         {
                             s.Category.Id,

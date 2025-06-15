@@ -54,9 +54,7 @@ namespace API.Functions
                 {
                     _logger.LogWarning("🤔 Client not found with email: {Email}", email);
                     return new NotFoundObjectResult($"No client found with email: {email}");
-                }
-
-                _logger.LogInformation("📋 Retrieving appointment history for client: {ClientName} ({Email})", 
+                }                _logger.LogInformation("📋 Retrieving appointment history for client: {ClientName} ({Email})", 
                     $"{client.FirstName} {client.LastName}", email);
 
                 // Get all appointments for this client
@@ -76,6 +74,7 @@ namespace API.Functions
                             a.Service.Description,
                             a.Service.Price,
                             a.Service.Duration,
+                            a.Service.AppointmentBufferTime,
                             Category = new
                             {
                                 a.Service.Category.Id,
@@ -87,15 +86,15 @@ namespace API.Functions
                 
                 _logger.LogInformation("✅ Retrieved {Count} appointments for client with email {Email}", 
                     appointments.Count, email);
-                
-                return new OkObjectResult(new 
+                  return new OkObjectResult(new 
                 {
                     Client = new
                     {
                         client.Id,
                         client.FirstName,
                         client.LastName,
-                        client.Email
+                        client.Email,
+                        client.PhoneNumber
                     },
                     Appointments = appointments,
                     TotalCount = appointments.Count

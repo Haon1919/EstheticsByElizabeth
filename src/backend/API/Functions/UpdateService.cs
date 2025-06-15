@@ -117,11 +117,17 @@ namespace API.Functions
                 if (updateRequest.Description != null)
                     existingService.Description = updateRequest.Description;
                     
+                if (updateRequest.AfterCareInstructions != null)
+                    existingService.AfterCareInstructions = updateRequest.AfterCareInstructions;
+                    
                 if (updateRequest.Price.HasValue)
                     existingService.Price = updateRequest.Price.Value;
                     
                 if (updateRequest.Duration.HasValue)
                     existingService.Duration = updateRequest.Duration.Value;
+                    
+                if (updateRequest.AppointmentBufferTime.HasValue)
+                    existingService.AppointmentBufferTime = updateRequest.AppointmentBufferTime.Value;
                     
                 if (updateRequest.CategoryId.HasValue)
                     existingService.CategoryId = updateRequest.CategoryId.Value;
@@ -141,8 +147,10 @@ namespace API.Functions
                     updatedService.Id,
                     updatedService.Name,
                     updatedService.Description,
+                    updatedService.AfterCareInstructions,
                     updatedService.Price,
                     updatedService.Duration,
+                    updatedService.AppointmentBufferTime,
                     updatedService.Website,
                     Category = new
                     {
@@ -179,11 +187,17 @@ namespace API.Functions
         [StringLength(2000, ErrorMessage = "Description cannot exceed 2000 characters")]
         public string? Description { get; set; }
 
+        [StringLength(2000, ErrorMessage = "Aftercare instructions cannot exceed 2000 characters")]
+        public string? AfterCareInstructions { get; set; }
+
         [Range(0, 9999.99, ErrorMessage = "Price must be between 0 and 9999.99")]
         public decimal? Price { get; set; }
 
         [Range(1, 480, ErrorMessage = "Duration must be between 1 and 480 minutes")]
         public int? Duration { get; set; }
+
+        [Range(1, 52, ErrorMessage = "Appointment buffer time must be between 1 and 52 weeks")]
+        public int? AppointmentBufferTime { get; set; }
 
         public int? CategoryId { get; set; }
 

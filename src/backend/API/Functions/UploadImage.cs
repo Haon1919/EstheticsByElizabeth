@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using API.DTOs;
+using API.Services;
 
 namespace API.Functions
 {
@@ -16,12 +17,14 @@ namespace API.Functions
     public class UploadImage
     {
         private readonly ILogger<UploadImage> _logger;
+        private readonly IImageStorageService _storageService;
         private static readonly string[] AllowedExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
         private const long MaxFileSize = 5 * 1024 * 1024; // 5MB
 
-        public UploadImage(ILogger<UploadImage> logger)
+        public UploadImage(ILogger<UploadImage> logger, IImageStorageService storageService)
         {
             _logger = logger;
+            _storageService = storageService;
         }
 
         /// <summary>
@@ -110,33 +113,8 @@ namespace API.Functions
                     .Replace("-", "_");
                 var newFileName = $"{timestamp}_{uniqueId}_{safeFileName}{fileExtension}";
 
-                // In a real-world scenario, you would upload to Azure Blob Storage, AWS S3, etc.
-                // For this demo, we'll simulate the upload and return a mock URL
-                // 
-                // Example Azure Blob Storage implementation:
-                // var blobServiceClient = new BlobServiceClient(connectionString);
-                // var containerClient = blobServiceClient.GetBlobContainerClient("gallery-images");
-                // var blobClient = containerClient.GetBlobClient(newFileName);
-                // 
-                // using var stream = file.OpenReadStream();
-                // await blobClient.UploadAsync(stream, overwrite: true);
-                // 
-                // var imageUrl = blobClient.Uri.ToString();
-
-                // For demo purposes, we'll save to local storage and return a mock URL
-                var uploadsDirectory = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "gallery");
-                Directory.CreateDirectory(uploadsDirectory);
-
-                var filePath = Path.Combine(uploadsDirectory, newFileName);
-                
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    await file.CopyToAsync(stream);
-                }
-
-                // Generate URL (in production, this would be your CDN/blob storage URL)
-                var baseUrl = $"{req.Scheme}://{req.Host}";
-                var imageUrl = $"{baseUrl}/uploads/gallery/{newFileName}";
+                // Upload using the storage service
+                var imageUrl = await _storageService.UploadImageAsync(file, newFileName);
 
                 _logger.LogInformation("✅ Image uploaded successfully: {FileName} -> {ImageUrl}", 
                     file.FileName, imageUrl);

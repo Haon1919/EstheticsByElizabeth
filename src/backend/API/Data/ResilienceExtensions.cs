@@ -28,7 +28,7 @@ namespace API.Data
             this DbContext dbContext, 
             Func<Task<T>> operation, 
             IAsyncPolicy policy,
-            string operationKey = null)
+            string? operationKey = null)
         {
             // Create a context dictionary for the policy
             var context = new Context(operationKey ?? Guid.NewGuid().ToString());
@@ -72,7 +72,7 @@ namespace API.Data
             this DbContext dbContext, 
             Func<Task> operation, 
             IAsyncPolicy policy,
-            string operationKey = null)
+            string? operationKey = null)
         {
             // Create a context dictionary for the policy
             var context = new Context(operationKey ?? Guid.NewGuid().ToString());

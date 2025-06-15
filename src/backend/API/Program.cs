@@ -9,6 +9,7 @@ using Npgsql; // Needed for UseNpgsql and options
 using System; // Needed for TimeSpan, StringComparison etc.
 using System.Text.Json; // Needed for JsonSerializerOptions
 using System.Text.Json.Serialization; // Needed for ReferenceHandler and JsonIgnoreCondition
+using Minio; // MinIO client
 
 Console.WriteLine("🔧 [STARTUP] Configuring Azure Functions Host (Isolated Process Mode)");
 
@@ -30,36 +31,10 @@ var host = new HostBuilder()
             options.SerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
         });
     })    .ConfigureAppConfiguration((context, config) =>
-    {
-        // Load configuration from local settings file
+    {        // Load configuration from local settings file
         config.AddJsonFile("local.settings.json", optional: true, reloadOnChange: true);
     })
-    .ConfigureServices((context, services) => {
-        // --- Log Configuration Structure ---
-        Console.WriteLine("📋 [STARTUP] Configuration Structure:");
-        Console.WriteLine($"📁 [CONFIG] FUNCTIONS_WORKER_RUNTIME: {context.Configuration["Values:FUNCTIONS_WORKER_RUNTIME"] ?? "[not set]"}");
-        Console.WriteLine($"📁 [CONFIG] ConnectionStrings:DefaultConnection: {(string.IsNullOrEmpty(context.Configuration["Values:ConnectionStrings:DefaultConnection"]) ? "[not set]" : "[configured]")}");
-        Console.WriteLine($"📁 [CONFIG] AzureWebJobsStorage: {(string.IsNullOrEmpty(context.Configuration["Values:AzureWebJobsStorage"]) ? "[not set]" : "[configured]")}");
-        
-        // --- Check if local.settings.json is being loaded ---
-        Console.WriteLine("🔍 [DEBUG] Checking local.settings.json loading:");
-        Console.WriteLine($"🏠 [CONFIG] Host:CORS from config: {context.Configuration["Host:CORS"] ?? "[not set]"}");
-        Console.WriteLine($"🏠 [CONFIG] Host:LocalHttpPort from config: {context.Configuration["Host:LocalHttpPort"] ?? "[not set]"}");
-        Console.WriteLine($"🌍 [ENV] Host__CORS environment variable: {Environment.GetEnvironmentVariable("Host__CORS") ?? "[not set]"}");
-        Console.WriteLine($"🌍 [ENV] ASPNETCORE_ENVIRONMENT: {Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "[not set]"}");
-        Console.WriteLine($"🌍 [ENV] AZURE_FUNCTIONS_ENVIRONMENT: {Environment.GetEnvironmentVariable("AZURE_FUNCTIONS_ENVIRONMENT") ?? "[not set]"}");
-        
-        // Check all configuration providers
-        Console.WriteLine("🔍 [DEBUG] Configuration providers:");
-        foreach (var provider in context.Configuration.AsEnumerable().Take(30))
-        {
-            if (!string.IsNullOrEmpty(provider.Key))
-            {
-                var value = provider.Value?.Length > 50 ? $"{provider.Value.Substring(0, 50)}..." : provider.Value;
-                Console.WriteLine($"    🔑 {provider.Key}: {value ?? "[null]"}");
-            }
-        }
-        
+    .ConfigureServices((context, services) => {        
         // --- Connection String Handling ---
         Console.WriteLine("🔍 Locating database connection string...");
 
@@ -119,12 +94,42 @@ var host = new HostBuilder()
                     Console.WriteLine($"[EFCore SQL] {DateTime.UtcNow:HH:mm:ss.fff} {message}");
                 }            },
             LogLevel.Information); // Set the minimum log level for messages from EF Core
-        });
-
-        // Register the ClientReviewService
+        });        // Register the ClientReviewService
         services.AddScoped<API.Services.ClientReviewService>();
+          // Register the EmailService
+        services.AddScoped<API.Services.IEmailService, API.Services.EmailService>();
         
-        Console.WriteLine("✅ [STARTUP] All services registered successfully");
+        // Register HttpClient for HTTP-based services
+        services.AddHttpClient();
+          // Register Image Storage Service based on configuration
+        var storageProvider = context.Configuration["Values:ImageStorage:Provider"] ?? "Local";
+        Console.WriteLine($"🗄️ [STARTUP] Registering Image Storage Provider: {storageProvider}");
+        
+        if (storageProvider.Equals("MinIO", StringComparison.OrdinalIgnoreCase))
+        {
+            // Add MinIO client using official AddMinio method
+            var endpoint = context.Configuration["Values:ImageStorage:MinIO:Endpoint"] ?? "localhost:9000";
+            var accessKey = context.Configuration["Values:ImageStorage:MinIO:AccessKey"] ?? "minioadmin";
+            var secretKey = context.Configuration["Values:ImageStorage:MinIO:SecretKey"] ?? "minioadmin123";
+            var useSSL = bool.Parse(context.Configuration["Values:ImageStorage:MinIO:UseSSL"] ?? "false");
+
+            Console.WriteLine($"🪣 [STARTUP] Configuring MinIO with endpoint: {endpoint}, SSL: {useSSL}");
+            
+            services.AddMinio(configureClient => configureClient
+                .WithEndpoint(endpoint)
+                .WithCredentials(accessKey, secretKey)
+                .WithSSL(useSSL)
+                .Build());
+
+            services.AddScoped<API.Services.IImageStorageService, API.Services.MinioImageStorageService>();
+            Console.WriteLine("✅ [STARTUP] MinIO image storage service configured with official AddMinio");
+        }
+        else
+        {
+            services.AddScoped<API.Services.IImageStorageService, API.Services.LocalImageStorageService>();
+            Console.WriteLine("✅ [STARTUP] Local image storage service configured");
+        }
+          Console.WriteLine("✅ [STARTUP] All services registered successfully");
 
         // Removed the separate Polly policy definition and registration.
         // EF Core's EnableRetryOnFailure is now handling database retries.

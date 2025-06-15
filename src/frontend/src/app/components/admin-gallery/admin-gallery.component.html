@@ -101,20 +101,10 @@
               <span>{{ selectedFile ? selectedFile.name : 'Choose Image File' }}</span>
               <small>Supports: JPG, PNG, GIF (Max 5MB)</small>
             </label>
-            <div *ngIf="selectedFile && !uploading && !imageForm.src" class="file-selected">
+            <div *ngIf="selectedFile" class="file-selected">
               <i class="fas fa-check-circle"></i>
               <span>File selected: {{ selectedFile.name }}</span>
-              <small>Uploading automatically to get URL...</small>
-            </div>
-            <div *ngIf="uploading" class="file-uploading">
-              <i class="fas fa-spinner fa-spin"></i>
-              <span>Uploading {{ selectedFile?.name }}...</span>
-              <small>Please wait while we upload your image</small>
-            </div>
-            <div *ngIf="selectedFile && imageForm.src" class="file-uploaded">
-              <i class="fas fa-check-circle"></i>
-              <span>Image uploaded successfully!</span>
-              <small>URL has been populated below. Complete the form and save.</small>
+              <small>Complete the form and save to upload and create gallery item.</small>
             </div>
           </div>
         </div>
@@ -125,7 +115,7 @@
           <div class="form-row">
             <div class="form-group">
               <label for="imageUrl">
-                {{ createMode && selectedFile ? 'Image URL (auto-populated from upload)' : 'Image URL *' }}
+                {{ createMode && selectedFile ? 'Image URL (will be auto-generated on save)' : 'Image URL *' }}
               </label>
               <input 
                 type="url" 

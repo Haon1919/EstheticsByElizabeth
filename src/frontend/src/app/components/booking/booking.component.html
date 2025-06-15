@@ -51,11 +51,20 @@
               </div>
             </div>
 
-            <div class="form-group">
-              <label for="name">Your Name *</label>
-              <input type="text" id="name" formControlName="name" [class.is-invalid]="bookingForm.get('name')?.invalid && bookingForm.get('name')?.touched">
-              <div class="invalid-feedback" *ngIf="bookingForm.get('name')?.invalid && bookingForm.get('name')?.touched">
-                Please enter your name
+            <div class="form-row">
+              <div class="form-group">
+                <label for="firstName">First Name *</label>
+                <input type="text" id="firstName" formControlName="firstName" [class.is-invalid]="bookingForm.get('firstName')?.invalid && bookingForm.get('firstName')?.touched">
+                <div class="invalid-feedback" *ngIf="bookingForm.get('firstName')?.invalid && bookingForm.get('firstName')?.touched">
+                  Please enter your first name
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="lastName">Last Name *</label>
+                <input type="text" id="lastName" formControlName="lastName" [class.is-invalid]="bookingForm.get('lastName')?.invalid && bookingForm.get('lastName')?.touched">
+                <div class="invalid-feedback" *ngIf="bookingForm.get('lastName')?.invalid && bookingForm.get('lastName')?.touched">
+                  Please enter your last name
+                </div>
               </div>
             </div>
 

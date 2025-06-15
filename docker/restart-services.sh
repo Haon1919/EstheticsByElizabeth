@@ -16,9 +16,9 @@ echo "📍 Script directory: $SCRIPT_DIR"
 echo "🛑 Stopping services..."
 "$SCRIPT_DIR/stop-services.sh"
 
-# Optional: Remove volumes to completely reset database (uncomment if needed)
-# echo "🗑️  Removing volumes for fresh database..."
-# docker-compose -f "$SCRIPT_DIR/docker-compose.yml" down -v
+# Remove volumes to completely reset database and MinIO storage
+echo "🗑️  Removing volumes for fresh database and storage..."
+docker-compose -f "$SCRIPT_DIR/docker-compose.yml" down -v
 
 # Start services using existing script
 echo "🚀 Starting services..."

@@ -1,0 +1,144 @@
+<main class="admin-categories-container">
+  <!-- Header Section -->
+  <div class="header-section" *ngIf="!showAddForm">
+    <h1>Category Management</h1>
+    <div class="header-actions">
+      <button class="btn btn-primary" (click)="showAddCategoryForm()" [disabled]="loading">
+        <i class="fas fa-plus"></i>
+        Add New Category
+      </button>
+    </div>
+  </div>
+
+  <!-- Alert Messages -->
+  <div class="alert alert-success" *ngIf="successMessage">
+    <i class="fas fa-check-circle"></i>
+    {{ successMessage }}
+  </div>
+  <div class="alert alert-error" *ngIf="errorMessage">
+    <i class="fas fa-exclamation-circle"></i>
+    {{ errorMessage }}
+  </div>
+
+  <!-- Search Section -->
+  <div class="search-section" *ngIf="!showAddForm">
+    <div class="search-row">
+      <div class="search-group">
+        <label for="searchInput">Search Categories:</label>
+        <input 
+          type="text" 
+          id="searchInput"
+          [(ngModel)]="searchQuery" 
+          (input)="onSearchChange()"
+          placeholder="Search by category name..."
+          class="search-input">
+      </div>
+      
+      <div class="search-button-wrapper">
+        <button class="btn btn-outline" (click)="clearFilters()">
+          <i class="fas fa-times"></i>
+          Clear Search
+        </button>
+      </div>
+    </div>
+    
+    <div class="results-summary">
+      Showing {{ filteredCategories.length }} of {{ categories.length }} categories
+    </div>
+  </div>
+
+  <!-- Add/Edit Form -->
+  <div class="form-section" *ngIf="showAddForm">
+    <div class="form-header">
+      <h2>
+        <i class="fas fa-tag"></i>
+        {{ isEditMode ? 'Edit Category' : 'Add New Category' }}
+      </h2>
+      <button class="btn btn-outline" (click)="cancelForm()">
+        <i class="fas fa-times"></i>
+        Cancel
+      </button>
+    </div>
+
+    <form [formGroup]="categoryForm" (ngSubmit)="submitForm()" class="category-form">
+      <div class="form-group">
+        <label for="name">Category Name *</label>
+        <input 
+          type="text" 
+          id="name" 
+          formControlName="name"
+          class="form-input"
+          [class.is-invalid]="categoryForm.get('name')?.invalid && categoryForm.get('name')?.touched"
+          placeholder="Enter category name"
+          maxlength="255">
+        <div class="invalid-feedback" *ngIf="categoryForm.get('name')?.invalid && categoryForm.get('name')?.touched">
+          <span *ngIf="categoryForm.get('name')?.errors?.['required']">Category name is required</span>
+          <span *ngIf="categoryForm.get('name')?.errors?.['minlength']">Category name must be at least 1 character</span>
+          <span *ngIf="categoryForm.get('name')?.errors?.['maxlength']">Category name cannot exceed 255 characters</span>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="button" class="btn btn-secondary" (click)="cancelForm()">
+          Cancel
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="loading || categoryForm.invalid">
+          <i class="fas fa-save" *ngIf="!loading"></i>
+          <i class="fas fa-spinner fa-spin" *ngIf="loading"></i>
+          {{ loading ? 'Saving...' : (isEditMode ? 'Update Category' : 'Create Category') }}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Categories List -->
+  <div class="categories-section" *ngIf="!showAddForm">
+    <div class="loading-spinner" *ngIf="loading">
+      <i class="fas fa-spinner fa-spin"></i>
+      <span>Loading categories...</span>
+    </div>
+
+    <div class="categories-list" *ngIf="!loading">
+      <div class="categories-grid">
+        <div class="category-card" *ngFor="let category of filteredCategories">
+          <div class="category-header">
+            <h4 class="category-name">
+              <i class="fas fa-tag"></i>
+              {{ category.name }}
+            </h4>
+            <div class="category-actions">
+              <button class="action-btn edit" (click)="editCategory(category)" title="Edit Category">
+                <i class="fas fa-edit"></i>
+              </button>
+              <button class="action-btn delete" (click)="deleteCategory(category)" title="Delete Category">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </div>
+          
+          <div class="category-details">
+            <div class="category-stats">
+              <div class="stat-item">
+                <i class="fas fa-spa"></i>
+                <span class="stat-label">Services:</span>
+                <span class="stat-value">{{ getServiceCount(category.id) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- No categories message -->
+      <div class="no-categories" *ngIf="filteredCategories.length === 0 && !loading">
+        <i class="fas fa-tag"></i>
+        <h3>No categories found</h3>
+        <p *ngIf="searchQuery">Try adjusting your search criteria.</p>
+        <p *ngIf="!searchQuery">No categories have been created yet.</p>
+        <button class="btn btn-primary" (click)="showAddCategoryForm()">
+          <i class="fas fa-plus"></i>
+          Add Your First Category
+        </button>
+      </div>
+    </div>
+  </div>
+</main>

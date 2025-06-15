@@ -45,8 +45,10 @@ export class AdminServicesComponent implements OnInit {
     this.serviceForm = this.fb.group({
       name: ['', [Validators.required, Validators.maxLength(255)]],
       description: ['', [Validators.maxLength(2000)]],
+      afterCareInstructions: ['', [Validators.maxLength(2000)]],
       price: ['', [Validators.min(0), Validators.max(9999.99)]],
       duration: ['', [Validators.min(1), Validators.max(480)]],
+      appointmentBufferTime: ['', [Validators.min(1), Validators.max(52)]],
       categoryId: ['', [Validators.required]],
       website: ['', [Validators.pattern(/^https?:\/\/.+/)]]
     });
@@ -139,8 +141,10 @@ export class AdminServicesComponent implements OnInit {
     this.serviceForm.patchValue({
       name: service.name,
       description: service.description || '',
+      afterCareInstructions: service.afterCareInstructions || '',
       price: service.price || '',
       duration: service.duration || '',
+      appointmentBufferTime: service.appointmentBufferTime || '',
       categoryId: service.category.id,
       website: service.website || ''
     });
@@ -168,8 +172,10 @@ export class AdminServicesComponent implements OnInit {
     const serviceData = {
       name: formData.name.trim(),
       description: formData.description?.trim() || null,
+      afterCareInstructions: formData.afterCareInstructions?.trim() || null,
       price: formData.price ? parseFloat(formData.price) : null,
       duration: formData.duration ? parseInt(formData.duration) : null,
+      appointmentBufferTime: formData.appointmentBufferTime ? parseInt(formData.appointmentBufferTime) : null,
       categoryId: parseInt(formData.categoryId),
       website: formData.website?.trim() || null
     };
@@ -251,6 +257,18 @@ export class AdminServicesComponent implements OnInit {
     const hours = Math.floor(duration / 60);
     const minutes = duration % 60;
     return minutes > 0 ? `${hours}h ${minutes}m` : `${hours}h`;
+  }
+
+  formatReschedulingPeriod(weeks?: number): string {
+    if (!weeks) return 'No rescheduling period';
+    if (weeks === 1) return '1 week';
+    if (weeks < 52) return `${weeks} weeks`;
+    const years = Math.floor(weeks / 52);
+    const remainingWeeks = weeks % 52;
+    if (remainingWeeks === 0) {
+      return years === 1 ? '1 year' : `${years} years`;
+    }
+    return `${years}y ${remainingWeeks}w`;
   }
 
   getServicesByCategory(categoryId: number): Service[] {

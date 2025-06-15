@@ -24,6 +24,15 @@ RUN dotnet publish "API.csproj" -c Release -o /app/publish --no-restore
 # Runtime stage - Use Azure Functions runtime image
 FROM mcr.microsoft.com/azure-functions/dotnet-isolated:4-dotnet-isolated8.0 AS runtime
 
+# Install Python and pip
+RUN apt-get update && \
+    apt-get install -y python3 python3-pip && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install Python MinIO client
+RUN pip3 install minio --break-system-packages
+
 # Set the working directory
 WORKDIR /home/site/wwwroot
 
@@ -32,6 +41,10 @@ COPY --from=build /app/publish .
 
 # Copy local.settings.json for development environment
 COPY --from=build /src/local.settings.json .
+
+# Copy Python upload script from docker directory (relative to build context)
+COPY upload-single-image.py /app/upload-single-image.py
+RUN chmod +x /app/upload-single-image.py
 
 # Debug: List files to verify what was copied
 RUN echo "=== DEBUG: Files in /home/site/wwwroot ===" && \

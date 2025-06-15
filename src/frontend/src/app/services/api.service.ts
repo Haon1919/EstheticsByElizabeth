@@ -13,6 +13,7 @@ import {
   Appointment,
   AppointmentHistoryResponse,
   AppointmentsByDateResponse,
+  EarliestAppointmentDateResponse,
   ContactRequest,
   ContactSubmissionsResponse,
   ContactSubmissionsParams,
@@ -23,6 +24,9 @@ import {
   ClientBanResponse,
   CreateServiceRequest,
   UpdateServiceRequest,
+  CreateCategoryRequest,
+  UpdateCategoryRequest,
+  CategoryServiceCount,
   GalleryImageResponse,
   GalleryImage,
   CreateGalleryImageRequest,
@@ -61,6 +65,27 @@ export class ApiService {
       .pipe(catchError(this.handleError));
   }
 
+  // Category Management methods for admin panel
+  createCategory(categoryData: CreateCategoryRequest): Observable<any> {
+    return this.http.post(`${this.baseUrl}/manage/categories`, categoryData)
+      .pipe(catchError(this.handleError));
+  }
+
+  updateCategory(categoryId: number, categoryData: UpdateCategoryRequest): Observable<any> {
+    return this.http.put(`${this.baseUrl}/manage/categories/${categoryId}`, categoryData)
+      .pipe(catchError(this.handleError));
+  }
+
+  deleteCategory(categoryId: number): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/manage/categories/${categoryId}`)
+      .pipe(catchError(this.handleError));
+  }
+
+  getServiceCountByCategory(): Observable<CategoryServiceCount[]> {
+    return this.http.get<CategoryServiceCount[]>(`${this.baseUrl}/categories/service-counts`)
+      .pipe(catchError(this.handleError));
+  }
+
   // Appointment methods
   createAppointment(appointmentData: CreateAppointmentRequest): Observable<Appointment> {
     return this.http.post<Appointment>(`${this.baseUrl}/appointments`, appointmentData)
@@ -86,6 +111,11 @@ export class ApiService {
 
   cancelAppointment(appointmentId: number): Observable<any> {
     return this.http.delete(`${this.baseUrl}/appointments/${appointmentId}`)
+      .pipe(catchError(this.handleError));
+  }
+
+  getEarliestAppointmentDate(): Observable<EarliestAppointmentDateResponse> {
+    return this.http.get<EarliestAppointmentDateResponse>(`${this.baseUrl}/appointments/earliest-date`)
       .pipe(catchError(this.handleError));
   }
 
@@ -210,6 +240,11 @@ export class ApiService {
       .pipe(catchError(this.handleError));
   }
 
+  createGalleryImageWithFile(formData: FormData): Observable<GalleryImage> {
+    return this.http.post<GalleryImage>(`${this.baseUrl}/manage/gallery`, formData)
+      .pipe(catchError(this.handleError));
+  }
+
   updateGalleryImage(imageId: number, imageData: UpdateGalleryImageRequest): Observable<GalleryImage> {
     return this.http.put<GalleryImage>(`${this.baseUrl}/manage/gallery/${imageId}`, imageData)
       .pipe(catchError(this.handleError));
@@ -235,6 +270,17 @@ export class ApiService {
 
   getGalleryCategories(): Observable<GalleryCategory[]> {
     return this.http.get<GalleryCategory[]>(`${this.baseUrl}/manage/gallery/categories`)
+      .pipe(catchError(this.handleError));
+  }
+
+  // Public Gallery methods for public gallery component
+  getPublicGalleryImages(category?: string): Observable<GalleryImageResponse> {
+    let params = new HttpParams();
+    if (category && category !== 'all') {
+      params = params.set('category', category);
+    }
+    
+    return this.http.get<GalleryImageResponse>(`${this.baseUrl}/gallery`, { params })
       .pipe(catchError(this.handleError));
   }
 

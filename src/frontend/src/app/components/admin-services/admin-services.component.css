@@ -225,6 +225,13 @@
   font-weight: 500;
 }
 
+.form-help {
+  color: #718096;
+  font-size: 0.8rem;
+  font-style: italic;
+  margin-top: 0.25rem;
+}
+
 /* Services Section */
 .services-section {
   background: white;

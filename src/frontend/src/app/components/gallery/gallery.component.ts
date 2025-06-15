@@ -1,106 +1,126 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { ApiService } from '../../services/api.service';
+import { GalleryImage } from '../../models/api-models';
+
+interface Category {
+  id: string;
+  name: string;
+}
 
 @Component({
   selector: 'app-gallery',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule],
   templateUrl: './gallery.component.html',
   styleUrls: ['./gallery.component.css']
 })
-export class GalleryComponent {
-  images = [
-    {
-      id: 1,
-      src: 'assets/images/gallery1.jpg',
-      category: 'facials',
-      alt: 'Facial treatment with client relaxing'
-    },
-    {
-      id: 2,
-      src: 'assets/images/gallery2.jpg',
-      category: 'body',
-      alt: 'Body treatment session'
-    },
-    {
-      id: 3,
-      src: 'assets/images/gallery3.jpg',
-      category: 'makeup',
-      alt: 'Professional makeup application'
-    },
-    {
-      id: 4,
-      src: 'assets/images/gallery4.jpg',
-      category: 'facials',
-      alt: 'Facial massage procedure'
-    },
-    {
-      id: 5,
-      src: 'assets/images/gallery5.jpg',
-      category: 'waxing',
-      alt: 'Waxing service being performed'
-    },
-    {
-      id: 6,
-      src: 'assets/images/gallery6.jpg',
-      category: 'makeup',
-      alt: 'Bridal makeup session'
-    },
-    {
-      id: 7,
-      src: 'assets/images/gallery7.jpg',
-      category: 'body',
-      alt: 'Relaxing body wrap treatment'
-    },
-    {
-      id: 8,
-      src: 'assets/images/gallery8.jpg',
-      category: 'facials',
-      alt: 'Advanced facial treatment'
-    },
-    {
-      id: 9,
-      src: 'assets/images/gallery9.jpg',
-      category: 'waxing',
-      alt: 'Eyebrow waxing procedure'
-    },
-    {
-      id: 10,
-      src: 'assets/images/gallery10.jpg',
-      category: 'makeup',
-      alt: 'Natural makeup look'
-    },
-    {
-      id: 11,
-      src: 'assets/images/gallery11.jpg',
-      category: 'body',
-      alt: 'Full body massage'
-    },
-    {
-      id: 12,
-      src: 'assets/images/gallery12.jpg',
-      category: 'facials',
-      alt: 'Facial cleansing treatment'
-    }
-  ];
-
-  categories = [
-    { id: 'all', name: 'All' },
-    { id: 'facials', name: 'Facials' },
-    { id: 'body', name: 'Body Treatments' },
-    { id: 'waxing', name: 'Waxing' },
-    { id: 'makeup', name: 'Makeup' }
-  ];
-
+export class GalleryComponent implements OnInit {
+  images: GalleryImage[] = [];
+  categories: Category[] = [{ id: 'all', name: 'All' }];
   selectedCategory = 'all';
+  loading = false;
+  error = '';
+
+  constructor(private apiService: ApiService) {}
+
+  ngOnInit(): void {
+    this.loadGalleryImages();
+  }
+
+  loadGalleryImages(): void {
+    this.loading = true;
+    this.error = '';
+
+    this.apiService.getPublicGalleryImages().subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.images = response.data;
+          this.updateCategories(response.categories);
+        } else {
+          this.error = 'Failed to load gallery images';
+        }
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error loading gallery images:', error);
+        this.error = 'Failed to load gallery images. Please try again later.';
+        this.loading = false;
+      }
+    });
+  }
+
+  updateCategories(apiCategories: string[]): void {
+    // Create category objects with proper display names
+    const categoryDisplayNames: { [key: string]: string } = {
+      'facials': 'Facials',
+      'body': 'Body Treatments',
+      'waxing': 'Waxing',
+      'makeup': 'Makeup',
+      'before-after': 'Before & After',
+      'products': 'Products',
+      'studio': 'Studio'
+    };
+
+    this.categories = [
+      { id: 'all', name: 'All' },
+      ...apiCategories.map(categoryId => ({
+        id: categoryId,
+        name: categoryDisplayNames[categoryId] || categoryId.charAt(0).toUpperCase() + categoryId.slice(1)
+      }))
+    ];
+  }
 
   filterImages(category: string): void {
     this.selectedCategory = category;
+    this.loading = true;
+    this.error = '';
+
+    this.apiService.getPublicGalleryImages(category).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.images = response.data;
+        } else {
+          this.error = 'Failed to filter gallery images';
+        }
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error filtering gallery images:', error);
+        this.error = 'Failed to filter gallery images. Please try again later.';
+        this.loading = false;
+      }
+    });
   }
 
   get filteredImages() {
-    return this.selectedCategory === 'all' 
-      ? this.images 
-      : this.images.filter(image => image.category === this.selectedCategory);
+    // Since we're now filtering on the server side, just return all images
+    return this.images;
+  }
+
+  trackByImageId(index: number, image: GalleryImage): number {
+    return image.id;
+  }
+
+  getCategoryDisplayName(category: string): string {
+    const categoryDisplayNames: { [key: string]: string } = {
+      'facials': 'Facials',
+      'body': 'Body Treatments',
+      'waxing': 'Waxing',
+      'makeup': 'Makeup',
+      'before-after': 'Before & After',
+      'products': 'Products',
+      'studio': 'Studio'
+    };
+
+    return categoryDisplayNames[category] || category.charAt(0).toUpperCase() + category.slice(1);
+  }
+
+  onImageError(event: any): void {
+    // Handle broken images by hiding them or showing a placeholder
+    const imgElement = event.target as HTMLImageElement;
+    imgElement.style.display = 'none';
+    console.warn('Failed to load image:', imgElement.src);
   }
 }

@@ -136,9 +136,7 @@ namespace API.Functions
             if (service.Duration == null)
             {
                 return !timeSlotTaken;
-            }
-
-            var proposedStartTime = appointmentDto.Time;
+            }            var proposedStartTime = appointmentDto.Time;
             var proposedEndTime = proposedStartTime.AddMinutes(service.Duration.Value); // Duration is in minutes
 
             var timeSlotOverlaps = await _context.Appointments

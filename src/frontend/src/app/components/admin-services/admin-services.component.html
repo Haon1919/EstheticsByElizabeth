@@ -126,6 +126,21 @@
         </div>
       </div>
       
+      <div class="form-group">
+        <label for="afterCareInstructions">Aftercare Instructions</label>
+        <textarea 
+          id="afterCareInstructions" 
+          formControlName="afterCareInstructions"
+          class="form-textarea"
+          [class.is-invalid]="serviceForm.get('afterCareInstructions')?.invalid && serviceForm.get('afterCareInstructions')?.touched"
+          placeholder="Enter aftercare instructions for clients"
+          rows="4"></textarea>
+        <div class="invalid-feedback" *ngIf="serviceForm.get('afterCareInstructions')?.invalid && serviceForm.get('afterCareInstructions')?.touched">
+          <span *ngIf="serviceForm.get('afterCareInstructions')?.errors?.['maxlength']">Aftercare instructions cannot exceed 2000 characters</span>
+        </div>
+        <small class="form-help">These instructions will be included in appointment reminder emails sent to clients</small>
+      </div>
+      
       <div class="form-row">
         <div class="form-group">
           <label for="price">Price ($)</label>
@@ -163,17 +178,37 @@
         </div>
       </div>
       
-      <div class="form-group">
-        <label for="website">Website URL</label>
-        <input 
-          type="url" 
-          id="website" 
-          formControlName="website"
-          class="form-input"
-          [class.is-invalid]="serviceForm.get('website')?.invalid && serviceForm.get('website')?.touched"
-          placeholder="https://example.com">
-        <div class="invalid-feedback" *ngIf="serviceForm.get('website')?.invalid && serviceForm.get('website')?.touched">
-          <span *ngIf="serviceForm.get('website')?.errors?.['pattern']">Please enter a valid URL starting with http:// or https://</span>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="appointmentBufferTime">Rescheduling Period (weeks)</label>
+          <input 
+            type="number" 
+            id="appointmentBufferTime" 
+            formControlName="appointmentBufferTime"
+            class="form-input"
+            [class.is-invalid]="serviceForm.get('appointmentBufferTime')?.invalid && serviceForm.get('appointmentBufferTime')?.touched"
+            placeholder="4"
+            min="1"
+            max="52">
+          <div class="invalid-feedback" *ngIf="serviceForm.get('appointmentBufferTime')?.invalid && serviceForm.get('appointmentBufferTime')?.touched">
+            <span *ngIf="serviceForm.get('appointmentBufferTime')?.errors?.['min']">Rescheduling period must be at least 1 week</span>
+            <span *ngIf="serviceForm.get('appointmentBufferTime')?.errors?.['max']">Rescheduling period cannot exceed 52 weeks (1 year)</span>
+          </div>
+          <small class="form-help">Number of weeks until the next recommended appointment for one-click rescheduling</small>
+        </div>
+        
+        <div class="form-group">
+          <label for="website">Website URL</label>
+          <input 
+            type="url" 
+            id="website" 
+            formControlName="website"
+            class="form-input"
+            [class.is-invalid]="serviceForm.get('website')?.invalid && serviceForm.get('website')?.touched"
+            placeholder="https://example.com">
+          <div class="invalid-feedback" *ngIf="serviceForm.get('website')?.invalid && serviceForm.get('website')?.touched">
+            <span *ngIf="serviceForm.get('website')?.errors?.['pattern']">Please enter a valid URL starting with http:// or https://</span>
+          </div>
         </div>
       </div>
     </form>
@@ -225,6 +260,10 @@
                 <div class="meta-item" *ngIf="service.duration">
                   <i class="fas fa-clock"></i>
                   <span>{{ formatDuration(service.duration) }}</span>
+                </div>
+                <div class="meta-item" *ngIf="service.appointmentBufferTime">
+                  <i class="fas fa-calendar-plus"></i>
+                  <span>{{ formatReschedulingPeriod(service.appointmentBufferTime) }}</span>
                 </div>
                 <div class="meta-item" *ngIf="service.website">
                   <i class="fas fa-external-link-alt"></i>

@@ -19,15 +19,17 @@ CREATE TABLE IF NOT EXISTS Categories (
 -- Create the Services table for PostgreSQL
 CREATE TABLE IF NOT EXISTS Services (
     Id SERIAL PRIMARY KEY,              -- Use SERIAL for auto-incrementing PK in PostgreSQL
-    CategoryId INT NOT NULL,
-    Name VARCHAR(150) NOT NULL,
+    CategoryId INT,                     -- Nullable because ON DELETE SET NULL
+    Name VARCHAR(255) NOT NULL,         -- Updated to match entity StringLength(255)
     Description TEXT,
     Duration INT,                       -- Duration in minutes
     Price DECIMAL(10, 2),               -- Price can be NULL for items like brands
-    Website VARCHAR(255),
+    AppointmentBufferTime INT,          -- Number of weeks until next appointment for rescheduling
+    Website VARCHAR(2048),              -- Updated to match entity StringLength(2048)
+    AfterCareInstructions TEXT,         -- Aftercare instructions for post-appointment client emails
 
     -- Foreign key constraint
-    FOREIGN KEY (CategoryId) REFERENCES Categories(Id)
+    FOREIGN KEY (CategoryId) REFERENCES Categories(Id) ON DELETE SET NULL
 );
 
 -- Create the Appointments table for PostgreSQL
@@ -146,22 +148,22 @@ INSERT INTO Categories (Id, Name) VALUES
 ON CONFLICT (Id) DO NOTHING; -- Avoid errors if IDs already exist
 
 -- Seed Services
-INSERT INTO Services (Id, CategoryId, Name, Description, Duration, Price, Website) VALUES
+INSERT INTO Services (Id, CategoryId, Name, Description, Duration, Price, AppointmentBufferTime, Website, AfterCareInstructions) VALUES
 -- Facial Treatments (CategoryId: 1)
-(101, 1, 'Signature Facial', 'A personalized facial treatment tailored to your specific skin needs and concerns.', 60, 95.00, NULL),
-(102, 1, 'Dermaplane + mini facial', 'A dual treatment combining dermaplaning to remove dead skin cells and peach fuzz, followed by a mini facial to cleanse and hydrate the skin.', 60, 100.00, NULL), -- Assuming 60 min based on range
-(103, 1, 'Back Facial', 'A specialized treatment for the back area, focusing on cleansing, exfoliating, and hydrating.', 60, 115.00, NULL),
+(101, 1, 'Signature Facial', 'A personalized facial treatment tailored to your specific skin needs and concerns.', 60, 95.00, 0, NULL, 'Avoid direct sunlight for 24 hours. Use a gentle cleanser and moisturizer. Apply SPF 30+ daily.'),
+(102, 1, 'Dermaplane + mini facial', 'A dual treatment combining dermaplaning to remove dead skin cells and peach fuzz, followed by a mini facial to cleanse and hydrate the skin.', 60, 100.00, 0, NULL, 'Your skin may be slightly sensitive for 24-48 hours. Avoid exfoliating products, retinoids, and direct sun exposure. Use gentle skincare and SPF 30+.'), -- Assuming 60 min based on range
+(103, 1, 'Back Facial', 'A specialized treatment for the back area, focusing on cleansing, exfoliating, and hydrating.', 60, 115.00, 0, NULL, 'Avoid tight clothing for 24 hours. Keep the area clean and dry. Apply the recommended moisturizer daily.'),
 
 -- Waxing (CategoryId: 2)
-(201, 2, 'Upper lip wax', 'Quick and precise removal of unwanted hair from the upper lip area.', 5, 15.00, NULL),
-(202, 2, 'Eyebrow wax', 'Precise shaping and grooming of eyebrows for a clean, defined look.', 10, 20.00, NULL),
+(201, 2, 'Upper lip wax', 'Quick and precise removal of unwanted hair from the upper lip area.', 5, 15.00, 0, NULL, 'Avoid touching the area for 2-4 hours. Use aloe vera gel if irritation occurs. Avoid makeup on the area for 4-6 hours.'),
+(202, 2, 'Eyebrow wax', 'Precise shaping and grooming of eyebrows for a clean, defined look.', 10, 20.00, 0, NULL, 'Apply ice if you experience swelling. Avoid makeup and touching the area for 2-4 hours. Use aloe vera for any redness.'),
 
 -- Addons (CategoryId: 3)
-(301, 3, 'Chemical peels', 'An exfoliating treatment that improves skin texture and tone for a more radiant complexion.', NULL, 15.00, NULL), -- Duration is 'Varies', so set to NULL
+(301, 3, 'Chemical peels', 'An exfoliating treatment that improves skin texture and tone for a more radiant complexion.', NULL, 15.00, 0, NULL, 'Do not pick or peel flaking skin. Use gentle cleanser and moisturizer only. Avoid sun exposure and use SPF 30+ for 1-2 weeks.'), -- Duration is 'Varies', so set to NULL
 
 -- Skincare Brands (CategoryId: 4) - Note: Price is NULL
-(401, 4, 'SkinCeuticals', 'A skincare brand known for its advanced skincare products backed by science.', NULL, NULL, 'https://www.skinceuticals.com/'),
-(402, 4, 'Bioelements', 'A professional skincare brand offering customized skincare solutions for all skin types.', NULL, NULL, 'https://www.bioelements.com/')
+(401, 4, 'SkinCeuticals', 'A skincare brand known for its advanced skincare products backed by science.', NULL, NULL, 0, 'https://www.skinceuticals.com/', NULL),
+(402, 4, 'Bioelements', 'A professional skincare brand offering customized skincare solutions for all skin types.', NULL, NULL, 0, 'https://www.bioelements.com/', NULL)
 ON CONFLICT (Id) DO NOTHING; -- Avoid errors if IDs already exist
 
 -- Part 5: Seed test data for client review system testing
@@ -241,35 +243,38 @@ INSERT INTO ContactSubmissions (Id, Name, Email, Phone, Subject, Message, Intere
 (10, 'James Rodriguez', 'james.rodriguez@email.com', '555-909-0123', 'Gift Certificate Inquiry', 'I want to buy a gift certificate for my mother''s birthday. She loves facials and I think she''d really enjoy your signature treatment. How do I go about purchasing one?', 'Signature Facial', 'Phone', '2025-05-25 12:45:00+00', 'responded', '2025-05-26 08:20:00+00', '2025-05-26 10:30:00+00', 'Helped set up gift certificate. Mother booked appointment and loved the service!')
 ON CONFLICT (Id) DO NOTHING;
 
--- Part 7: Seed sample gallery images for testing admin gallery functionality
+-- Part 7: Seed sample gallery images using actual available images for testing admin gallery functionality
+-- Using correct MinIO object keys (these will be converted to proper URLs by the storage service)
 
 INSERT INTO GalleryImages (Id, Src, Alt, Category, Title, Description, IsActive, SortOrder, UploadedAt) VALUES
--- Facial treatment images
-(1, '/assets/images/gallery/facial-treatment-1.jpg', 'Client receiving signature facial treatment', 'facial', 'Signature Facial Treatment', 'Our most popular facial treatment in progress, showcasing our serene treatment room environment.', true, 1, '2025-01-01 10:00:00+00'),
-(2, '/assets/images/gallery/facial-treatment-2.jpg', 'Relaxing facial mask application', 'facial', 'Custom Facial Mask', 'Applying a customized facial mask tailored to specific skin needs.', true, 2, '2025-01-01 11:00:00+00'),
-(3, '/assets/images/gallery/dermaplane-treatment.jpg', 'Dermaplaning procedure in action', 'facial', 'Dermaplaning Treatment', 'Professional dermaplaning to remove dead skin cells and achieve smooth, radiant skin.', true, 3, '2025-01-01 12:00:00+00'),
+-- Facial treatment images using MinIO object keys (no leading slash, no full URLs)
+(1, 'images/gallery/facial-treatment-1.jpg', 'Professional facial treatment session', 'facials', 'Signature Facial Treatment', 'Our signature facial treatment showcasing professional skincare techniques and relaxing environment.', true, 1, '2025-01-01 10:00:00+00'),
+(2, 'images/gallery/facial-treatment-2.jpg', 'Relaxing skincare treatment', 'facials', 'Custom Facial Experience', 'Customized facial treatment tailored to individual skin needs and concerns.', true, 2, '2025-01-01 11:00:00+00'),
+(3, 'images/gallery/dermaplaning-treatment.jpg', 'Advanced skincare procedure', 'facials', 'Dermaplaning Treatment', 'Professional dermaplaning service for smooth, radiant skin results.', true, 3, '2025-01-01 12:00:00+00'),
 
 -- Before and after results
-(4, '/assets/images/gallery/before-after-acne-1.jpg', 'Before and after acne treatment results', 'before-after', 'Acne Treatment Results', 'Dramatic improvement in skin clarity after a series of customized facial treatments.', true, 1, '2025-01-02 10:00:00+00'),
-(5, '/assets/images/gallery/before-after-aging-1.jpg', 'Before and after anti-aging treatment', 'before-after', 'Anti-Aging Results', 'Visible reduction in fine lines and improved skin texture after specialized treatments.', true, 2, '2025-01-02 11:00:00+00'),
-(6, '/assets/images/gallery/before-after-hyperpigmentation.jpg', 'Before and after hyperpigmentation treatment', 'before-after', 'Hyperpigmentation Treatment', 'Significant improvement in skin tone and reduction of dark spots.', true, 3, '2025-01-02 12:00:00+00'),
+(4, 'images/gallery/before-after-facial.jpg', 'Before and after facial treatment results', 'before-after', 'Facial Treatment Results', 'Dramatic improvement in skin clarity and texture after our signature facial treatments.', true, 1, '2025-01-02 10:00:00+00'),
+(5, 'images/gallery/skincare-transformation.jpg', 'Before and after skincare transformation', 'before-after', 'Skincare Transformation', 'Visible improvement in skin health and appearance after customized treatment plan.', true, 2, '2025-01-02 11:00:00+00'),
 
--- Facility and environment photos
-(7, '/assets/images/gallery/treatment-room-1.jpg', 'Peaceful treatment room with soft lighting', 'facility', 'Treatment Room', 'Our tranquil treatment rooms designed for ultimate relaxation and comfort.', true, 1, '2025-01-03 10:00:00+00'),
-(8, '/assets/images/gallery/reception-area.jpg', 'Welcoming reception and waiting area', 'facility', 'Reception Area', 'Modern and welcoming reception area where your spa experience begins.', true, 2, '2025-01-03 11:00:00+00'),
-(9, '/assets/images/gallery/product-display.jpg', 'Professional skincare products on display', 'facility', 'Professional Products', 'High-quality skincare products from trusted brands like SkinCeuticals and Bioelements.', true, 3, '2025-01-03 12:00:00+00'),
+-- Studio and facility photos
+(6, 'images/gallery/treatment-room.jpg', 'Professional treatment room setup', 'studio', 'Treatment Room', 'Our peaceful and professional treatment rooms designed for ultimate client comfort.', true, 1, '2025-01-03 10:00:00+00'),
+(7, 'images/gallery/studio-atmosphere.jpg', 'Studio mascot and ambiance', 'studio', 'Studio Atmosphere', 'The welcoming and relaxing atmosphere that makes our studio special.', true, 2, '2025-01-03 11:00:00+00'),
 
 -- Waxing services
-(10, '/assets/images/gallery/eyebrow-waxing.jpg', 'Precision eyebrow waxing service', 'waxing', 'Eyebrow Waxing', 'Expert eyebrow shaping for perfectly defined brows.', true, 1, '2025-01-04 10:00:00+00'),
-(11, '/assets/images/gallery/waxing-setup.jpg', 'Clean waxing station setup', 'waxing', 'Professional Waxing Setup', 'Hygienic and professional waxing environment ensuring client comfort and safety.', true, 2, '2025-01-04 11:00:00+00'),
+(8, 'images/gallery/eyebrow-waxing.jpg', 'Professional waxing service', 'waxing', 'Eyebrow Waxing', 'Expert eyebrow shaping and waxing services for perfectly defined brows.', true, 1, '2025-01-04 10:00:00+00'),
+(9, 'images/gallery/professional-waxing.jpg', 'Precision waxing technique', 'waxing', 'Professional Waxing', 'Clean, hygienic waxing environment with professional techniques and care.', true, 2, '2025-01-04 11:00:00+00'),
 
--- Seasonal/promotional content (some inactive for rotation)
-(12, '/assets/images/gallery/summer-glow-promo.jpg', 'Summer skincare promotion image', 'promotional', 'Summer Glow Package', 'Special summer skincare package for radiant, sun-ready skin.', false, 1, '2025-01-05 10:00:00+00'),
-(13, '/assets/images/gallery/bridal-package.jpg', 'Bridal skincare preparation', 'promotional', 'Bridal Skincare Package', 'Complete bridal preparation skincare routine for your special day.', true, 1, '2025-01-05 11:00:00+00'),
+-- Body treatment examples
+(10, 'images/gallery/body-treatment.jpg', 'Relaxing body treatment session', 'body', 'Body Treatment', 'Comprehensive body treatments designed to rejuvenate and refresh.', true, 1, '2025-01-05 10:00:00+00'),
+(11, 'images/gallery/body-care-services.jpg', 'Professional body care service', 'body', 'Body Care Services', 'Expert body treatments using premium products and techniques.', true, 2, '2025-01-05 11:00:00+00'),
 
--- Educational content
-(14, '/assets/images/gallery/skincare-consultation.jpg', 'Skincare consultation in progress', 'educational', 'Skincare Consultation', 'Personalized skincare analysis and treatment planning session.', true, 1, '2025-01-06 10:00:00+00'),
-(15, '/assets/images/gallery/product-education.jpg', 'Client learning about skincare products', 'educational', 'Product Education', 'Learning about proper skincare routine and product application techniques.', true, 2, '2025-01-06 11:00:00+00')
+-- Products showcase
+(12, 'images/gallery/premium-skincare.jpg', 'Professional skincare products', 'products', 'Premium Skincare', 'High-quality skincare products from trusted brands like SkinCeuticals and Bioelements.', true, 1, '2025-01-06 10:00:00+00'),
+(13, 'images/gallery/product-education.jpg', 'Product consultation session', 'products', 'Product Education', 'Learning about proper skincare routines and product application techniques.', true, 2, '2025-01-06 11:00:00+00'),
+
+-- Makeup services (using available images)
+(14, 'images/gallery/makeup-services.jpg', 'Professional makeup application', 'makeup', 'Makeup Services', 'Expert makeup application for special occasions and everyday looks.', true, 1, '2025-01-07 10:00:00+00'),
+(15, 'images/gallery/bridal-makeup.jpg', 'Bridal makeup preparation', 'makeup', 'Bridal Makeup', 'Specialized bridal makeup services for your perfect wedding day look.', false, 2, '2025-01-07 11:00:00+00')
 ON CONFLICT (Id) DO NOTHING;
 
 -- Reset sequences to proper values

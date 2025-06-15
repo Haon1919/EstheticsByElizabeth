@@ -9,15 +9,16 @@ using Microsoft.EntityFrameworkCore;
 
 
 namespace API.Functions
-{
-    /// <summary>
+{    /// <summary>
     /// 🗑️ The Appointment Cancellation Wizard 🗑️
     /// Handles cancelling existing appointments.
     /// </summary>
     public class CancelAppointment
     {
         private readonly ILogger<CancelAppointment> _logger;
-        private readonly ProjectContext _context;        public CancelAppointment(ILogger<CancelAppointment> logger, ProjectContext context)
+        private readonly ProjectContext _context;
+
+        public CancelAppointment(ILogger<CancelAppointment> logger, ProjectContext context)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _context = context ?? throw new ArgumentNullException(nameof(context));
@@ -26,10 +27,12 @@ namespace API.Functions
         /// <summary>
         /// 🗑️ The Magical Appointment Cancellation Ritual 🗑️
         /// Azure Function triggered by HTTP DELETE to cancel an appointment.
-        /// </summary>        [Function("CancelAppointment")]
+        /// </summary>
+        [Function("CancelAppointment")]
         public async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "appointments/{id}")] HttpRequest req,
-            string id)        {
+            string id)
+        {
             _logger.LogInformation("🗑️ Appointment cancellation request received for ID: {Id}", id);
 
             if (string.IsNullOrEmpty(id) || !int.TryParse(id, out int appointmentId))

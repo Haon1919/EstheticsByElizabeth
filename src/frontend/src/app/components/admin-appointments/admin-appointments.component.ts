@@ -11,7 +11,8 @@ import {
   AppointmentHistoryResponse, 
   Service,
   CreateAppointmentRequest,
-  Client
+  Client,
+  EarliestAppointmentDateResponse
 } from '../../models/api-models';
 
 @Component({
@@ -79,18 +80,48 @@ export class AdminAppointmentsComponent implements OnInit {
       return;
     }
 
-    // Initialize with today's date
-    this.selectedDate = this.formatDateForInput(new Date());
-    this.selectedEndDate = this.formatDateForInput(new Date());
-    this.newAppointment.date = this.selectedDate;
-    
-    // Load initial data
-    this.loadAppointmentsByDate();
+    // Initialize date with earliest appointment date or today's date as fallback
+    this.initializeDates();
     this.loadServices();
     this.generateTimeSlots();
     
     // Initialize filtered appointments
     this.filteredAppointments = [];
+  }
+
+  private initializeDates(): void {
+    // Get earliest appointment date from backend
+    this.appointmentService.getEarliestAppointmentDate().subscribe({
+      next: (response: EarliestAppointmentDateResponse) => {
+        let dateToUse: string;
+        if (response.hasAppointments && response.earliestDate) {
+          // Use earliest appointment date
+          dateToUse = response.earliestDate;
+        } else {
+          // Fallback to today's date if no appointments exist
+          dateToUse = this.formatDateForInput(new Date());
+        }
+        
+        // Set both selectedDate and selectedEndDate
+        this.selectedDate = dateToUse;
+        this.selectedEndDate = dateToUse;
+        this.newAppointment.date = dateToUse;
+        
+        // Load appointments for the initialized date
+        this.loadAppointmentsByDate();
+      },
+      error: (error) => {
+        console.error('Error getting earliest appointment date:', error);
+        // Fallback to today's date on error
+        const todayDate = this.formatDateForInput(new Date());
+        this.selectedDate = todayDate;
+        this.selectedEndDate = todayDate;
+        this.newAppointment.date = todayDate;
+        
+        // Load appointments for today's date
+        this.loadAppointmentsByDate();
+      }
+    });
   }
 
   // Tab management
@@ -128,8 +159,11 @@ export class AdminAppointmentsComponent implements OnInit {
   }
 
   loadAppointmentsByDate(): void {
+    console.log('yeet')
     if (!this.selectedDate) return;
-    
+    console.log('yoot')
+    console.log(this.isDateRangeMode, this.selectedEndDate, this.selectedDate);
+
     this.loading = true;
     this.clearMessages();
 
@@ -281,17 +315,17 @@ export class AdminAppointmentsComponent implements OnInit {
     // Pre-populate the form with client and service data
     this.newAppointment = {
       client: {
-        firstName: appointment.client.firstName,
-        lastName: appointment.client.lastName,
-        email: appointment.client.email,
-        phoneNumber: appointment.client.phoneNumber || ''
+        firstName: appointment.client?.firstName || '',
+        lastName: appointment.client?.lastName || '',
+        email: appointment.client?.email || '',
+        phoneNumber: appointment.client?.phoneNumber || ''
       },
       serviceId: appointment.service.id,
       date: this.formatDateForInput(new Date()),
       time: ''
     };
     
-    this.successMessage = `Pre-filled form for ${appointment.client.firstName} ${appointment.client.lastName} - ${appointment.service.name}`;
+    this.successMessage = `Pre-filled form for ${appointment.client?.firstName || 'Unknown'} ${appointment.client?.lastName || 'Client'} - ${appointment.service.name}`;
   }
 
   // Schedule new appointment methods

@@ -12,18 +12,53 @@
         <button 
           *ngFor="let category of categories" 
           [class.active]="selectedCategory === category.id"
+          [disabled]="loading"
           (click)="filterImages(category.id)"
         >
           {{category.name}}
         </button>
       </div>
 
-      <div class="gallery-grid">
-        <div class="gallery-item" *ngFor="let image of filteredImages">
+      <!-- Loading State -->
+      <div class="loading-state" *ngIf="loading">
+        <div class="spinner"></div>
+        <p>Loading gallery images...</p>
+      </div>
+
+      <!-- Error State -->
+      <div class="error-state" *ngIf="error && !loading">
+        <div class="error-message">
+          <i class="fas fa-exclamation-triangle"></i>
+          <p>{{ error }}</p>
+          <button class="btn btn-primary" (click)="loadGalleryImages()">Try Again</button>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div class="empty-state" *ngIf="!loading && !error && filteredImages.length === 0">
+        <div class="empty-message">
+          <i class="fas fa-images"></i>
+          <p>No images found{{ selectedCategory !== 'all' ? ' in this category' : '' }}.</p>
+          <button class="btn btn-primary" *ngIf="selectedCategory !== 'all'" (click)="filterImages('all')">
+            View All Images
+          </button>
+        </div>
+      </div>
+
+      <!-- Gallery Grid -->
+      <div class="gallery-grid" *ngIf="!loading && !error && filteredImages.length > 0">
+        <div class="gallery-item" *ngFor="let image of filteredImages; trackBy: trackByImageId">
           <div class="gallery-image">
-            <img [src]="image.src" [alt]="image.alt">
+            <img 
+              [src]="image.src" 
+              [alt]="image.alt"
+              [title]="image.title || image.alt"
+              (error)="onImageError($event)"
+              loading="lazy"
+            >
             <div class="overlay">
-              <span class="category">{{image.category | titlecase}}</span>
+              <span class="category">{{getCategoryDisplayName(image.category)}}</span>
+              <h4 *ngIf="image.title" class="image-title">{{ image.title }}</h4>
             </div>
           </div>
         </div>

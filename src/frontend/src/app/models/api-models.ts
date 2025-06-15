@@ -39,13 +39,43 @@ export interface Category {
   name: string;
 }
 
+export interface CategoryServiceCount {
+  categoryId: number;
+  categoryName: string;
+  serviceCount: number;
+}
+
 export interface Service {
   id: number;
   name: string;
   description: string;
   price?: number;
   duration?: number;
+  appointmentBufferTime?: number;
   category: Category;
+  website?: string;
+  afterCareInstructions?: string;
+}
+
+export interface CreateServiceRequest {
+  name: string;
+  description?: string;
+  afterCareInstructions?: string;
+  price?: number;
+  duration?: number;
+  appointmentBufferTime?: number;
+  categoryId: number;
+  website?: string;
+}
+
+export interface UpdateServiceRequest {
+  name?: string;
+  description?: string;
+  afterCareInstructions?: string;
+  price?: number;
+  duration?: number;
+  appointmentBufferTime?: number;
+  categoryId?: number;
   website?: string;
 }
 
@@ -59,7 +89,8 @@ export interface Appointment {
   id: number;
   time: string;
   service: Service;
-  client: Client;
+  client?: Client; // Optional for appointment history (client data is at response level)
+  Client?: Client; // Optional for calendar appointments (API returns capitalized Client)
 }
 
 export interface AppointmentHistoryResponse {
@@ -74,6 +105,12 @@ export interface AppointmentsByDateResponse {
   isDateRange: boolean;
   appointments: Appointment[];
   totalCount: number;
+}
+
+export interface EarliestAppointmentDateResponse {
+  earliestDate: string | null;
+  hasAppointments: boolean;
+  message: string;
 }
 
 // Contact form interface
@@ -104,7 +141,7 @@ export interface ContactSubmission {
   interestedService?: string;
   preferredContactMethod?: string;
   submittedAt: string;
-  status: 'unread' | 'read' | 'responded';
+  status: 'unread' | 'read' | 'responded' | 'banned';
   readAt?: string;
   respondedAt?: string;
   adminNotes?: string;
@@ -187,6 +224,7 @@ export interface CreateServiceRequest {
   description?: string;
   price?: number;
   duration?: number;
+  appointmentBufferTime?: number;
   categoryId: number;
   website?: string;
 }
@@ -196,6 +234,7 @@ export interface UpdateServiceRequest {
   description?: string;
   price?: number;
   duration?: number;
+  appointmentBufferTime?: number;
   categoryId?: number;
   website?: string;
 }
@@ -252,4 +291,24 @@ export interface UploadImageResponse {
   url: string;
   filename: string;
   message?: string;
+}
+
+// Category Management interfaces for admin panel
+export interface CreateCategoryRequest {
+  name: string;
+}
+
+export interface UpdateCategoryRequest {
+  name: string;
+}
+
+export interface CategoryResponse {
+  success: boolean;
+  data: Category;
+  message?: string;
+}
+
+export interface DeleteCategoryResponse {
+  success: boolean;
+  message: string;
 }

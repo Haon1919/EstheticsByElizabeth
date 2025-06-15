@@ -110,14 +110,14 @@ namespace API.Functions
                             a.Client.LastName,
                             a.Client.Email,
                             a.Client.PhoneNumber
-                        },
-                        Service = new
+                        },                        Service = new
                         {
                             a.Service.Id,
                             a.Service.Name,
                             a.Service.Description,
                             a.Service.Price,
                             a.Service.Duration,
+                            a.Service.AppointmentBufferTime,
                             Category = new
                             {
                                 a.Service.Category.Id,

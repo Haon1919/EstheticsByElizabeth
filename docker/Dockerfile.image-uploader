@@ -1,0 +1,19 @@
+FROM python:3.11-slim
+
+# Install required Python packages
+RUN pip install minio
+
+# Create app directory
+WORKDIR /app
+
+# Copy the upload script
+COPY upload-images.py /app/upload-images.py
+
+# Make the script executable
+RUN chmod +x /app/upload-images.py
+
+# Create directory for source images
+RUN mkdir -p /app/source-images
+
+# Entry point
+ENTRYPOINT ["python3", "/app/upload-images.py"]

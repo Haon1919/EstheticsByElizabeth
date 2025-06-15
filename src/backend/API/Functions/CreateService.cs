@@ -96,9 +96,11 @@ namespace API.Functions
                 {
                     Name = serviceRequest.Name,
                     Description = serviceRequest.Description,
+                    AfterCareInstructions = serviceRequest.AfterCareInstructions,
                     Price = serviceRequest.Price,
                     Duration = serviceRequest.Duration,
                     CategoryId = serviceRequest.CategoryId,
+                    AppointmentBufferTime = serviceRequest.AppointmentBufferTime,
                     Website = serviceRequest.Website
                 };
 
@@ -115,8 +117,10 @@ namespace API.Functions
                     createdService.Id,
                     createdService.Name,
                     createdService.Description,
+                    createdService.AfterCareInstructions,
                     createdService.Price,
                     createdService.Duration,
+                    createdService.AppointmentBufferTime,
                     createdService.Website,
                     Category = new
                     {
@@ -154,11 +158,17 @@ namespace API.Functions
         [StringLength(2000, ErrorMessage = "Description cannot exceed 2000 characters")]
         public string? Description { get; set; }
 
+        [StringLength(2000, ErrorMessage = "Aftercare instructions cannot exceed 2000 characters")]
+        public string? AfterCareInstructions { get; set; }
+
         [Range(0, 9999.99, ErrorMessage = "Price must be between 0 and 9999.99")]
         public decimal? Price { get; set; }
 
         [Range(1, 480, ErrorMessage = "Duration must be between 1 and 480 minutes")]
         public int? Duration { get; set; }
+
+        [Range(1, 52, ErrorMessage = "Appointment buffer time must be between 1 and 52 weeks")]
+        public int? AppointmentBufferTime { get; set; }
 
         [Required(ErrorMessage = "Category ID is required")]
         public int CategoryId { get; set; }
