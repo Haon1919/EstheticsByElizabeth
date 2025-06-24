@@ -27,11 +27,12 @@ namespace API.Functions
         }
 
         /// <summary>
-        /// Azure Timer Function that runs daily at 7:00 PM to send appointment reminder emails
-        /// CRON expression: "0 0 19 * * *" = run at 19:00 (7:00 PM) every day
+        /// Azure Timer Function that runs on startup and daily at 7:00 AM to send appointment reminder emails
+        /// CRON expression: "0 0 7 * * *" = run at 07:00 (7:00 AM) every day
+        /// RunOnStartup = true for testing purposes
         /// </summary>
         [Function("AppointmentReminderTimer")]
-        public async Task Run([TimerTrigger("0 0 19 * * *")] object myTimer)
+        public async Task Run([TimerTrigger("0 0 7 * * *")] object myTimer)
         {
             _logger.LogInformation($"Appointment reminder timer function executed at: {DateTime.UtcNow}");
 

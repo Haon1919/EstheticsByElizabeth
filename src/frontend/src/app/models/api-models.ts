@@ -71,7 +71,7 @@ export interface CreateServiceRequest {
 export interface UpdateServiceRequest {
   name?: string;
   description?: string;
-  afterCareInstructions?: string;
+  afterCareInstructions?: string | null;
   price?: number;
   duration?: number;
   appointmentBufferTime?: number;
@@ -89,8 +89,7 @@ export interface Appointment {
   id: number;
   time: string;
   service: Service;
-  client?: Client; // Optional for appointment history (client data is at response level)
-  Client?: Client; // Optional for calendar appointments (API returns capitalized Client)
+  client: Client; // Both APIs now return client data with each appointment
 }
 
 export interface AppointmentHistoryResponse {

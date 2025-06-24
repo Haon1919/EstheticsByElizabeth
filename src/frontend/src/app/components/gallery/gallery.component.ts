@@ -34,7 +34,7 @@ export class GalleryComponent implements OnInit {
     this.error = '';
 
     this.apiService.getPublicGalleryImages().subscribe({
-      next: (response) => {
+      next: (response: any) => {
         if (response.success) {
           this.images = response.data;
           this.updateCategories(response.categories);
@@ -43,7 +43,7 @@ export class GalleryComponent implements OnInit {
         }
         this.loading = false;
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Error loading gallery images:', error);
         this.error = 'Failed to load gallery images. Please try again later.';
         this.loading = false;
@@ -78,7 +78,7 @@ export class GalleryComponent implements OnInit {
     this.error = '';
 
     this.apiService.getPublicGalleryImages(category).subscribe({
-      next: (response) => {
+      next: (response: any) => {
         if (response.success) {
           this.images = response.data;
         } else {
@@ -86,7 +86,7 @@ export class GalleryComponent implements OnInit {
         }
         this.loading = false;
       },
-      error: (error) => {
+      error: (error: any) => {
         console.error('Error filtering gallery images:', error);
         this.error = 'Failed to filter gallery images. Please try again later.';
         this.loading = false;

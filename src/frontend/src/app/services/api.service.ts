@@ -259,28 +259,18 @@ export class ApiService {
     const formData = new FormData();
     formData.append('image', file);
     
-    return this.http.post<UploadImageResponse>(`${this.baseUrl}/manage/gallery/upload`, formData)
+    return this.http.post<UploadImageResponse>(`${this.baseUrl}/upload-image`, formData)
       .pipe(catchError(this.handleError));
+  }
+
+  // Public Gallery methods (for non-admin users)
+  getPublicGalleryImages(category?: string): Observable<any> {
+    // For now, use the same endpoint as admin (could be different in the future)
+    return this.getGalleryImages(category);
   }
 
   updateGalleryImageOrder(imageIds: number[]): Observable<any> {
     return this.http.put(`${this.baseUrl}/manage/gallery/reorder`, { imageIds })
-      .pipe(catchError(this.handleError));
-  }
-
-  getGalleryCategories(): Observable<GalleryCategory[]> {
-    return this.http.get<GalleryCategory[]>(`${this.baseUrl}/manage/gallery/categories`)
-      .pipe(catchError(this.handleError));
-  }
-
-  // Public Gallery methods for public gallery component
-  getPublicGalleryImages(category?: string): Observable<GalleryImageResponse> {
-    let params = new HttpParams();
-    if (category && category !== 'all') {
-      params = params.set('category', category);
-    }
-    
-    return this.http.get<GalleryImageResponse>(`${this.baseUrl}/gallery`, { params })
       .pipe(catchError(this.handleError));
   }
 

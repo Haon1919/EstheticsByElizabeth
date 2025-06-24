@@ -1,0 +1,90 @@
+{
+  "EmailConfigurationExamples": {
+    "Development": {
+      "Description": "Logs emails to console only - perfect for development",
+      "Email:Provider": "Development"
+    },
+    "MailHog_Local": {
+      "Description": "Uses MailHog container for local email testing - view emails at http://localhost:8025",
+      "Email:Provider": "smtp",
+      "Email:Smtp:Host": "localhost",
+      "Email:Smtp:Port": "1025",
+      "Email:Smtp:EnableSsl": "false",
+      "Email:Smtp:Username": "test@estheticsbyelizabeth.com",
+      "Email:Smtp:Password": "testpassword",
+      "Email:Smtp:FromEmail": "noreply@estheticsbyelizabeth.com",
+      "Email:Smtp:FromName": "Esthetics by Elizabeth"
+    },
+    "Azure_Communication_Services": {
+      "Description": "Azure Communication Services Email - Free tier: 365 emails/month",
+      "Setup_Instructions": [
+        "1. Create Azure Communication Services resource in Azure Portal",
+        "2. Add Email Communication Service",
+        "3. Configure your domain (or use Azure subdomain)",
+        "4. Get connection string from Azure Portal",
+        "5. Update configuration below"
+      ],
+      "Email:Provider": "azure",
+      "Email:Azure:ConnectionString": "endpoint=https://your-acs.communication.azure.com/;accesskey=your-access-key",
+      "Email:Azure:FromAddress": "DoNotReply@your-domain.azurecomm.net"
+    },
+    "SendGrid": {
+      "Description": "SendGrid Email Service - Free tier: 25,000 emails first month, then 100/day",
+      "Setup_Instructions": [
+        "1. Sign up at https://sendgrid.com/",
+        "2. Create API Key with Mail Send permissions",
+        "3. Verify your sender identity (email or domain)",
+        "4. Update configuration below"
+      ],
+      "Email:Provider": "sendgrid",
+      "Email:SendGrid:ApiKey": "SG.your-api-key-here",
+      "Email:SendGrid:FromEmail": "noreply@yourdomain.com",
+      "Email:SendGrid:FromName": "Esthetics by Elizabeth"
+    },
+    "Gmail_SMTP": {
+      "Description": "Gmail SMTP - Free with personal account (300 emails/day)",
+      "Setup_Instructions": [
+        "1. Enable 2-Factor Authentication on your Gmail account",
+        "2. Generate an App Password for this application",
+        "3. Use the App Password, not your regular Gmail password",
+        "4. Update configuration below"
+      ],
+      "Email:Provider": "smtp",
+      "Email:Smtp:Host": "smtp.gmail.com",
+      "Email:Smtp:Port": "587",
+      "Email:Smtp:EnableSsl": "true",
+      "Email:Smtp:Username": "your-email@gmail.com",
+      "Email:Smtp:Password": "your-app-password-here",
+      "Email:Smtp:FromEmail": "your-email@gmail.com",
+      "Email:Smtp:FromName": "Esthetics by Elizabeth"
+    },
+    "Outlook_SMTP": {
+      "Description": "Outlook/Hotmail SMTP - Free with personal account",
+      "Email:Provider": "smtp",
+      "Email:Smtp:Host": "smtp-mail.outlook.com",
+      "Email:Smtp:Port": "587",
+      "Email:Smtp:EnableSsl": "true",
+      "Email:Smtp:Username": "your-email@outlook.com",
+      "Email:Smtp:Password": "your-password-here",
+      "Email:Smtp:FromEmail": "your-email@outlook.com",
+      "Email:Smtp:FromName": "Esthetics by Elizabeth"
+    }
+  },
+  "Production_Recommendations": {
+    "Azure_Communication_Services": {
+      "pros": ["Native Azure integration", "Simple setup", "Good pricing", "Custom domain support"],
+      "cons": ["Limited free tier (365 emails/month)", "Azure-specific"],
+      "best_for": "Azure-hosted applications with moderate email volume"
+    },
+    "SendGrid": {
+      "pros": ["Generous free tier", "Great deliverability", "Rich features", "Analytics"],
+      "cons": ["Free tier drops after first month", "Complex pricing"],
+      "best_for": "High-volume applications, marketing emails"
+    },
+    "Gmail/Outlook": {
+      "pros": ["Completely free", "Simple setup", "Reliable"],
+      "cons": ["Daily limits", "Less professional", "No custom domain"],
+      "best_for": "Small businesses, development, low-volume applications"
+    }
+  }
+}

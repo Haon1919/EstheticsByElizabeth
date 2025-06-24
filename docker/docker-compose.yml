@@ -38,6 +38,15 @@ services:
       - Values__ImageStorage__MinIO__SecretKey=minioadmin123
       - Values__ImageStorage__MinIO__BucketName=gallery-images
       - Values__ImageStorage__MinIO__UseSSL=false
+      # Email Configuration (using MailHog for local development)
+      - Values__Email__Provider=smtp
+      - Values__Email__Smtp__Host=mailhog
+      - Values__Email__Smtp__Port=1025
+      - Values__Email__Smtp__EnableSsl=false
+      - Values__Email__Smtp__Username=test@estheticsbyelizabeth.com
+      - Values__Email__Smtp__Password=testpassword
+      - Values__Email__Smtp__FromEmail=noreply@estheticsbyelizabeth.com
+      - Values__Email__Smtp__FromName=Esthetics by Elizabeth
     ports:
       - "80:80"
     volumes:
@@ -48,6 +57,8 @@ services:
       minio:
         condition: service_healthy
       azurite:
+        condition: service_started
+      mailhog:
         condition: service_started
     restart: unless-stopped
 
@@ -117,6 +128,14 @@ services:
     volumes:
       - azurite_data:/data
     command: azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0 --location /data --debug /data/debug.log
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: esthetics-mailhog
+    ports:
+      - "1025:1025"  # SMTP port
+      - "8025:8025"  # Web UI port
+    restart: unless-stopped
 
 volumes:
   postgres-data:

@@ -16,6 +16,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
   title = 'Esthetics by Elizabeth';
   isAuthenticated = false;
   isDropdownOpen = false;
+  isMobileMenuOpen = false;
   private authSubscription?: Subscription;
   private routerSubscription?: Subscription;
 
@@ -30,11 +31,12 @@ export class NavbarComponent implements OnInit, OnDestroy {
       this.isAuthenticated = session.isAuthenticated;
     });
 
-    // Subscribe to router events to close dropdown on navigation
+    // Subscribe to router events to close dropdown and mobile menu on navigation
     this.routerSubscription = this.router.events
       .pipe(filter(event => event instanceof NavigationEnd))
       .subscribe(() => {
         this.closeDropdown();
+        this.closeMobileMenu();
       });
   }
 
@@ -53,8 +55,24 @@ export class NavbarComponent implements OnInit, OnDestroy {
     this.closeDropdown();
   }
 
+  @HostListener('document:keydown.escape', ['$event'])
+  onEscapeKeyPress(event: KeyboardEvent): void {
+    // Close mobile menu and dropdown on escape key
+    this.closeMobileMenu();
+    this.closeDropdown();
+  }
+
+  @HostListener('window:resize', ['$event'])
+  onWindowResize(): void {
+    // Close mobile menu on window resize (orientation change)
+    if (window.innerWidth > 768) {
+      this.closeMobileMenu();
+    }
+  }
+
   logout(): void {
     this.closeDropdown();
+    this.closeMobileMenu();
     this.authService.logout();
     this.router.navigate(['/']);
   }
@@ -67,8 +85,25 @@ export class NavbarComponent implements OnInit, OnDestroy {
     this.isDropdownOpen = false;
   }
 
+  toggleMobileMenu(): void {
+    this.isMobileMenuOpen = !this.isMobileMenuOpen;
+    
+    // Prevent body scroll when mobile menu is open
+    if (this.isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+  }
+
+  closeMobileMenu(): void {
+    this.isMobileMenuOpen = false;
+    document.body.style.overflow = '';
+  }
+
   onDropdownItemClick(): void {
-    // Close dropdown immediately when item is clicked
+    // Close dropdown and mobile menu immediately when item is clicked
     this.closeDropdown();
+    this.closeMobileMenu();
   }
 }

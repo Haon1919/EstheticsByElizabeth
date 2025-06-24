@@ -4,6 +4,7 @@ import { ServicesComponent } from './components/services/services.component';
 import { BookingComponent } from './components/booking/booking.component';
 import { GalleryComponent } from './components/gallery/gallery.component';
 import { ContactComponent } from './components/contact/contact.component';
+import { AftercareComponent } from './components/aftercare/aftercare.component';
 import { AdminLoginComponent } from './components/admin-login/admin-login.component';
 import { ContactSubmissionsComponent } from './components/contact-submissions/contact-submissions.component';
 import { AdminAppointmentsComponent } from './components/admin-appointments/admin-appointments.component';
@@ -19,6 +20,7 @@ export const routes: Routes = [
   { path: 'booking', component: BookingComponent },
   { path: 'gallery', component: GalleryComponent },
   { path: 'contact', component: ContactComponent },
+  { path: 'aftercare', component: AftercareComponent },
   { path: 'admin', component: AdminLoginComponent },
   { 
     path: 'admin/submissions', 

@@ -311,21 +311,40 @@ export class AdminAppointmentsComponent implements OnInit {
   rebookAppointment(appointment: Appointment): void {
     // Switch to schedule tab and pre-populate form
     this.activeTab = 'schedule';
+    console.log('Appointment object:', appointment);
+    console.log('Client data:', appointment.client);
+    
+    // Calculate the rebook date based on the original appointment date + appointmentBufferTime
+    let rebookDate: Date;
+    if (appointment.service.appointmentBufferTime && appointment.service.appointmentBufferTime > 0) {
+      // Parse the original appointment date
+      const originalDate = new Date(appointment.time);
+      // Add the buffer time (in weeks) to the original date
+      rebookDate = new Date(originalDate);
+      rebookDate.setDate(originalDate.getDate() + (appointment.service.appointmentBufferTime * 7));
+      console.log(`Calculated rebook date: ${rebookDate.toISOString()} (original: ${originalDate.toISOString()}, buffer: ${appointment.service.appointmentBufferTime} weeks)`);
+    } else {
+      // Fallback to today's date if no buffer time is set
+      rebookDate = new Date();
+      console.log('No appointment buffer time set, using today\'s date as fallback');
+    }
     
     // Pre-populate the form with client and service data
     this.newAppointment = {
       client: {
-        firstName: appointment.client?.firstName || '',
-        lastName: appointment.client?.lastName || '',
-        email: appointment.client?.email || '',
-        phoneNumber: appointment.client?.phoneNumber || ''
+        firstName: appointment.client.firstName,
+        lastName: appointment.client.lastName,
+        email: appointment.client.email,
+        phoneNumber: appointment.client.phoneNumber || ''
       },
       serviceId: appointment.service.id,
-      date: this.formatDateForInput(new Date()),
+      date: this.formatDateForInput(rebookDate),
       time: ''
     };
     
-    this.successMessage = `Pre-filled form for ${appointment.client?.firstName || 'Unknown'} ${appointment.client?.lastName || 'Client'} - ${appointment.service.name}`;
+    const clientName = `${appointment.client.firstName} ${appointment.client.lastName}`.trim();
+    const bufferWeeks = appointment.service.appointmentBufferTime || 0;
+    this.successMessage = `Pre-filled form for ${clientName} - ${appointment.service.name}. Recommended date: ${rebookDate.toLocaleDateString()} (${bufferWeeks} weeks from original appointment)`;
   }
 
   // Schedule new appointment methods

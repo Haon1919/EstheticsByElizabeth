@@ -1,0 +1,99 @@
+import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterModule } from '@angular/router';
+import { ServiceManagementService } from '../../services/service-management.service';
+import { Service } from '../../models/api-models';
+
+@Component({
+  selector: 'app-aftercare',
+  standalone: true,
+  imports: [CommonModule, RouterModule],
+  templateUrl: './aftercare.component.html',
+  styleUrls: ['./aftercare.component.css']
+})
+export class AftercareComponent implements OnInit {
+  services: Service[] = [];
+  filteredServices: Service[] = [];
+  categories: { id: number; name: string; services: Service[] }[] = [];
+  isLoading = false;
+  errorMessage = '';
+  selectedCategory = '';
+
+  constructor(
+    private serviceManagementService: ServiceManagementService
+  ) {}
+
+  ngOnInit(): void {
+    this.loadServicesWithAftercare();
+  }
+
+  loadServicesWithAftercare(): void {
+    this.isLoading = true;
+    this.errorMessage = '';
+
+    this.serviceManagementService.loadServices().subscribe({
+      next: (services: Service[]) => {
+        // Filter services that have aftercare instructions
+        this.services = services.filter(service => 
+          service.afterCareInstructions && service.afterCareInstructions.trim() !== ''
+        );
+        this.organizeServicesByCategory();
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading services:', error);
+        this.errorMessage = 'Failed to load aftercare information. Please try again later.';
+        this.isLoading = false;
+      }
+    });
+  }
+
+  organizeServicesByCategory(): void {
+    const categoryMap = new Map<number, { id: number; name: string; services: Service[] }>();
+
+    this.services.forEach(service => {
+      if (service.category) {
+        const categoryId = service.category.id;
+        if (!categoryMap.has(categoryId)) {
+          categoryMap.set(categoryId, {
+            id: categoryId,
+            name: service.category.name,
+            services: []
+          });
+        }
+        categoryMap.get(categoryId)!.services.push(service);
+      }
+    });
+
+    this.categories = Array.from(categoryMap.values()).sort((a, b) => 
+      a.name.localeCompare(b.name)
+    );
+  }
+
+  filterByCategory(categoryName: string): void {
+    this.selectedCategory = categoryName;
+    if (!categoryName) {
+      this.filteredServices = [...this.services];
+    } else {
+      this.filteredServices = this.services.filter(service => 
+        service.category?.name === categoryName
+      );
+    }
+  }
+
+  scrollToCategory(categoryId: number): void {
+    const element = document.getElementById(`category-${categoryId}`);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
+  formatAftercareText(text: string): string[] {
+    // Split by line breaks and filter out empty lines
+    return text.split(/\r?\n/).filter(line => line.trim() !== '');
+  }
+
+  hasAftercareServices(): boolean {
+    return this.services.length > 0;
+  }
+}

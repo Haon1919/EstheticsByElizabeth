@@ -42,9 +42,6 @@ COPY --from=build /app/publish .
 # Copy local.settings.json for development environment
 COPY --from=build /src/local.settings.json .
 
-# Copy Python upload script from docker directory (relative to build context)
-COPY upload-single-image.py /app/upload-single-image.py
-RUN chmod +x /app/upload-single-image.py
 
 # Debug: List files to verify what was copied
 RUN echo "=== DEBUG: Files in /home/site/wwwroot ===" && \

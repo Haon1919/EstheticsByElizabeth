@@ -55,10 +55,9 @@ namespace API.Functions
                     _logger.LogWarning("🤔 Client not found with email: {Email}", email);
                     return new NotFoundObjectResult($"No client found with email: {email}");
                 }                _logger.LogInformation("📋 Retrieving appointment history for client: {ClientName} ({Email})", 
-                    $"{client.FirstName} {client.LastName}", email);
-
-                // Get all appointments for this client
+                    $"{client.FirstName} {client.LastName}", email);                // Get all appointments for this client
                 var appointments = await _context.Appointments
+                    .Include(a => a.Client)
                     .Include(a => a.Service)
                         .ThenInclude(s => s.Category)
                     .Where(a => a.ClientId == client.Id)
@@ -67,6 +66,14 @@ namespace API.Functions
                     {
                         a.Id,
                         a.Time,
+                        Client = new
+                        {
+                            a.Client.Id,
+                            a.Client.FirstName,
+                            a.Client.LastName,
+                            a.Client.Email,
+                            a.Client.PhoneNumber
+                        },
                         Service = new
                         {
                             a.Service.Id,
@@ -85,8 +92,7 @@ namespace API.Functions
                     .ToListAsync();
                 
                 _logger.LogInformation("✅ Retrieved {Count} appointments for client with email {Email}", 
-                    appointments.Count, email);
-                  return new OkObjectResult(new 
+                    appointments.Count, email);                return new OkObjectResult(new 
                 {
                     Client = new
                     {

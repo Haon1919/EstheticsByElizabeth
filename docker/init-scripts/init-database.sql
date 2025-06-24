@@ -150,16 +150,16 @@ ON CONFLICT (Id) DO NOTHING; -- Avoid errors if IDs already exist
 -- Seed Services
 INSERT INTO Services (Id, CategoryId, Name, Description, Duration, Price, AppointmentBufferTime, Website, AfterCareInstructions) VALUES
 -- Facial Treatments (CategoryId: 1)
-(101, 1, 'Signature Facial', 'A personalized facial treatment tailored to your specific skin needs and concerns.', 60, 95.00, 0, NULL, 'Avoid direct sunlight for 24 hours. Use a gentle cleanser and moisturizer. Apply SPF 30+ daily.'),
-(102, 1, 'Dermaplane + mini facial', 'A dual treatment combining dermaplaning to remove dead skin cells and peach fuzz, followed by a mini facial to cleanse and hydrate the skin.', 60, 100.00, 0, NULL, 'Your skin may be slightly sensitive for 24-48 hours. Avoid exfoliating products, retinoids, and direct sun exposure. Use gentle skincare and SPF 30+.'), -- Assuming 60 min based on range
-(103, 1, 'Back Facial', 'A specialized treatment for the back area, focusing on cleansing, exfoliating, and hydrating.', 60, 115.00, 0, NULL, 'Avoid tight clothing for 24 hours. Keep the area clean and dry. Apply the recommended moisturizer daily.'),
+(101, 1, 'Signature Facial', 'A personalized facial treatment tailored to your specific skin needs and concerns.', 60, 95.00, 4, NULL, 'Avoid direct sunlight for 24 hours. Use a gentle cleanser and moisturizer. Apply SPF 30+ daily.'),
+(102, 1, 'Dermaplane + mini facial', 'A dual treatment combining dermaplaning to remove dead skin cells and peach fuzz, followed by a mini facial to cleanse and hydrate the skin.', 60, 100.00, 3, NULL, 'Your skin may be slightly sensitive for 24-48 hours. Avoid exfoliating products, retinoids, and direct sun exposure. Use gentle skincare and SPF 30+.'), -- Assuming 60 min based on range
+(103, 1, 'Back Facial', 'A specialized treatment for the back area, focusing on cleansing, exfoliating, and hydrating.', 60, 115.00, 4, NULL, 'Avoid tight clothing for 24 hours. Keep the area clean and dry. Apply the recommended moisturizer daily.'),
 
 -- Waxing (CategoryId: 2)
-(201, 2, 'Upper lip wax', 'Quick and precise removal of unwanted hair from the upper lip area.', 5, 15.00, 0, NULL, 'Avoid touching the area for 2-4 hours. Use aloe vera gel if irritation occurs. Avoid makeup on the area for 4-6 hours.'),
-(202, 2, 'Eyebrow wax', 'Precise shaping and grooming of eyebrows for a clean, defined look.', 10, 20.00, 0, NULL, 'Apply ice if you experience swelling. Avoid makeup and touching the area for 2-4 hours. Use aloe vera for any redness.'),
+(201, 2, 'Upper lip wax', 'Quick and precise removal of unwanted hair from the upper lip area.', 5, 15.00, 2, NULL, 'Avoid touching the area for 2-4 hours. Use aloe vera gel if irritation occurs. Avoid makeup on the area for 4-6 hours.'),
+(202, 2, 'Eyebrow wax', 'Precise shaping and grooming of eyebrows for a clean, defined look.', 10, 20.00, 3, NULL, 'Apply ice if you experience swelling. Avoid makeup and touching the area for 2-4 hours. Use aloe vera for any redness.'),
 
 -- Addons (CategoryId: 3)
-(301, 3, 'Chemical peels', 'An exfoliating treatment that improves skin texture and tone for a more radiant complexion.', NULL, 15.00, 0, NULL, 'Do not pick or peel flaking skin. Use gentle cleanser and moisturizer only. Avoid sun exposure and use SPF 30+ for 1-2 weeks.'), -- Duration is 'Varies', so set to NULL
+(301, 3, 'Chemical peels', 'An exfoliating treatment that improves skin texture and tone for a more radiant complexion.', NULL, 15.00, 2, NULL, 'Do not pick or peel flaking skin. Use gentle cleanser and moisturizer only. Avoid sun exposure and use SPF 30+ for 1-2 weeks.'), -- Duration is 'Varies', so set to NULL
 
 -- Skincare Brands (CategoryId: 4) - Note: Price is NULL
 (401, 4, 'SkinCeuticals', 'A skincare brand known for its advanced skincare products backed by science.', NULL, NULL, 0, 'https://www.skinceuticals.com/', NULL),
@@ -188,7 +188,8 @@ INSERT INTO Clients (Id, FirstName, LastName, Email, PhoneNumber) VALUES
 (11, 'Michael', 'Wilson', 'michael.wilson@email.com', '555-456-7890'),
 -- Additional test clients for different review states
 (12, 'Marcus', 'Thompson', 'marcus.thompson@email.com', '555-000-0001'),
-(15, 'David', 'Anderson', 'david.anderson@email.com', '555-000-0004')
+(15, 'David', 'Anderson', 'david.anderson@email.com', '555-000-0004'),
+(16, 'Jessica', 'Martinez', 'jessica.martinez@email.com', '555-000-0005')
 ON CONFLICT (Id) DO NOTHING;
 
 -- Seed test appointments
@@ -203,6 +204,7 @@ INSERT INTO Appointments (Id, ClientId, ServiceId, Time) VALUES
 -- Additional appointments for test clients with different review states
 (10, 12, 101, '2025-06-17 09:00:00+00'), -- Marcus Thompson appointment
 (11, 12, 201, '2025-06-17 10:00:00+00'), -- Marcus Thompson second appointment
+(12, 16, 102, '2025-06-17 15:00:00+00'), -- Jessica Martinez appointment
 (14, 15, 201, '2025-06-22 16:00:00+00')  -- Clean client appointment
 ON CONFLICT (Id) DO NOTHING;
 

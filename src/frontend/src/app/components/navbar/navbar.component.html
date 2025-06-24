@@ -1,61 +1,161 @@
 <nav class="navbar" (click)="closeDropdown()">
+  <!-- Skip navigation link for accessibility -->
+  <a href="#main-content" class="skip-nav">Skip to main content</a>
+  
   <div class="container" (click)="$event.stopPropagation()">
-    <div class="navbar-logo">
-      <a routerLink="/">{{title}}</a>
+    <div class="navbar-brand">
+      <div class="navbar-logo">
+        <a routerLink="/" [attr.aria-label]="'Home - ' + title">{{title}}</a>
+      </div>
+      <!-- Mobile menu toggle button -->
+      <button class="mobile-menu-toggle" 
+              type="button" 
+              [class.active]="isMobileMenuOpen"
+              (click)="$event.stopPropagation(); toggleMobileMenu()"
+              aria-label="Toggle navigation menu"
+              [attr.aria-expanded]="isMobileMenuOpen"
+              aria-controls="mobile-menu">
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+      </button>
     </div>
-    <div class="navbar-menu">
-      <ul *ngIf="!isAuthenticated">
-        <li><a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Home</a></li>
-        <li><a routerLink="/services" routerLinkActive="active">Services</a></li>
-        <li><a routerLink="/booking" routerLinkActive="active">Book Now</a></li>
-        <li><a routerLink="/gallery" routerLinkActive="active">Gallery</a></li>
-        <li><a routerLink="/contact" routerLinkActive="active">Contact</a></li>
+    
+    <!-- Mobile menu overlay -->
+    <div class="mobile-menu-overlay" 
+         [class.show]="isMobileMenuOpen" 
+         (click)="closeMobileMenu()" 
+         aria-hidden="true"></div>
+    
+    <!-- Navigation menu -->
+    <div class="navbar-menu" 
+         [class.mobile-open]="isMobileMenuOpen"
+         id="mobile-menu">
+      <ul *ngIf="!isAuthenticated" role="menubar">
+        <li role="none"><a routerLink="/" 
+                          routerLinkActive="active" 
+                          [routerLinkActiveOptions]="{exact: true}"
+                          role="menuitem"
+                          (click)="closeMobileMenu()">Home</a></li>
+        <li role="none"><a routerLink="/services" 
+                          routerLinkActive="active"
+                          role="menuitem"
+                          (click)="closeMobileMenu()">Services</a></li>
+        <li role="none"><a routerLink="/booking" 
+                          routerLinkActive="active"
+                          role="menuitem"
+                          (click)="closeMobileMenu()">Book Now</a></li>
+        <li role="none"><a routerLink="/gallery" 
+                          routerLinkActive="active"
+                          role="menuitem"
+                          (click)="closeMobileMenu()">Gallery</a></li>
+        <li role="none"><a routerLink="/aftercare" 
+                          routerLinkActive="active"
+                          role="menuitem"
+                          (click)="closeMobileMenu()">Aftercare</a></li>
+        <li role="none"><a routerLink="/contact" 
+                          routerLinkActive="active"
+                          role="menuitem"
+                          (click)="closeMobileMenu()">Contact</a></li>
       </ul>
+      
+      <!-- Admin navigation -->
       <div *ngIf="isAuthenticated" class="admin-nav">
         <div class="admin-dropdown" [class.active]="isDropdownOpen">
-          <button class="dropdown-toggle" type="button" (click)="$event.stopPropagation(); toggleDropdown()">
-            <i class="fas fa-tools"></i>
+          <button class="dropdown-toggle" 
+                  type="button" 
+                  (click)="$event.stopPropagation(); toggleDropdown()"
+                  aria-label="Toggle admin menu"
+                  [attr.aria-expanded]="isDropdownOpen"
+                  aria-haspopup="true">
+            <i class="fas fa-tools" aria-hidden="true"></i>
             <span>Management</span>
-            <i class="fas fa-chevron-down dropdown-arrow" [class.rotated]="isDropdownOpen"></i>
+            <i class="fas fa-chevron-down dropdown-arrow" 
+               [class.rotated]="isDropdownOpen" 
+               aria-hidden="true"></i>
           </button>
-          <ul class="dropdown-menu" [class.show]="isDropdownOpen" (click)="$event.stopPropagation()">
-            <li><a routerLink="/admin/appointments" routerLinkActive="active" (click)="onDropdownItemClick()">
-              <i class="fas fa-calendar-alt"></i>
+          <ul class="dropdown-menu" 
+              [class.show]="isDropdownOpen" 
+              (click)="$event.stopPropagation()"
+              role="menu"
+              aria-label="Admin management options">
+            <li role="none"><a routerLink="/admin/appointments" 
+                              routerLinkActive="active" 
+                              (click)="onDropdownItemClick()"
+                              role="menuitem">
+              <i class="fas fa-calendar-alt" aria-hidden="true"></i>
               Appointments
             </a></li>
-            <li><a routerLink="/admin/services" routerLinkActive="active" (click)="onDropdownItemClick()">
-              <i class="fas fa-spa"></i>
+            <li role="none"><a routerLink="/admin/services" 
+                              routerLinkActive="active" 
+                              (click)="onDropdownItemClick()"
+                              role="menuitem">
+              <i class="fas fa-spa" aria-hidden="true"></i>
               Services
             </a></li>
-            <li><a routerLink="/admin/categories" routerLinkActive="active" (click)="onDropdownItemClick()">
-              <i class="fas fa-tags"></i>
+            <li role="none"><a routerLink="/admin/categories" 
+                              routerLinkActive="active" 
+                              (click)="onDropdownItemClick()"
+                              role="menuitem">
+              <i class="fas fa-tags" aria-hidden="true"></i>
               Categories
             </a></li>
-            <li><a routerLink="/admin/gallery" routerLinkActive="active" (click)="onDropdownItemClick()">
-              <i class="fas fa-images"></i>
+            <li role="none"><a routerLink="/admin/gallery" 
+                              routerLinkActive="active" 
+                              (click)="onDropdownItemClick()"
+                              role="menuitem">
+              <i class="fas fa-images" aria-hidden="true"></i>
               Gallery
             </a></li>
-            <li><a routerLink="/admin/clients" routerLinkActive="active" (click)="onDropdownItemClick()">
-              <i class="fas fa-users"></i>
+            <li role="none"><a routerLink="/admin/clients" 
+                              routerLinkActive="active" 
+                              (click)="onDropdownItemClick()"
+                              role="menuitem">
+              <i class="fas fa-users" aria-hidden="true"></i>
               Client Management
             </a></li>
-            <li><a routerLink="/admin/submissions" routerLinkActive="active" (click)="onDropdownItemClick()">
-              <i class="fas fa-envelope"></i>
+            <li role="none"><a routerLink="/admin/submissions" 
+                              routerLinkActive="active" 
+                              (click)="onDropdownItemClick()"
+                              role="menuitem">
+              <i class="fas fa-envelope" aria-hidden="true"></i>
               Contact Submissions
             </a></li>
           </ul>
         </div>
       </div>
     </div>
+    
+    <!-- Right side content -->
     <div class="navbar-right">
       <div *ngIf="isAuthenticated" class="admin-section">
-        <div class="admin-badge">ADMIN</div>
-        <button class="logout-btn" (click)="logout()">Logout</button>
+        <div class="admin-badge" role="status" aria-label="Admin status">ADMIN</div>
+        <button class="logout-btn" 
+                (click)="logout()"
+                aria-label="Logout from admin panel">
+          <i class="fas fa-sign-out-alt" aria-hidden="true"></i>
+          <span>Logout</span>
+        </button>
       </div>
-      <div class="navbar-social" *ngIf="!isAuthenticated">
-        <a href="https://instagram.com/" target="_blank"><i class="fab fa-instagram"></i></a>
-        <a href="https://facebook.com/" target="_blank"><i class="fab fa-facebook-f"></i></a>
-        <a href="https://tiktok.com/" target="_blank"><i class="fab fa-tiktok"></i></a>
+      <div class="navbar-social" *ngIf="!isAuthenticated" role="navigation" aria-label="Social media links">
+        <a href="https://instagram.com/" 
+           target="_blank" 
+           rel="noopener noreferrer"
+           aria-label="Follow us on Instagram">
+          <i class="fab fa-instagram" aria-hidden="true"></i>
+        </a>
+        <a href="https://facebook.com/" 
+           target="_blank" 
+           rel="noopener noreferrer"
+           aria-label="Follow us on Facebook">
+          <i class="fab fa-facebook-f" aria-hidden="true"></i>
+        </a>
+        <a href="https://tiktok.com/" 
+           target="_blank" 
+           rel="noopener noreferrer"
+           aria-label="Follow us on TikTok">
+          <i class="fab fa-tiktok" aria-hidden="true"></i>
+        </a>
       </div>
     </div>
   </div>

@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore; // Needed for EF Core operations (DbContext
 using API.Data; // Your DbContext namespace
 using API.DTOs; // Your DTOs namespace
 using API.Entities;
+using API.Services; // Add this for IEmailService
 using Npgsql; // Your Entities namespace
 
 // Removed Polly using statement
@@ -24,9 +25,14 @@ namespace API.Functions
     public class ScheduleAppointment
     {
         private readonly ILogger<ScheduleAppointment> _logger;
-        private readonly ProjectContext _context;        public ScheduleAppointment(ILogger<ScheduleAppointment> logger, ProjectContext context)
-        {        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        private readonly ProjectContext _context;
+        private readonly IEmailService _emailService; // Add email service
+
+        public ScheduleAppointment(ILogger<ScheduleAppointment> logger, ProjectContext context, IEmailService emailService)
+        {
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _context = context ?? throw new ArgumentNullException(nameof(context));
+            _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService)); // Initialize email service
         }        /// <summary>
         /// 🧙‍♂️ The Magical Appointment Scheduling Ritual 🧙‍♂️
         /// Azure Function triggered by HTTP POST to schedule an appointment.
@@ -222,9 +228,22 @@ namespace API.Functions
             {
                 // Save the appointment if there's no client email to check
                 await _context.SaveChangesAsync();
-                _logger.LogInformation("✅ Appointment created with ID: {AppointmentId}", appointment.Id);            }
+                _logger.LogInformation("✅ Appointment created with ID: {AppointmentId}", appointment.Id);            }            _logger.LogInformation("🎉 Successfully scheduled appointment ID {AppointmentId} for client {ClientEmail}", appointment.Id, client.Email);
 
-            _logger.LogInformation("🎉 Successfully scheduled appointment ID {AppointmentId} for client {ClientEmail}", appointment.Id, client.Email);
+            // --- Send Confirmation Email ---
+            try
+            {
+                _logger.LogInformation("📧 Sending confirmation email to: {ClientEmail}", client.Email);
+                await SendConfirmationEmailAsync(appointment, client, service);
+                _logger.LogInformation("✅ Confirmation email sent successfully to: {ClientEmail}", client.Email);
+            }
+            catch (Exception emailEx)
+            {
+                // Log the error but don't fail the appointment creation
+                _logger.LogError(emailEx, "📧 Failed to send confirmation email to {ClientEmail} for appointment {AppointmentId}", 
+                    client.Email, appointment.Id);
+                // Email failure shouldn't prevent appointment from being created
+            }
 
             // --- Return Success Response ---
             // Return a 201 Created status with the location of the new resource and its details
@@ -330,9 +349,128 @@ namespace API.Functions
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "💥 Error flagging client ID {ClientId} for review", clientId);
-                // We don't throw here to avoid disrupting the appointment booking process
+                _logger.LogError(ex, "💥 Error flagging client ID {ClientId} for review", clientId);                // We don't throw here to avoid disrupting the appointment booking process
             }
+        }
+
+        /// <summary>
+        /// 📧 Sends a confirmation email to the client after successful appointment booking
+        /// </summary>
+        private async Task SendConfirmationEmailAsync(Appointment appointment, Client client, Service service)
+        {
+            var appointmentTime = appointment.Time.ToString("h:mm tt");
+            var appointmentDate = appointment.Time.ToString("dddd, MMMM dd, yyyy");
+            var serviceName = service.Name;
+            var duration = service.Duration ?? 0;
+            var aftercareInstructions = service.AfterCareInstructions;
+
+            var subject = "Appointment Confirmation - Esthetics by Elizabeth";
+            var emailBody = BuildConfirmationEmailBody(appointment, client, service, appointmentDate, appointmentTime, serviceName, duration, aftercareInstructions);
+
+            var emailRequest = new EmailRequest
+            {
+                To = client.Email,
+                Subject = subject,
+                Body = emailBody,
+                IsHtml = true,
+                FromName = "Esthetics by Elizabeth"
+            };
+
+            await _emailService.SendEmailAsync(emailRequest);
+        }
+
+        /// <summary>
+        /// 🎨 Builds the HTML email body for appointment confirmation
+        /// </summary>
+        private string BuildConfirmationEmailBody(Appointment appointment, Client client, Service service, 
+            string appointmentDate, string appointmentTime, string serviceName, int duration, string? aftercareInstructions)
+        {
+            var emailBody = $@"
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+        .header {{ background-color: #f8f9fa; padding: 20px; border-radius: 5px; margin-bottom: 20px; }}
+        .appointment-details {{ background-color: #e9ecef; padding: 15px; border-radius: 5px; margin: 20px 0; }}
+        .aftercare {{ background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin: 20px 0; }}
+        .footer {{ margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #666; }}
+        .logo {{ text-align: center; margin-bottom: 20px; }}
+        .confirmation-badge {{ background-color: #28a745; color: white; padding: 0.5rem 1rem; border-radius: 20px; display: inline-block; margin-bottom: 1rem; }}
+        h1 {{ color: #2c3e50; }}
+        h2 {{ color: #34495e; }}
+        .highlight {{ font-weight: bold; color: #e74c3c; }}
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <div class='logo'>
+            <h1>Esthetics by Elizabeth</h1>
+        </div>
+        
+        <div class='header'>
+            <div class='confirmation-badge'>✅ CONFIRMED</div>
+            <h2>Your Appointment is Confirmed!</h2>
+            <p>Dear {client.FirstName},</p>
+            <p>Thank you for choosing Esthetics by Elizabeth! We're excited to provide you with exceptional service.</p>
+        </div>
+
+        <div class='appointment-details'>
+            <h3>📅 Appointment Details:</h3>
+            <ul>
+                <li><strong>Service:</strong> {serviceName}</li>
+                <li><strong>Date:</strong> {appointmentDate}</li>
+                <li><strong>Time:</strong> <span class='highlight'>{appointmentTime}</span></li>
+                <li><strong>Duration:</strong> {duration} minutes</li>
+                <li><strong>Appointment ID:</strong> #{appointment.Id}</li>
+            </ul>
+        </div>";
+
+            // Add aftercare instructions if available
+            if (!string.IsNullOrWhiteSpace(aftercareInstructions))
+            {
+                emailBody += $@"
+        <div class='aftercare'>
+            <h3>📋 Pre-Appointment & Aftercare Instructions</h3>
+            <p>Please review these important instructions for your {serviceName}:</p>
+            <div style='white-space: pre-line; margin-top: 10px;'>
+                {aftercareInstructions}
+            </div>
+        </div>";
+            }
+
+            emailBody += $@"
+        <div>
+            <h3>Important Information:</h3>
+            <ul>
+                <li>Please arrive 10-15 minutes early for your appointment</li>
+                <li>If you need to reschedule or cancel, please contact us at least 24 hours in advance</li>
+                <li>Bring any relevant medical history or skincare concerns to discuss</li>
+                <li>Feel free to contact us if you have any questions about your upcoming service</li>
+            </ul>
+        </div>
+
+        <div>
+            <h3>Contact Information:</h3>
+            <p><strong>Phone:</strong> (555) 123-4567<br>
+            <strong>Email:</strong> info@estheticsbyelizabeth.com<br>
+            <strong>Address:</strong> [Your Business Address]</p>
+        </div>
+
+        <div>
+            <p>We look forward to seeing you on {appointmentDate}! Thank you for trusting us with your skincare needs.</p>
+        </div>
+
+        <div class='footer'>
+            <p>Thank you for choosing Esthetics by Elizabeth!</p>
+            <p><em>This is an automated confirmation email. Please save this email for your records.</em></p>
+        </div>
+    </div>
+</body>
+</html>";
+
+            return emailBody;
         }
     }
 }

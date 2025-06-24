@@ -96,8 +96,90 @@ var host = new HostBuilder()
             LogLevel.Information); // Set the minimum log level for messages from EF Core
         });        // Register the ClientReviewService
         services.AddScoped<API.Services.ClientReviewService>();
-          // Register the EmailService
-        services.AddScoped<API.Services.IEmailService, API.Services.EmailService>();
+          
+        // Register Email Service based on configuration
+        var emailProvider = context.Configuration["Values:Email:Provider"] ?? "Development";
+        Console.WriteLine($"📧 [STARTUP] Registering Email Provider: {emailProvider}");
+        
+        switch (emailProvider.ToLowerInvariant())
+        {
+            case "azure":
+                var azureConnectionString = context.Configuration["Values:Email:Azure:ConnectionString"];
+                var azureFromAddress = context.Configuration["Values:Email:Azure:FromAddress"];
+                if (!string.IsNullOrEmpty(azureConnectionString) && !string.IsNullOrEmpty(azureFromAddress))
+                {
+                    services.AddScoped<API.Services.IEmailService>(provider =>
+                        new API.Services.AzureEmailService(
+                            provider.GetRequiredService<ILogger<API.Services.AzureEmailService>>(),
+                            azureConnectionString,
+                            azureFromAddress));
+                }
+                else
+                {
+                    Console.WriteLine("⚠️ Azure email configuration missing, falling back to development service");
+                    services.AddScoped<API.Services.IEmailService, API.Services.EmailService>();
+                }
+                break;
+                
+            case "sendgrid":
+                var sendGridApiKey = context.Configuration["Values:Email:SendGrid:ApiKey"];
+                var sendGridFromEmail = context.Configuration["Values:Email:SendGrid:FromEmail"];
+                var sendGridFromName = context.Configuration["Values:Email:SendGrid:FromName"] ?? "Esthetics by Elizabeth";
+                if (!string.IsNullOrEmpty(sendGridApiKey) && !string.IsNullOrEmpty(sendGridFromEmail))
+                {
+                    services.AddScoped<API.Services.IEmailService>(provider =>
+                        new API.Services.SendGridEmailService(
+                            provider.GetRequiredService<ILogger<API.Services.SendGridEmailService>>(),
+                            sendGridApiKey,
+                            sendGridFromEmail,
+                            sendGridFromName));
+                }
+                else
+                {
+                    Console.WriteLine("⚠️ SendGrid email configuration missing, falling back to development service");
+                    services.AddScoped<API.Services.IEmailService, API.Services.EmailService>();
+                }
+                break;
+                
+            case "smtp":
+                var smtpHost = context.Configuration["Values:Email:Smtp:Host"];
+                var smtpPort = int.TryParse(context.Configuration["Values:Email:Smtp:Port"], out int port) ? port : 587;
+                var smtpUsername = context.Configuration["Values:Email:Smtp:Username"];
+                var smtpPassword = context.Configuration["Values:Email:Smtp:Password"];
+                var smtpFromEmail = context.Configuration["Values:Email:Smtp:FromEmail"];
+                var smtpFromName = context.Configuration["Values:Email:Smtp:FromName"] ?? "Esthetics by Elizabeth";
+                var smtpEnableSsl = bool.TryParse(context.Configuration["Values:Email:Smtp:EnableSsl"], out bool ssl) ? ssl : true;
+                
+                if (!string.IsNullOrEmpty(smtpHost) && !string.IsNullOrEmpty(smtpUsername) && !string.IsNullOrEmpty(smtpPassword))
+                {
+                    var smtpConfig = new API.Services.SmtpConfiguration
+                    {
+                        Host = smtpHost,
+                        Port = smtpPort,
+                        EnableSsl = smtpEnableSsl,
+                        Username = smtpUsername,
+                        Password = smtpPassword,
+                        FromEmail = smtpFromEmail ?? smtpUsername,
+                        FromName = smtpFromName
+                    };
+                    
+                    services.AddScoped<API.Services.IEmailService>(provider =>
+                        new API.Services.SmtpEmailService(
+                            provider.GetRequiredService<ILogger<API.Services.SmtpEmailService>>(),
+                            smtpConfig));
+                }
+                else
+                {
+                    Console.WriteLine("⚠️ SMTP email configuration missing, falling back to development service");
+                    services.AddScoped<API.Services.IEmailService, API.Services.EmailService>();
+                }
+                break;
+                
+            default:
+                Console.WriteLine("📧 Using development email service (logs only)");
+                services.AddScoped<API.Services.IEmailService, API.Services.EmailService>();
+                break;
+        }
         
         // Register HttpClient for HTTP-based services
         services.AddHttpClient();

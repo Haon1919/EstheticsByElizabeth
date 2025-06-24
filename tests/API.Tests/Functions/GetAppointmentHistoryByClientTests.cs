@@ -361,5 +361,54 @@ namespace API.Tests.Functions
             Assert.Empty(appointments);
             Assert.Equal(0, (int)response.TotalCount);
         }
+
+        [Fact]
+        public async Task Run_IncludesClientInformationInEachAppointment()
+        {
+            // Arrange
+            await SeedDatabase();
+            var function = new GetAppointmentHistoryByClient(_loggerMock.Object, CreateContext());
+            var mockRequest = new Mock<HttpRequest>();
+            var mockContext = new Mock<HttpContext>();
+            var mockResponse = new Mock<HttpResponse>();
+            var mockHeaders = new HeaderDictionary();
+            var mockQuery = new QueryCollection(new Dictionary<string, Microsoft.Extensions.Primitives.StringValues>
+            {
+                { "email", "john.doe@example.com" }
+            });
+
+            mockResponse.Setup(r => r.Headers).Returns(mockHeaders);
+            mockContext.Setup(c => c.Response).Returns(mockResponse.Object);
+            mockRequest.Setup(r => r.HttpContext).Returns(mockContext.Object);
+            mockRequest.Setup(r => r.Method).Returns("GET");
+            mockRequest.Setup(r => r.Query).Returns(mockQuery);
+
+            // Act
+            var result = await function.Run(mockRequest.Object);
+
+            // Assert
+            var okResult = Assert.IsType<OkObjectResult>(result);
+            var response = okResult.Value as dynamic;
+            var appointments = response.Appointments as dynamic[];
+            
+            Assert.NotNull(appointments);
+            Assert.True(appointments.Length > 0);
+            
+            dynamic firstAppointment = appointments[0];
+            
+            // Verify client information is included in each appointment
+            Assert.NotNull(firstAppointment.Client);
+            Assert.NotNull(firstAppointment.Client.Id);
+            Assert.NotNull(firstAppointment.Client.FirstName);
+            Assert.NotNull(firstAppointment.Client.LastName);
+            Assert.NotNull(firstAppointment.Client.Email);
+            Assert.NotNull(firstAppointment.Client.PhoneNumber);
+            
+            // Verify the client data matches the expected values
+            Assert.Equal("John", firstAppointment.Client.FirstName.ToString());
+            Assert.Equal("Doe", firstAppointment.Client.LastName.ToString());
+            Assert.Equal("john.doe@example.com", firstAppointment.Client.Email.ToString());
+            Assert.Equal("555-123-4567", firstAppointment.Client.PhoneNumber.ToString());
+        }
     }
 }

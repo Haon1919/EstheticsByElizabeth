@@ -1,0 +1,174 @@
+<main class="aftercare-page">
+  <!-- Hero Section -->
+  <section class="aftercare-hero">
+    <div class="container">
+      <h1>Aftercare Information</h1>
+      <p>Essential post-treatment care instructions to maximize your results and ensure optimal healing</p>
+    </div>
+  </section>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="loading-container">
+    <div class="loading-spinner"></div>
+    <p>Loading aftercare information...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="errorMessage && !isLoading" class="error-container">
+    <div class="container">
+      <div class="error-message">
+        <i class="fas fa-exclamation-triangle"></i>
+        <p>{{ errorMessage }}</p>
+        <button class="btn btn-primary" (click)="loadServicesWithAftercare()">Try Again</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div *ngIf="!isLoading && !errorMessage">
+    <!-- Category Navigation -->
+    <section class="category-nav" *ngIf="categories.length > 1">
+      <div class="container">
+        <h2>Browse by Service Category</h2>
+        <div class="category-buttons">
+          <button 
+            *ngFor="let category of categories" 
+            class="category-btn"
+            (click)="scrollToCategory(category.id)">
+            <i class="fas fa-spa"></i>
+            {{ category.name }}
+            <span class="service-count">({{ category.services.length }})</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Aftercare Instructions by Category -->
+    <section class="aftercare-content" *ngIf="hasAftercareServices()">
+      <div class="container">
+        <div class="category-section" *ngFor="let category of categories" [id]="'category-' + category.id">
+          <div class="category-header">
+            <h2>
+              <i class="fas fa-tag"></i>
+              {{ category.name }}
+            </h2>
+            <p>Post-treatment care for {{ category.name.toLowerCase() }} services</p>
+          </div>
+
+          <div class="services-grid">
+            <div class="service-card" *ngFor="let service of category.services">
+              <div class="service-header">
+                <h3>{{ service.name }}</h3>
+                <div class="service-meta" *ngIf="service.duration || service.price">
+                  <span *ngIf="service.duration" class="duration">
+                    <i class="fas fa-clock"></i>
+                    {{ service.duration }} minutes
+                  </span>
+                  <span *ngIf="service.price" class="price">
+                    <i class="fas fa-dollar-sign"></i>
+                    {{ service.price }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="service-description" *ngIf="service.description">
+                <p>{{ service.description }}</p>
+              </div>
+
+              <div class="aftercare-instructions">
+                <h4>
+                  <i class="fas fa-heart"></i>
+                  Aftercare Instructions
+                </h4>
+                <div class="instructions-content">
+                  <div *ngFor="let line of formatAftercareText(service.afterCareInstructions!)" class="instruction-item">
+                    <i class="fas fa-check-circle"></i>
+                    <span>{{ line }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="service-footer" *ngIf="service.website">
+                <a [href]="service.website" target="_blank" rel="noopener noreferrer" class="btn btn-outline">
+                  <i class="fas fa-external-link-alt"></i>
+                  Learn More
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- No Aftercare Services Message -->
+    <section class="no-aftercare" *ngIf="!hasAftercareServices()">
+      <div class="container">
+        <div class="no-content-message">
+          <i class="fas fa-heart"></i>
+          <h2>No Aftercare Information Available</h2>
+          <p>We're working on adding detailed aftercare instructions for our services. Please contact us if you have specific questions about post-treatment care.</p>
+          <div class="contact-actions">
+            <a routerLink="/contact" class="btn btn-primary">Contact Us</a>
+            <a routerLink="/services" class="btn btn-secondary">View Services</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- General Aftercare Tips -->
+    <section class="general-tips" *ngIf="hasAftercareServices()">
+      <div class="container">
+        <div class="tips-section">
+          <h2>
+            <i class="fas fa-lightbulb"></i>
+            General Post-Treatment Tips
+          </h2>
+          <div class="tips-grid">
+            <div class="tip-card">
+              <div class="tip-icon">
+                <i class="fas fa-sun"></i>
+              </div>
+              <h3>Sun Protection</h3>
+              <p>Always apply SPF 30+ sunscreen when going outdoors after any facial treatment to protect sensitive skin.</p>
+            </div>
+            <div class="tip-card">
+              <div class="tip-icon">
+                <i class="fas fa-tint"></i>
+              </div>
+              <h3>Stay Hydrated</h3>
+              <p>Drink plenty of water to help your skin heal and maintain optimal hydration levels.</p>
+            </div>
+            <div class="tip-card">
+              <div class="tip-icon">
+                <i class="fas fa-hand-sparkles"></i>
+              </div>
+              <h3>Gentle Care</h3>
+              <p>Use gentle, fragrance-free products for the first 24-48 hours after treatment.</p>
+            </div>
+            <div class="tip-card">
+              <div class="tip-icon">
+                <i class="fas fa-phone"></i>
+              </div>
+              <h3>Questions?</h3>
+              <p>Don't hesitate to contact us if you have any concerns or questions about your aftercare routine.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Call to Action -->
+    <section class="aftercare-cta" *ngIf="hasAftercareServices()">
+      <div class="container">
+        <div class="cta-content">
+          <h2>Need Personalized Aftercare Advice?</h2>
+          <p>Our experienced estheticians are here to help you achieve the best results from your treatments</p>
+          <div class="cta-buttons">
+            <a routerLink="/contact" class="btn btn-primary">Contact Us</a>
+            <a routerLink="/booking" class="btn btn-secondary">Book Follow-up</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
