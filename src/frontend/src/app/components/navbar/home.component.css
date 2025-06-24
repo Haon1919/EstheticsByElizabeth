@@ -1,6 +1,6 @@
 /* Base styles */
 .home-page {
-  padding-top: 90px;
+  padding-top: 100px;
 }
 
 .hero {
@@ -38,7 +38,7 @@
 }
 
 .about {
-  padding: 10rem 0;
+  padding: 5rem 0;
   background-color: #f9f9f9;
 }
 
@@ -51,7 +51,7 @@
 .about-content {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 6rem;
+  gap: 3rem;
   align-items: center;
 }
 
@@ -79,12 +79,12 @@
 }
 
 .featured-services {
-  padding: 8rem 0;
+  padding: 5rem 0;
 }
 
 .section-header {
   text-align: center;
-  margin-bottom: 5rem;
+  margin-bottom: 3rem;
 }
 
 .section-header h2 {
@@ -102,13 +102,13 @@
 .services-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 5rem;
-  margin-bottom: 5rem;
+  gap: 3rem;
+  margin-bottom: 3rem;
 }
 
 .service-card {
   background: #fff;
-  padding: 2.5rem;
+  padding: 2rem;
   border-radius: 8px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
   text-align: center;
@@ -124,18 +124,18 @@
   height: 250px;
   object-fit: cover;
   border-radius: 8px;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 .service-card h3 {
   font-size: 1.5rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
   color: #333;
 }
 
 .service-card p {
   color: #666;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 .services-cta {
@@ -146,7 +146,7 @@
   background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('/assets/images/cta-bg.jpg');
   background-size: cover;
   background-position: center;
-  padding: 8rem 0;
+  padding: 5rem 0;
   color: #fff;
   text-align: center;
 }
@@ -233,13 +233,13 @@
 
 /* Special Offers */
 .special-offers {
-  padding: 8rem 0;
+  padding: 5rem 0;
   background-color: #fff;
 }
 
 .offers-grid {
   display: flex;
-  gap: 4rem;
+  gap: 2rem;
   justify-content: center;
   flex-wrap: wrap;
 }
@@ -264,19 +264,19 @@
 }
 
 .offer-content {
-  padding: 2.5rem;
+  padding: 2rem;
   text-align: center;
 }
 
 .offer-content h3 {
   font-size: 1.5rem;
   color: #333;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .offer-content p {
   color: #666;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   line-height: 1.6;
 }
 
@@ -284,7 +284,7 @@
   font-size: 1.25rem;
   color: #b27092;
   font-weight: 600;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .offer-price span {
@@ -295,20 +295,20 @@
 
 /* Why Choose Us */
 .why-choose-us {
-  padding: 8rem 0;
+  padding: 5rem 0;
   background-color: #f9f9f9;
 }
 
 .features-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 4rem;
-  margin-top: 4rem;
+  gap: 2rem;
+  margin-top: 3rem;
 }
 
 .feature {
   text-align: center;
-  padding: 2.5rem;
+  padding: 2rem;
   background: #fff;
   border-radius: 10px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
@@ -327,7 +327,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0 auto 2rem;
+  margin: 0 auto 1.5rem;
   font-size: 2rem;
   color: #fff;
 }
@@ -335,7 +335,7 @@
 .feature h3 {
   font-size: 1.5rem;
   color: #333;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
   font-family: 'Playfair Display', serif;
 }
 
@@ -346,19 +346,19 @@
 
 /* Testimonials */
 .testimonials {
-  padding: 8rem 0;
+  padding: 5rem 0;
   background-color: #fff;
 }
 
 .testimonials-slider {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 4rem;
+  gap: 2rem;
 }
 
 .testimonial {
   background: #f9f9f9;
-  padding: 2.5rem;
+  padding: 2rem;
   border-radius: 10px;
   text-align: center;
 }
@@ -366,7 +366,7 @@
 .testimonial-content p {
   font-style: italic;
   color: #666;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
   line-height: 1.6;
 }
 
@@ -398,14 +398,14 @@
 
 /* Instagram Feed */
 .instagram-feed {
-  padding: 8rem 0;
+  padding: 5rem 0;
   background-color: #f9f9f9;
 }
 
 .instagram-grid {
   display: flex;
   flex-direction: row;
-  gap: 3rem;
+  gap: 2rem;
   justify-content: center;
   align-items: flex-start;
   flex-wrap: wrap;
@@ -422,7 +422,7 @@
 @media (max-width: 1200px) {
   .services-grid {
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 3rem;
+    gap: 2rem;
   }
 }
 
@@ -439,7 +439,7 @@
   
   .about-content {
     grid-template-columns: 1fr;
-    gap: 3rem;
+    gap: 2rem;
   }
   
   .offers-grid {
@@ -449,7 +449,7 @@
   
   .features-grid {
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 3rem;
+    gap: 1.5rem;
   }
 }
 
@@ -493,7 +493,7 @@
   .testimonials,
   .instagram-feed,
   .cta {
-    padding: 4rem 0;
+    padding: 3rem 0;
   }
   
   .instagram-grid {
@@ -509,11 +509,11 @@
   
   .services-grid {
     grid-template-columns: 1fr;
-    gap: 3rem;
+    gap: 1.5rem;
   }
   
   .service-card {
-    padding: 2rem;
+    padding: 1.5rem;
   }
   
   .service-card img {
@@ -522,7 +522,7 @@
   
   .offers-grid {
     flex-direction: column;
-    gap: 3rem;
+    gap: 1.5rem;
   }
   
   .offer-card {
@@ -531,11 +531,11 @@
   
   .features-grid {
     grid-template-columns: 1fr;
-    gap: 3rem;
+    gap: 1.5rem;
   }
   
   .feature {
-    padding: 2rem;
+    padding: 1.5rem;
   }
   
   .feature-icon {
@@ -546,7 +546,7 @@
   
   .testimonials-slider {
     grid-template-columns: 1fr;
-    gap: 2rem;
+    gap: 1.5rem;
   }
   
   .section-header h2,
