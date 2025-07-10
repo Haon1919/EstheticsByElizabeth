@@ -65,9 +65,29 @@ export class AftercareComponent implements OnInit {
       }
     });
 
-    this.categories = Array.from(categoryMap.values()).sort((a, b) => 
-      a.name.localeCompare(b.name)
-    );
+    // Sort categories with specific order: Facial Treatments, Waxing, Addons, then alphabetical
+    this.categories = Array.from(categoryMap.values()).sort((a, b) => {
+      const aName = a.name.toLowerCase();
+      const bName = b.name.toLowerCase();
+      
+      // Get priority for each category (lower number = higher priority)
+      const getPriority = (categoryName: string): number => {
+        if (categoryName.includes('facial')) return 1;
+        if (categoryName.includes('wax')) return 2;
+        if (categoryName.includes('addon') || categoryName.includes('add-on')) return 3;
+        return 999; // Unknown categories go to the end
+      };
+
+      const aPriority = getPriority(aName);
+      const bPriority = getPriority(bName);
+      
+      if (aPriority !== bPriority) {
+        return aPriority - bPriority;
+      }
+      
+      // If same priority, sort alphabetically
+      return aName.localeCompare(bName);
+    });
   }
 
   filterByCategory(categoryName: string): void {

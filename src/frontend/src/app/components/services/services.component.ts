@@ -67,11 +67,36 @@ export class ServicesComponent implements OnInit {
     });
 
     // Convert to the expected format
-    this.services = Array.from(servicesByCategory.entries()).map(([categoryId, categoryServices]) => ({
+    const unsortedServices = Array.from(servicesByCategory.entries()).map(([categoryId, categoryServices]) => ({
       id: categoryId,
       category: categoryMap.get(categoryId)?.name || 'Unknown Category',
       items: categoryServices
     }));
+
+    // Sort services according to the desired order: Facial Treatments, Waxing, Addons, Skincare Brands
+    this.services = unsortedServices.sort((a, b) => {
+      const aCategory = a.category.toLowerCase();
+      const bCategory = b.category.toLowerCase();
+      
+      // Get priority for each category (lower number = higher priority)
+      const getPriority = (categoryName: string): number => {
+        if (categoryName.includes('facial')) return 1;
+        if (categoryName.includes('wax')) return 2;
+        if (categoryName.includes('addon') || categoryName.includes('add-on')) return 3;
+        if (categoryName.includes('brand') || categoryName.includes('skincare')) return 4;
+        return 999; // Unknown categories go to the end
+      };
+
+      const aPriority = getPriority(aCategory);
+      const bPriority = getPriority(bCategory);
+      
+      if (aPriority !== bPriority) {
+        return aPriority - bPriority;
+      }
+      
+      // If same priority, sort alphabetically
+      return aCategory.localeCompare(bCategory);
+    });
 
     // Add skincare brands category if not present (special category for display)
     if (!this.services.find(cat => cat.category.toLowerCase().includes('brand'))) {
