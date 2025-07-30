@@ -42,10 +42,8 @@ export class ServicesComponent implements OnInit {
     }).catch((error) => {
       console.error('Error loading services and categories:', error);
       this.errorMessage = 'Failed to load services. Please try again later.';
-      this.isLoading = false;
-      
-      // Fallback to hardcoded data if API fails
       this.loadFallbackData();
+      this.isLoading = false;
     });
   }
 
@@ -144,7 +142,7 @@ export class ServicesComponent implements OnInit {
           },
           {
             id: 102,
-            name: 'Dermaplane + mini facial',
+            name: 'Dermaplane + Mini Facial',
             description: 'A dual treatment combining dermaplaning to remove dead skin cells and peach fuzz, followed by a mini facial to cleanse and hydrate the skin.',
             duration: 60,
             price: 100,
@@ -157,42 +155,106 @@ export class ServicesComponent implements OnInit {
             duration: 60,
             price: 115,
             category: { id: 1, name: 'Facial Treatments' }
+          },
+          {
+            id: 104,
+            name: 'HydraFacial',
+            description: 'A medical-grade resurfacing treatment that immediately delivers hydrating and anti-aging benefits.',
+            duration: 45,
+            price: 150,
+            category: { id: 1, name: 'Facial Treatments' }
+          },
+          {
+            id: 105,
+            name: 'Express Facial',
+            description: 'A quick, refreshing facial perfect for busy schedules. Includes cleansing, exfoliation, and moisturizing.',
+            duration: 30,
+            price: 65,
+            category: { id: 1, name: 'Facial Treatments' }
           }
         ]
       },
       {
         id: 2,
-        category: 'Waxing',
+        category: 'Body Waxing',
         items: [
           {
             id: 201,
-            name: 'Upper lip wax',
+            name: 'Upper Lip Wax',
             description: 'Quick and precise removal of unwanted hair from the upper lip area.',
             duration: 5,
             price: 15,
-            category: { id: 2, name: 'Waxing' }
+            category: { id: 2, name: 'Body Waxing' }
           },
           {
             id: 202,
-            name: 'Eyebrow wax',
+            name: 'Eyebrow Wax',
             description: 'Precise shaping and grooming of eyebrows for a clean, defined look.',
             duration: 10,
             price: 20,
-            category: { id: 2, name: 'Waxing' }
+            category: { id: 2, name: 'Body Waxing' }
+          },
+          {
+            id: 203,
+            name: 'Brazilian Wax',
+            description: 'Complete hair removal from the bikini area for smooth, long-lasting results.',
+            duration: 30,
+            price: 65,
+            category: { id: 2, name: 'Body Waxing' }
+          },
+          {
+            id: 204,
+            name: 'Bikini Line Wax',
+            description: 'Hair removal along the bikini line for a clean, comfortable fit in swimwear.',
+            duration: 20,
+            price: 45,
+            category: { id: 2, name: 'Body Waxing' }
+          },
+          {
+            id: 205,
+            name: 'Leg Wax (Full)',
+            description: 'Complete hair removal from upper and lower legs for silky smooth skin.',
+            duration: 45,
+            price: 75,
+            category: { id: 2, name: 'Body Waxing' }
+          },
+          {
+            id: 206,
+            name: 'Underarm Wax',
+            description: 'Quick and effective hair removal from the underarm area.',
+            duration: 15,
+            price: 25,
+            category: { id: 2, name: 'Body Waxing' }
           }
         ]
       },
       {
         id: 3,
-        category: 'Addons',
+        category: 'Add-On Services',
         items: [
           {
             id: 301,
-            name: 'Chemical peels',
+            name: 'Chemical Peel',
             description: 'An exfoliating treatment that improves skin texture and tone for a more radiant complexion.',
             duration: 30,
             price: 15,
-            category: { id: 3, name: 'Addons' }
+            category: { id: 3, name: 'Add-On Services' }
+          },
+          {
+            id: 302,
+            name: 'LED Light Therapy',
+            description: 'Non-invasive treatment using different wavelengths of light to promote healing and rejuvenation.',
+            duration: 20,
+            price: 25,
+            category: { id: 3, name: 'Add-On Services' }
+          },
+          {
+            id: 303,
+            name: 'Enzyme Mask',
+            description: 'Natural enzyme treatment to gently exfoliate and brighten the skin.',
+            duration: 15,
+            price: 20,
+            category: { id: 3, name: 'Add-On Services' }
           }
         ]
       },
@@ -217,10 +279,21 @@ export class ServicesComponent implements OnInit {
             duration: 0,
             price: 0,
             website: 'https://www.bioelements.com/'
+          } as Service & { website: string },
+          {
+            id: 403,
+            name: 'Dermalogica',
+            description: 'Professional skincare products designed to improve skin health through education and innovation.',
+            category: { id: 4, name: 'Skincare Brands I Use' },
+            duration: 0,
+            price: 0,
+            website: 'https://www.dermalogica.com/'
           } as Service & { website: string }
         ]
       }
     ];
+    
+    this.errorMessage = 'Demo mode: Showing sample services data.';
   }
 
   handleItemClick(item: Service): void {
