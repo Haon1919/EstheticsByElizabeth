@@ -192,7 +192,331 @@ input:focus, select:focus, textarea:focus {
 }
 
 @media (max-width: 768px) {
+  /* Container adjustments */
+  .container {
+    padding: 0 1rem;
+  }
+  
+  /* Typography adjustments */
+  h1 {
+    font-size: 2rem !important;
+  }
+  
+  h2 {
+    font-size: 1.8rem !important;
+  }
+  
+  h3 {
+    font-size: 1.5rem !important;
+  }
+  
+  h4 {
+    font-size: 1.3rem !important;
+  }
+  
+  /* Button adjustments */
+  .btn {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.95rem;
+  }
+  
+  .btn-lg {
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+  }
+  
+  .btn-sm {
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+  }
+  
+  /* Spacing adjustments */
+  .section {
+    padding: 3rem 0;
+  }
+  
+  .section-header {
+    margin-bottom: 2rem;
+  }
+  
   .section-header h2 {
     font-size: 2rem;
+  }
+  
+  .section-header p {
+    font-size: 0.95rem;
+  }
+  
+  /* Grid adjustments */
+  .grid-2 {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .grid-3 {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .grid-4 {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+  
+  /* Flex adjustments */
+  .flex-wrap {
+    flex-wrap: wrap;
+  }
+  
+  .flex-mobile-column {
+    flex-direction: column !important;
+  }
+  
+  /* Hide/show utilities */
+  .hide-mobile {
+    display: none !important;
+  }
+  
+  .show-mobile {
+    display: block !important;
+  }
+  
+  /* Text alignment utilities */
+  .text-center-mobile {
+    text-align: center !important;
+  }
+  
+  .text-left-mobile {
+    text-align: left !important;
+  }
+  
+  /* Margin/padding utilities */
+  .p-mobile-1 {
+    padding: 1rem !important;
+  }
+  
+  .p-mobile-2 {
+    padding: 2rem !important;
+  }
+  
+  .px-mobile-1 {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+  
+  .py-mobile-1 {
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+  }
+  
+  .m-mobile-1 {
+    margin: 1rem !important;
+  }
+  
+  .mx-mobile-1 {
+    margin-left: 1rem !important;
+    margin-right: 1rem !important;
+  }
+  
+  .my-mobile-1 {
+    margin-top: 1rem !important;
+    margin-bottom: 1rem !important;
+  }
+  
+  /* Form adjustments */
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+  
+  .form-group label {
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    padding: 0.75rem;
+    font-size: 0.95rem;
+  }
+  
+  /* Card adjustments */
+  .card {
+    margin-bottom: 1.5rem;
+  }
+  
+  .card-body {
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Container adjustments */
+  .container {
+    padding: 0 0.75rem;
+  }
+  
+  /* Typography adjustments */
+  h1 {
+    font-size: 1.8rem !important;
+  }
+  
+  h2 {
+    font-size: 1.6rem !important;
+  }
+  
+  h3 {
+    font-size: 1.4rem !important;
+  }
+  
+  h4 {
+    font-size: 1.2rem !important;
+  }
+  
+  /* Button adjustments */
+  .btn {
+    padding: 0.7rem 1rem;
+    font-size: 0.9rem;
+  }
+  
+  .btn-lg {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.95rem;
+  }
+  
+  .btn-sm {
+    padding: 0.5rem 0.8rem;
+    font-size: 0.8rem;
+  }
+  
+  /* Spacing adjustments */
+  .section {
+    padding: 2.5rem 0;
+  }
+  
+  .section-header {
+    margin-bottom: 1.5rem;
+  }
+  
+  .section-header h2 {
+    font-size: 1.8rem;
+  }
+  
+  .section-header p {
+    font-size: 0.9rem;
+  }
+  
+  /* Grid adjustments */
+  .grid-4 {
+    grid-template-columns: 1fr !important;
+  }
+  
+  /* Margin/padding utilities */
+  .p-mobile-1 {
+    padding: 0.75rem !important;
+  }
+  
+  .p-mobile-2 {
+    padding: 1.5rem !important;
+  }
+  
+  .px-mobile-1 {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+  
+  .py-mobile-1 {
+    padding-top: 0.75rem !important;
+    padding-bottom: 0.75rem !important;
+  }
+  
+  .m-mobile-1 {
+    margin: 0.75rem !important;
+  }
+  
+  .mx-mobile-1 {
+    margin-left: 0.75rem !important;
+    margin-right: 0.75rem !important;
+  }
+  
+  .my-mobile-1 {
+    margin-top: 0.75rem !important;
+    margin-bottom: 0.75rem !important;
+  }
+  
+  /* Form adjustments */
+  .form-group {
+    margin-bottom: 1.25rem;
+  }
+  
+  .form-group label {
+    font-size: 0.9rem;
+  }
+  
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    padding: 0.7rem;
+    font-size: 0.9rem;
+  }
+  
+  /* Card adjustments */
+  .card {
+    margin-bottom: 1.25rem;
+  }
+  
+  .card-body {
+    padding: 1.25rem;
+  }
+}
+
+/* Touch-friendly improvements */
+@media (max-width: 768px) {
+  /* Increase touch targets */
+  button,
+  .btn,
+  a[role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Improve tap targets */
+  .nav-link,
+  .dropdown-item {
+    padding: 0.75rem 1rem;
+  }
+  
+  /* Improve form inputs */
+  input,
+  select,
+  textarea {
+    min-height: 44px;
+  }
+  
+  /* Better spacing for mobile */
+  .list-group-item {
+    padding: 1rem;
+  }
+  
+  /* Improve modal spacing */
+  .modal-body {
+    padding: 1.5rem;
+  }
+  
+  .modal-footer {
+    padding: 1rem 1.5rem;
+  }
+}
+
+/* Landscape mobile adjustments */
+@media (max-width: 896px) and (orientation: landscape) {
+  .hero,
+  .hero-section {
+    height: 60vh;
+  }
+  
+  .navbar {
+    padding: 0.5rem 0;
+  }
+  
+  .section {
+    padding: 2rem 0;
   }
 }

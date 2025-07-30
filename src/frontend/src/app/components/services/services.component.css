@@ -244,8 +244,21 @@
 }
 
 @media (max-width: 768px) {
+  .services-hero {
+    padding: 60px 0 40px;
+  }
+  
   .services-hero h1 {
     font-size: 2.5rem;
+  }
+  
+  .services-hero p {
+    font-size: 1rem;
+    padding: 0 1rem;
+  }
+  
+  .services-category {
+    padding: 0 1rem;
   }
   
   .services-category h2 {
@@ -254,9 +267,77 @@
   
   .service-items {
     grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .cta-section {
+    padding: 60px 0;
   }
   
   .cta-content h2 {
     font-size: 2rem;
+  }
+  
+  .cta-content p {
+    font-size: 1rem;
+    padding: 0 1rem;
+  }
+  
+  .cta-buttons {
+    padding: 0 1rem;
+  }
+  
+  .btn {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .services-hero {
+    padding: 50px 0 30px;
+  }
+  
+  .services-hero h1 {
+    font-size: 2rem;
+  }
+  
+  .services-hero p {
+    font-size: 0.9rem;
+    padding: 0 0.75rem;
+  }
+  
+  .services-category {
+    padding: 0 0.75rem;
+  }
+  
+  .services-category h2 {
+    font-size: 1.8rem;
+  }
+  
+  .service-items {
+    gap: 1.25rem;
+  }
+  
+  .cta-section {
+    padding: 50px 0;
+  }
+  
+  .cta-content h2 {
+    font-size: 1.8rem;
+  }
+  
+  .cta-content p {
+    font-size: 0.9rem;
+    padding: 0 0.75rem;
+  }
+  
+  .cta-buttons {
+    padding: 0 0.75rem;
+  }
+  
+  .btn {
+    padding: 0.7rem 1.25rem;
+    font-size: 0.9rem;
   }
 }

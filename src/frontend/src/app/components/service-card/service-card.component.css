@@ -74,3 +74,76 @@
   background-color: #a15c7e;
   border-color: #a15c7e;
 }
+
+/* Mobile responsive styles for tablets and below */
+@media (max-width: 768px) {
+  .service-card {
+    margin-bottom: 1.5rem;
+  }
+  
+  .service-image {
+    height: 180px;
+  }
+  
+  .service-content {
+    padding: 1.25rem;
+  }
+  
+  .service-content h3 {
+    font-size: 1.3rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .service-content p {
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+    line-height: 1.5;
+  }
+  
+  .service-price {
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+  }
+  
+  .btn {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.95rem;
+  }
+}
+
+/* Mobile responsive styles for phones */
+@media (max-width: 480px) {
+  .service-card {
+    border-radius: 8px;
+    margin-bottom: 1.25rem;
+  }
+  
+  .service-image {
+    height: 160px;
+  }
+  
+  .service-content {
+    padding: 1rem;
+  }
+  
+  .service-content h3 {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .service-content p {
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    line-height: 1.4;
+  }
+  
+  .service-price {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+  }
+  
+  .btn {
+    padding: 0.7rem 1rem;
+    font-size: 0.9rem;
+  }
+}

@@ -253,8 +253,13 @@
     font-size: 2.5rem;
   }
   
+  .gallery-hero p {
+    font-size: 1.1rem;
+  }
+  
   .gallery-grid {
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1.5rem;
   }
   
   .cta-content h2 {
@@ -263,11 +268,102 @@
 }
 
 @media (max-width: 768px) {
+  .gallery-hero {
+    padding: 60px 0 40px;
+  }
+  
   .gallery-hero h1 {
     font-size: 2rem;
   }
   
+  .gallery-hero p {
+    font-size: 1rem;
+    padding: 0 1rem;
+  }
+  
   .gallery-grid {
     grid-template-columns: 1fr;
+    gap: 1.5rem;
+    padding: 0 1rem;
+  }
+  
+  .gallery-item {
+    height: 300px;
+  }
+  
+  .cta-section {
+    padding: 60px 0;
+  }
+  
+  .cta-content h2 {
+    font-size: 2rem;
+  }
+  
+  .cta-content p {
+    font-size: 1rem;
+    padding: 0 1rem;
+  }
+  
+  .cta-buttons {
+    padding: 0 1rem;
+  }
+  
+  .btn {
+    padding: 0.75rem 1.5rem;
+    font-size: 0.95rem;
+  }
+  
+  .loading-spinner {
+    padding: 2rem 1rem;
+  }
+  
+  .error-message {
+    padding: 0 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .gallery-hero {
+    padding: 50px 0 30px;
+  }
+  
+  .gallery-hero h1 {
+    font-size: 1.8rem;
+  }
+  
+  .gallery-hero p {
+    font-size: 0.9rem;
+    padding: 0 0.75rem;
+  }
+  
+  .gallery-grid {
+    gap: 1.25rem;
+    padding: 0 0.75rem;
+  }
+  
+  .gallery-item {
+    height: 250px;
+  }
+  
+  .cta-section {
+    padding: 50px 0;
+  }
+  
+  .cta-content h2 {
+    font-size: 1.8rem;
+  }
+  
+  .cta-content p {
+    font-size: 0.9rem;
+    padding: 0 0.75rem;
+  }
+  
+  .cta-buttons {
+    padding: 0 0.75rem;
+  }
+  
+  .btn {
+    padding: 0.7rem 1.25rem;
+    font-size: 0.9rem;
   }
 }
