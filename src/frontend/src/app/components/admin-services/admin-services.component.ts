@@ -81,7 +81,87 @@ export class AdminServicesComponent implements OnInit {
       console.error('Error loading data:', error);
       this.errorMessage = 'Failed to load services and categories.';
       this.loading = false;
+      
+      // Fallback to dummy data for GitHub Pages
+      this.loadDummyData();
     });
+  }
+
+  loadDummyData(): void {
+    // Dummy categories for GitHub Pages
+    this.categories = [
+      { id: 1, name: 'Facial Treatments' },
+      { id: 2, name: 'Waxing' },
+      { id: 3, name: 'Addons' },
+      { id: 4, name: 'Skincare Brands' }
+    ];
+
+    // Dummy services for GitHub Pages
+    this.services = [
+      {
+        id: 1,
+        name: 'Signature Facial',
+        description: 'A personalized facial treatment tailored to your specific skin needs and concerns.',
+        price: 95,
+        duration: 60,
+        appointmentBufferTime: 4,
+        category: { id: 1, name: 'Facial Treatments' },
+        afterCareInstructions: 'Avoid direct sunlight for 24 hours. Use gentle skincare products. Stay hydrated.'
+      },
+      {
+        id: 2,
+        name: 'Dermaplane + Mini Facial',
+        description: 'A dual treatment combining dermaplaning to remove dead skin cells and peach fuzz, followed by a mini facial.',
+        price: 100,
+        duration: 60,
+        appointmentBufferTime: 4,
+        category: { id: 1, name: 'Facial Treatments' },
+        afterCareInstructions: 'Avoid makeup for 4 hours. Use SPF 30+ sunscreen. Avoid exfoliating products for 3 days.'
+      },
+      {
+        id: 3,
+        name: 'Back Facial',
+        description: 'A specialized treatment for the back area, focusing on cleansing, exfoliating, and hydrating.',
+        price: 115,
+        duration: 60,
+        appointmentBufferTime: 6,
+        category: { id: 1, name: 'Facial Treatments' },
+        afterCareInstructions: 'Wear loose clothing. Avoid hot showers for 12 hours. Moisturize daily.'
+      },
+      {
+        id: 4,
+        name: 'Upper Lip Wax',
+        description: 'Quick and precise removal of unwanted hair from the upper lip area.',
+        price: 15,
+        duration: 5,
+        appointmentBufferTime: 3,
+        category: { id: 2, name: 'Waxing' },
+        afterCareInstructions: 'Avoid sun exposure for 24 hours. Do not touch the area. Avoid makeup on treated area for 4 hours.'
+      },
+      {
+        id: 5,
+        name: 'Eyebrow Wax',
+        description: 'Precise shaping and grooming of eyebrows for a clean, defined look.',
+        price: 20,
+        duration: 10,
+        appointmentBufferTime: 3,
+        category: { id: 2, name: 'Waxing' },
+        afterCareInstructions: 'Avoid touching the area. No makeup on brows for 2 hours. Avoid hot water for 12 hours.'
+      },
+      {
+        id: 6,
+        name: 'Chemical Peels',
+        description: 'An exfoliating treatment that improves skin texture and tone for a more radiant complexion.',
+        price: 15,
+        duration: 30,
+        category: { id: 3, name: 'Addons' },
+        afterCareInstructions: 'Use gentle skincare. Avoid direct sunlight. Apply SPF daily. No picking at peeling skin.'
+      }
+    ];
+
+    this.applyFilters();
+    this.errorMessage = '';
+    this.loading = false;
   }
 
   applyFilters(): void {

@@ -76,8 +76,7 @@
     </div>
   </section>
 
-  <!-- Testimonials Section - Hidden until we have real testimonials -->
-  <!--
+  <!-- Testimonials Section -->
   <section class="testimonials">
     <div class="container">
       <div class="section-header">
@@ -85,46 +84,13 @@
         <p>What our clients say about their experiences</p>
       </div>
       <div class="testimonials-slider">
-        <div class="testimonial">
-          <div class="testimonial-content">
-            <p>"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus lacinia odio vitae vestibulum vestibulum. Cras porttitor metus vel risus placerat, nec vehicula odio suscipit."</p>
-          </div>
-          <div class="testimonial-author">
-            <img src="https://placehold.co/80x80/f8e0eb/b27092?text=J" alt="Jane Doe" />
-            <div>
-              <h4>Jane Doe</h4>
-              <p>Regular Client</p>
-            </div>
-          </div>
-        </div>
-        <div class="testimonial">
-          <div class="testimonial-content">
-            <p>"Nulla facilisi. Sed ut imperdiet nisi. Proin condimentum fermentum nunc. Etiam pharetra, erat sed fermentum feugiat, velit mauris egestas quam, ut aliquam massa nisl quis neque."</p>
-          </div>
-          <div class="testimonial-author">
-            <img src="https://placehold.co/80x80/f8e0eb/b27092?text=S" alt="Sarah Smith" />
-            <div>
-              <h4>Sarah Smith</h4>
-              <p>Loyal Customer</p>
-            </div>
-          </div>
-        </div>
-        <div class="testimonial">
-          <div class="testimonial-content">
-            <p>"Curabitur aliquet quam id dui posuere blandit. Vivamus magna justo, lacinia eget consectetur sed, convallis at tellus. Vestibulum ante ipsum primis in faucibus orci luctus."</p>
-          </div>
-          <div class="testimonial-author">
-            <img src="https://placehold.co/80x80/f8e0eb/b27092?text=M" alt="Maria Johnson" />
-            <div>
-              <h4>Maria Johnson</h4>
-              <p>VIP Member</p>
-            </div>
-          </div>
-        </div>
+        <app-testimonial 
+          *ngFor="let testimonial of testimonials" 
+          [testimonial]="testimonial">
+        </app-testimonial>
       </div>
     </div>
   </section>
-  -->
 
   <script async src="//www.instagram.com/embed.js"></script>
 </main>

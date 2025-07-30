@@ -55,9 +55,99 @@ export class ContactSubmissionsComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading submissions:', error);
+        this.loadDummyContactSubmissions();
         this.loading = false;
       }
     });
+  }
+
+  loadDummyContactSubmissions(): void {
+    // Load dummy contact submissions for GitHub Pages demo
+    const now = new Date();
+    const today = now.toISOString();
+    const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+    const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString();
+    const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+    this.submissions = [
+      {
+        id: '1',
+        name: 'Sarah Johnson',
+        email: 'sarah.johnson@email.com',
+        phone: '555-123-4567',
+        subject: 'Facial Treatment Inquiry',
+        message: 'Hi! I\'m interested in scheduling a facial treatment. I have sensitive skin and would like to know what options you recommend. Could you also let me know about pricing and availability?',
+        interestedService: 'Facial',
+        preferredContactMethod: 'Email',
+        submittedAt: today,
+        status: 'unread',
+        readAt: undefined,
+        respondedAt: undefined,
+        adminNotes: undefined
+      },
+      {
+        id: '2',
+        name: 'Emily Rodriguez',
+        email: 'emily.r@gmail.com',
+        phone: undefined,
+        subject: 'Booking for Next Week',
+        message: 'Hello, I would like to book an appointment for a Brazilian wax next week. What are your available times? Thank you!',
+        interestedService: 'Body Treatment',
+        preferredContactMethod: 'Email',
+        submittedAt: yesterday,
+        status: 'read',
+        readAt: yesterday,
+        respondedAt: undefined,
+        adminNotes: 'Check calendar for availability'
+      },
+      {
+        id: '3',
+        name: 'Jessica Chen',
+        email: 'jchen.work@company.com',
+        phone: '555-987-6543',
+        subject: 'Skincare Consultation',
+        message: 'I\'m looking for a comprehensive skincare consultation. I\'ve been dealing with acne and would like professional advice on treatments and products.',
+        interestedService: 'Skincare Consultation',
+        preferredContactMethod: 'Phone',
+        submittedAt: threeDaysAgo,
+        status: 'responded',
+        readAt: threeDaysAgo,
+        respondedAt: new Date(new Date(threeDaysAgo).getTime() + 2 * 60 * 60 * 1000).toISOString(),
+        adminNotes: 'Recommended HydraFacial treatment series'
+      },
+      {
+        id: '4',
+        name: 'Amanda Thompson',
+        email: 'amanda.t@email.com',
+        phone: '555-456-7890',
+        subject: 'Gift Certificate Question',
+        message: 'Do you offer gift certificates? I\'d like to purchase one for my friend\'s birthday. What services would you recommend for someone new to your spa?',
+        interestedService: 'Other',
+        preferredContactMethod: 'Email',
+        submittedAt: oneWeekAgo,
+        status: 'responded',
+        readAt: oneWeekAgo,
+        respondedAt: new Date(new Date(oneWeekAgo).getTime() + 4 * 60 * 60 * 1000).toISOString(),
+        adminNotes: 'Sent gift certificate information and first-time client package details'
+      },
+      {
+        id: '5',
+        name: 'Rachel Green',
+        email: 'rachel.green@email.com',
+        phone: undefined,
+        subject: 'Wedding Prep Package',
+        message: 'I\'m getting married in 3 months and want to start a skincare routine. Do you have any bridal packages or recommendations for pre-wedding treatments?',
+        interestedService: 'Facial',
+        preferredContactMethod: 'Email',
+        submittedAt: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+        status: 'read',
+        readAt: new Date(now.getTime() - 4 * 24 * 60 * 60 * 1000).toISOString(),
+        respondedAt: undefined,
+        adminNotes: 'Follow up with bridal package information'
+      }
+    ];
+
+    this.applyFilters();
   }
 
   applyFilters(): void {

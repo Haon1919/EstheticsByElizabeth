@@ -71,9 +71,32 @@ export class AdminCategoriesComponent implements OnInit {
       error: (error) => {
         console.error('Error loading data:', error);
         this.errorMessage = 'Failed to load categories and service counts.';
+        this.loadDummyCategoriesData();
         this.loading = false;
       }
     });
+  }
+
+  loadDummyCategoriesData(): void {
+    // Load dummy categories for GitHub Pages demo
+    this.categories = [
+      { id: 1, name: 'Facial Treatments' },
+      { id: 2, name: 'Body Waxing' },
+      { id: 3, name: 'Skincare Products' },
+      { id: 4, name: 'Seasonal Treatments' },
+      { id: 5, name: 'Add-On Services' }
+    ];
+
+    this.serviceCounts = [
+      { categoryId: 1, categoryName: 'Facial Treatments', serviceCount: 8 },
+      { categoryId: 2, categoryName: 'Body Waxing', serviceCount: 12 },
+      { categoryId: 3, categoryName: 'Skincare Products', serviceCount: 4 },
+      { categoryId: 4, categoryName: 'Seasonal Treatments', serviceCount: 3 },
+      { categoryId: 5, categoryName: 'Add-On Services', serviceCount: 6 }
+    ];
+
+    this.applyFilters();
+    this.errorMessage = 'Demo mode: Showing sample categories data.';
   }
 
   applyFilters(): void {

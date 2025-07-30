@@ -159,10 +159,7 @@ export class AdminAppointmentsComponent implements OnInit {
   }
 
   loadAppointmentsByDate(): void {
-    console.log('yeet')
     if (!this.selectedDate) return;
-    console.log('yoot')
-    console.log(this.isDateRangeMode, this.selectedEndDate, this.selectedDate);
 
     this.loading = true;
     this.clearMessages();
@@ -179,6 +176,9 @@ export class AdminAppointmentsComponent implements OnInit {
           console.error('Error loading appointments:', error);
           this.errorMessage = 'Failed to load appointments for the selected date range.';
           this.loading = false;
+          
+          // Fallback to dummy data for GitHub Pages
+          this.loadDummyAppointments();
         }
       });
     } else {
@@ -193,9 +193,68 @@ export class AdminAppointmentsComponent implements OnInit {
           console.error('Error loading appointments:', error);
           this.errorMessage = 'Failed to load appointments for the selected date.';
           this.loading = false;
+          
+          // Fallback to dummy data for GitHub Pages
+          this.loadDummyAppointments();
         }
       });
     }
+  }
+
+  loadDummyAppointments(): void {
+    // Create dummy appointments for GitHub Pages display
+    const today = new Date().toISOString();
+    this.appointments = [
+      {
+        id: 1,
+        time: new Date(today.split('T')[0] + 'T10:00:00').toISOString(),
+        client: {
+          id: 1,
+          firstName: 'Sarah',
+          lastName: 'Johnson',
+          email: 'sarah.johnson@example.com',
+          phoneNumber: '(555) 123-4567'
+        },
+        service: {
+          id: 1,
+          name: 'Signature Facial',
+          description: 'A personalized facial treatment tailored to your specific skin needs.',
+          price: 95,
+          duration: 60,
+          category: { id: 1, name: 'Facial Treatments' }
+        }
+      },
+      {
+        id: 2,
+        time: new Date(today.split('T')[0] + 'T14:30:00').toISOString(),
+        client: {
+          id: 2,
+          firstName: 'Michael',
+          lastName: 'Rodriguez',
+          email: 'michael.rodriguez@example.com',
+          phoneNumber: '(555) 987-6543'
+        },
+        service: {
+          id: 4,
+          name: 'Upper Lip Wax',
+          description: 'Quick and precise removal of unwanted hair from the upper lip area.',
+          price: 15,
+          duration: 5,
+          category: { id: 2, name: 'Waxing' }
+        }
+      }
+    ];
+
+    this.appointmentResponse = {
+      startDate: this.selectedDate,
+      endDate: this.selectedEndDate,
+      isDateRange: this.isDateRangeMode,
+      appointments: this.appointments,
+      totalCount: this.appointments.length
+    };
+
+    this.errorMessage = '';
+    this.loading = false;
   }
 
   onDateChange(): void {
@@ -238,8 +297,70 @@ export class AdminAppointmentsComponent implements OnInit {
         console.error('Error searching client appointments:', error);
         this.errorMessage = 'Failed to load client appointment history.';
         this.searchLoading = false;
+        
+        // Fallback to dummy data for GitHub Pages
+        this.loadDummyClientHistory();
       }
     });
+  }
+
+  loadDummyClientHistory(): void {
+    // Create dummy client search results for GitHub Pages
+    this.searchResults = {
+      client: {
+        id: 1,
+        firstName: 'Sarah',
+        lastName: 'Johnson',
+        email: this.searchEmail.trim(),
+        phoneNumber: '(555) 123-4567'
+      },
+      appointments: [
+        {
+          id: 1,
+          time: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 1 week ago
+          client: {
+            id: 1,
+            firstName: 'Sarah',
+            lastName: 'Johnson',
+            email: this.searchEmail.trim(),
+            phoneNumber: '(555) 123-4567'
+          },
+          service: {
+            id: 1,
+            name: 'Signature Facial',
+            description: 'A personalized facial treatment tailored to your specific skin needs.',
+            price: 95,
+            duration: 60,
+            category: { id: 1, name: 'Facial Treatments' }
+          }
+        },
+        {
+          id: 2,
+          time: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(), // 1 month ago
+          client: {
+            id: 1,
+            firstName: 'Sarah',
+            lastName: 'Johnson',
+            email: this.searchEmail.trim(),
+            phoneNumber: '(555) 123-4567'
+          },
+          service: {
+            id: 4,
+            name: 'Upper Lip Wax',
+            description: 'Quick and precise removal of unwanted hair from the upper lip area.',
+            price: 15,
+            duration: 5,
+            category: { id: 2, name: 'Waxing' }
+          }
+        }
+      ],
+      totalCount: 2
+    };
+
+    this.extractUniqueServices();
+    this.applyServiceFilter();
+    this.errorMessage = '';
+    this.searchLoading = false;
   }
 
   extractUniqueServices(): void {
@@ -358,8 +479,66 @@ export class AdminAppointmentsComponent implements OnInit {
       error: (error) => {
         console.error('Error loading services:', error);
         this.errorMessage = 'Failed to load services.';
+        
+        // Fallback to dummy data for GitHub Pages
+        this.loadDummyServices();
       }
     });
+  }
+
+  loadDummyServices(): void {
+    // Dummy services data for GitHub Pages display
+    this.services = [
+      {
+        id: 1,
+        name: 'Signature Facial',
+        description: 'A personalized facial treatment tailored to your specific skin needs and concerns.',
+        price: 95,
+        duration: 60,
+        category: { id: 1, name: 'Facial Treatments' }
+      },
+      {
+        id: 2,
+        name: 'Dermaplane + Mini Facial',
+        description: 'A dual treatment combining dermaplaning to remove dead skin cells and peach fuzz, followed by a mini facial.',
+        price: 100,
+        duration: 60,
+        category: { id: 1, name: 'Facial Treatments' }
+      },
+      {
+        id: 3,
+        name: 'Back Facial',
+        description: 'A specialized treatment for the back area, focusing on cleansing, exfoliating, and hydrating.',
+        price: 115,
+        duration: 60,
+        category: { id: 1, name: 'Facial Treatments' }
+      },
+      {
+        id: 4,
+        name: 'Upper Lip Wax',
+        description: 'Quick and precise removal of unwanted hair from the upper lip area.',
+        price: 15,
+        duration: 5,
+        category: { id: 2, name: 'Waxing' }
+      },
+      {
+        id: 5,
+        name: 'Eyebrow Wax',
+        description: 'Precise shaping and grooming of eyebrows for a clean, defined look.',
+        price: 20,
+        duration: 10,
+        category: { id: 2, name: 'Waxing' }
+      },
+      {
+        id: 6,
+        name: 'Full Face Wax',
+        description: 'Complete facial hair removal for smooth, hair-free skin.',
+        price: 45,
+        duration: 25,
+        category: { id: 2, name: 'Waxing' }
+      }
+    ];
+    this.errorMessage = '';
   }
 
   generateTimeSlots(): void {

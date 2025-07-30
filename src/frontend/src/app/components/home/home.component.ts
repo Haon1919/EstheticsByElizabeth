@@ -1,11 +1,13 @@
 import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { RouterModule } from '@angular/router';
+import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeStyle } from '@angular/platform-browser';
+import { TestimonialComponent } from '../testimonial/testimonial.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [RouterModule],
+  imports: [RouterModule, CommonModule, TestimonialComponent],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css']
 })
@@ -97,21 +99,21 @@ export class HomeComponent implements OnInit, OnDestroy {
       name: 'Sarah Johnson',
       quote: 'The facial treatment was amazing! My skin has never looked better. The esthetician was knowledgeable and made me feel completely relaxed.',
       rating: 5,
-      image: 'assets/images/testimonial1.jpg'
+      image: 'https://images.unsplash.com/photo-1494790108755-2616b612b977?w=150&h=150&fit=crop&crop=face'
     },
     {
       id: 2,
       name: 'Michael Rodriguez',
       quote: 'I was hesitant about getting a massage, but the staff made me feel comfortable. The experience was incredible and I left feeling rejuvenated.',
       rating: 5,
-      image: 'assets/images/testimonial2.jpg'
+      image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face'
     },
     {
       id: 3,
       name: 'Emma Thompson',
       quote: "I've been coming here for waxing for over a year. The service is always consistent and the results are fantastic. Highly recommend!",
       rating: 4,
-      image: 'assets/images/testimonial3.jpg'
+      image: 'https://images.unsplash.com/photo-1489424731084-a5d8b219a5bb?w=150&h=150&fit=crop&crop=face'
     }
   ];
 }

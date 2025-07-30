@@ -3,7 +3,10 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches:
-      - master # or main, depending on your default branch name
+      - main
+      - master
+      - dummyMobileStyleSite
+  workflow_dispatch: # Allow manual deployment
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:

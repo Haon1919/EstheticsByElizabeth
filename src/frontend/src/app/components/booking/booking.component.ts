@@ -72,8 +72,66 @@ export class BookingComponent implements OnInit {
       error: (error: any) => {
         console.error('Error loading services:', error);
         this.errorMessage = 'Failed to load services. Please try again.';
+        
+        // Fallback to dummy data for GitHub Pages
+        this.loadDummyServices();
       }
     });
+  }
+
+  loadDummyServices(): void {
+    // Dummy services data for GitHub Pages display
+    this.services = [
+      {
+        id: 1,
+        name: 'Signature Facial',
+        description: 'A personalized facial treatment tailored to your specific skin needs and concerns.',
+        price: 95,
+        duration: 60,
+        category: { id: 1, name: 'Facial Treatments' }
+      },
+      {
+        id: 2,
+        name: 'Dermaplane + Mini Facial',
+        description: 'A dual treatment combining dermaplaning to remove dead skin cells and peach fuzz, followed by a mini facial.',
+        price: 100,
+        duration: 60,
+        category: { id: 1, name: 'Facial Treatments' }
+      },
+      {
+        id: 3,
+        name: 'Back Facial',
+        description: 'A specialized treatment for the back area, focusing on cleansing, exfoliating, and hydrating.',
+        price: 115,
+        duration: 60,
+        category: { id: 1, name: 'Facial Treatments' }
+      },
+      {
+        id: 4,
+        name: 'Upper Lip Wax',
+        description: 'Quick and precise removal of unwanted hair from the upper lip area.',
+        price: 15,
+        duration: 5,
+        category: { id: 2, name: 'Waxing' }
+      },
+      {
+        id: 5,
+        name: 'Eyebrow Wax',
+        description: 'Precise shaping and grooming of eyebrows for a clean, defined look.',
+        price: 20,
+        duration: 10,
+        category: { id: 2, name: 'Waxing' }
+      },
+      {
+        id: 6,
+        name: 'Full Face Wax',
+        description: 'Complete facial hair removal for smooth, hair-free skin.',
+        price: 45,
+        duration: 25,
+        category: { id: 2, name: 'Waxing' }
+      }
+    ];
+    this.errorMessage = '';
   }
 
   generateTimeSlots(): void {

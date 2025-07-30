@@ -62,9 +62,120 @@ export class ClientManagementComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading review flags:', error);
+        this.loadDummyReviewFlags();
         this.loading = false;
       }
     });
+  }
+
+  loadDummyReviewFlags(): void {
+    // Load dummy client review flags for GitHub Pages demo
+    const now = new Date();
+    const today = now.toISOString();
+    const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+    const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000).toISOString();
+
+    this.reviewFlags = [
+      {
+        id: 1,
+        clientId: 101,
+        appointmentId: 501,
+        flagReason: 'Multiple no-shows (3 consecutive appointments)',
+        flagDate: today,
+        status: 'Pending',
+        reviewDate: undefined,
+        reviewedBy: undefined,
+        adminComments: undefined,
+        autoFlags: 3,
+        client: {
+          id: 101,
+          firstName: 'Jennifer',
+          lastName: 'Martinez',
+          email: 'jennifer.martinez@email.com',
+          phoneNumber: '555-123-4567'
+        },
+        appointment: {
+          id: 501,
+          time: new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString(),
+          serviceId: 1
+        }
+      },
+      {
+        id: 2,
+        clientId: 102,
+        appointmentId: 502,
+        flagReason: 'Late cancellation pattern (cancelled within 24 hours 4 times)',
+        flagDate: yesterday,
+        status: 'Pending',
+        reviewDate: undefined,
+        reviewedBy: undefined,
+        adminComments: undefined,
+        autoFlags: 4,
+        client: {
+          id: 102,
+          firstName: 'Michael',
+          lastName: 'Thompson',
+          email: 'mthompson@email.com',
+          phoneNumber: '555-987-6543'
+        },
+        appointment: {
+          id: 502,
+          time: new Date(now.getTime() + 24 * 60 * 60 * 1000).toISOString(),
+          serviceId: 2
+        }
+      },
+      {
+        id: 3,
+        clientId: 103,
+        appointmentId: 503,
+        flagReason: 'Inappropriate behavior reported by staff',
+        flagDate: oneWeekAgo,
+        status: 'Banned',
+        reviewDate: new Date(new Date(oneWeekAgo).getTime() + 2 * 60 * 60 * 1000).toISOString(),
+        reviewedBy: 'Admin',
+        adminComments: 'Client was rude and disrespectful to staff. Permanent ban implemented.',
+        autoFlags: 1,
+        client: {
+          id: 103,
+          firstName: 'David',
+          lastName: 'Wilson',
+          email: 'david.wilson@email.com',
+          phoneNumber: '555-456-7890'
+        },
+        appointment: {
+          id: 503,
+          time: oneWeekAgo,
+          serviceId: 1
+        }
+      },
+      {
+        id: 4,
+        clientId: 104,
+        appointmentId: 504,
+        flagReason: 'Payment issues - card declined multiple times',
+        flagDate: twoWeeksAgo,
+        status: 'Approved',
+        reviewDate: new Date(new Date(twoWeeksAgo).getTime() + 6 * 60 * 60 * 1000).toISOString(),
+        reviewedBy: 'Admin',
+        adminComments: 'Payment issue resolved. Client provided alternative payment method.',
+        autoFlags: 2,
+        client: {
+          id: 104,
+          firstName: 'Lisa',
+          lastName: 'Anderson',
+          email: 'lisa.anderson@email.com',
+          phoneNumber: '555-321-0987'
+        },
+        appointment: {
+          id: 504,
+          time: twoWeeksAgo,
+          serviceId: 3
+        }
+      }
+    ];
+
+    this.applyFilters();
   }
 
   applyFilters(): void {
