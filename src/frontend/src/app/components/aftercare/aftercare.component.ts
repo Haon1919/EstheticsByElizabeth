@@ -17,6 +17,7 @@ export class AftercareComponent implements OnInit {
   categories: { id: number; name: string; services: Service[] }[] = [];
   isLoading = false;
   errorMessage = '';
+  demoMessage = '';
   selectedCategory = '';
 
   constructor(
@@ -30,6 +31,7 @@ export class AftercareComponent implements OnInit {
   loadServicesWithAftercare(): void {
     this.isLoading = true;
     this.errorMessage = '';
+    this.demoMessage = '';
 
     this.serviceManagementService.loadServices().subscribe({
       next: (services: Service[]) => {
@@ -42,7 +44,7 @@ export class AftercareComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading services:', error);
-        this.errorMessage = 'Failed to load aftercare information. Please try again later.';
+        // Load demo data instead of persistent error state
         this.loadDummyAftercareData();
         this.isLoading = false;
       }
@@ -151,7 +153,9 @@ export class AftercareComponent implements OnInit {
     ];
 
     this.organizeServicesByCategory();
-    this.errorMessage = 'Demo mode: Showing sample aftercare instructions.';
+    // Clear error and set demo message
+    this.errorMessage = '';
+    this.demoMessage = 'Demo mode: Showing sample aftercare instructions.';
   }
 
   organizeServicesByCategory(): void {

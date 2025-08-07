@@ -8,6 +8,11 @@
 
   <section class="services-list">
     <div class="container">
+      <!-- Demo banner -->
+      <div *ngIf="demoMessage && !isLoading" class="demo-banner">
+        <p>{{ demoMessage }}</p>
+      </div>
+
       <!-- Loading state -->
       <div *ngIf="isLoading" class="loading-container">
         <div class="loading-spinner"></div>

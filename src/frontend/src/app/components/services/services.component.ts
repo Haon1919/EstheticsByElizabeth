@@ -22,6 +22,7 @@ export class ServicesComponent implements OnInit {
   services: ServiceCategory[] = [];
   isLoading = true;
   errorMessage = '';
+  demoMessage = '';
 
   constructor(private serviceManagementService: ServiceManagementService) {}
 
@@ -31,6 +32,8 @@ export class ServicesComponent implements OnInit {
 
   loadServicesAndCategories(): void {
     this.isLoading = true;
+    this.errorMessage = '';
+    this.demoMessage = '';
     
     // Load both services and categories
     Promise.all([
@@ -41,7 +44,7 @@ export class ServicesComponent implements OnInit {
       this.isLoading = false;
     }).catch((error) => {
       console.error('Error loading services and categories:', error);
-      this.errorMessage = 'Failed to load services. Please try again later.';
+      // Load fallback demo data instead of showing permanent error
       this.loadFallbackData();
       this.isLoading = false;
     });
@@ -292,8 +295,9 @@ export class ServicesComponent implements OnInit {
         ]
       }
     ];
-    
-    this.errorMessage = 'Demo mode: Showing sample services data.';
+    // Clear any prior error and set demo banner message
+    this.errorMessage = '';
+    this.demoMessage = 'Demo mode: Showing sample services data.';
   }
 
   handleItemClick(item: Service): void {

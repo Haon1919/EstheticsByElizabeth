@@ -24,8 +24,15 @@
     </div>
   </div>
 
+  <!-- Demo Banner -->
+  <div *ngIf="demoMessage && !isLoading" class="demo-banner">
+    <div class="container">
+      <p>{{ demoMessage }}</p>
+    </div>
+  </div>
+
   <!-- Content -->
-  <div *ngIf="!isLoading && !errorMessage">
+  <div *ngIf="!isLoading && (hasAftercareServices())">
     <!-- Category Navigation -->
     <section class="category-nav" *ngIf="categories.length > 1">
       <div class="container">
