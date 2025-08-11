@@ -1,3 +1,5 @@
+import { Service } from './services.models';
+
 // Common models shared between frontend and backend
 
 export interface ApiResponse<T> {
@@ -32,51 +34,6 @@ export interface Client {
   lastName: string;
   email: string;
   phoneNumber: string;
-}
-
-export interface Category {
-  id: number;
-  name: string;
-}
-
-export interface CategoryServiceCount {
-  categoryId: number;
-  categoryName: string;
-  serviceCount: number;
-}
-
-export interface Service {
-  id: number;
-  name: string;
-  description: string;
-  price?: number;
-  duration?: number;
-  appointmentBufferTime?: number;
-  category: Category;
-  website?: string;
-  afterCareInstructions?: string;
-}
-
-export interface CreateServiceRequest {
-  name: string;
-  description?: string;
-  afterCareInstructions?: string;
-  price?: number;
-  duration?: number;
-  appointmentBufferTime?: number;
-  categoryId: number;
-  website?: string;
-}
-
-export interface UpdateServiceRequest {
-  name?: string;
-  description?: string;
-  afterCareInstructions?: string | null;
-  price?: number;
-  duration?: number;
-  appointmentBufferTime?: number;
-  categoryId?: number;
-  website?: string;
 }
 
 export interface CreateAppointmentRequest {
@@ -215,99 +172,4 @@ export interface ClientBanResponse {
   success: boolean;
   message: string;
   unbannedFlags?: number;
-}
-
-// Service Management interfaces for admin panel
-export interface CreateServiceRequest {
-  name: string;
-  description?: string;
-  price?: number;
-  duration?: number;
-  appointmentBufferTime?: number;
-  categoryId: number;
-  website?: string;
-}
-
-export interface UpdateServiceRequest {
-  name?: string;
-  description?: string;
-  price?: number;
-  duration?: number;
-  appointmentBufferTime?: number;
-  categoryId?: number;
-  website?: string;
-}
-
-// Gallery Management interfaces for admin panel
-export interface GalleryImage {
-  id: number;
-  src: string;
-  alt: string;
-  category: string;
-  title?: string;
-  description?: string;
-  isActive: boolean;
-  sortOrder: number;
-  uploadedAt: string;
-  updatedAt?: string;
-}
-
-export interface CreateGalleryImageRequest {
-  src: string;
-  alt: string;
-  category: string;
-  title?: string;
-  description?: string;
-  isActive?: boolean;
-  sortOrder?: number;
-}
-
-export interface UpdateGalleryImageRequest {
-  src?: string;
-  alt?: string;
-  category?: string;
-  title?: string;
-  description?: string;
-  isActive?: boolean;
-  sortOrder?: number;
-}
-
-export interface GalleryImageResponse {
-  success: boolean;
-  data: GalleryImage[];
-  totalCount: number;
-  categories: string[];
-}
-
-export interface GalleryCategory {
-  id: string;
-  name: string;
-  count: number;
-}
-
-export interface UploadImageResponse {
-  success: boolean;
-  url: string;
-  filename: string;
-  message?: string;
-}
-
-// Category Management interfaces for admin panel
-export interface CreateCategoryRequest {
-  name: string;
-}
-
-export interface UpdateCategoryRequest {
-  name: string;
-}
-
-export interface CategoryResponse {
-  success: boolean;
-  data: Category;
-  message?: string;
-}
-
-export interface DeleteCategoryResponse {
-  success: boolean;
-  message: string;
 }

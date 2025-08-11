@@ -5,15 +5,15 @@ import { Router } from '@angular/router';
 import { AppointmentService } from '../../services/appointment.service';
 import { AuthService } from '../../services/auth.service';
 import { ServiceManagementService } from '../../services/service-management.service';
-import { 
-  Appointment, 
-  AppointmentsByDateResponse, 
-  AppointmentHistoryResponse, 
-  Service,
+import {
+  Appointment,
+  AppointmentsByDateResponse,
+  AppointmentHistoryResponse,
   CreateAppointmentRequest,
   Client,
   EarliestAppointmentDateResponse
 } from '../../models/api-models';
+import { Service } from '../../models/services.models';
 
 @Component({
   selector: 'app-admin-appointments',

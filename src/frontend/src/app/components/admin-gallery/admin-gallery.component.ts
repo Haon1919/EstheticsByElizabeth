@@ -4,14 +4,14 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ApiService } from '../../services/api.service';
 import { AuthService } from '../../services/auth.service';
-import { 
-  GalleryImage, 
-  GalleryImageResponse, 
-  CreateGalleryImageRequest, 
+import {
+  GalleryImage,
+  GalleryImageResponse,
+  CreateGalleryImageRequest,
   UpdateGalleryImageRequest,
   GalleryCategory,
   UploadImageResponse
-} from '../../models/api-models';
+} from '../../models/gallery.models';
 
 @Component({
   selector: 'app-admin-gallery',

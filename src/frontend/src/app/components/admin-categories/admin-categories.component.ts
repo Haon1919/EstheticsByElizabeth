@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { CategoryManagementService } from '../../services/category-management.service';
 import { ServiceManagementService } from '../../services/service-management.service';
-import { Category, CreateCategoryRequest, UpdateCategoryRequest, CategoryServiceCount } from '../../models/api-models';
+import { Category, CreateCategoryRequest, UpdateCategoryRequest, CategoryServiceCount } from '../../models/services.models';
 
 @Component({
   selector: 'app-admin-categories',

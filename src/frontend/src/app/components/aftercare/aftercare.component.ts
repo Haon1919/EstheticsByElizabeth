@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ServiceManagementService } from '../../services/service-management.service';
-import { Service } from '../../models/api-models';
+import { Service } from '../../models/services.models';
 
 @Component({
   selector: 'app-aftercare',
