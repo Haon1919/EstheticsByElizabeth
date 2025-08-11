@@ -24,9 +24,10 @@ if [ -f ".azure-config" ] && [ "$DEPLOY_MODE" = "activate" ]; then
 else
     # Generate new resource names with timestamps
     DB_SERVER="esthetics-db-server-$(date +%s)"
-    DB_PASSWORD="EstheticsDB2025!"
+    DB_PASSWORD=""
     STORAGE_ACCOUNT="estheticsstorage$(date +%s | cut -c6-)"
     WEBAPP_NAME="esthetics-webapp-$(date +%s)"
+    ACS_NAME="esthetics-comm-$(date +%s)"
     GITHUB_REPO="https://github.com/yourusername/EstheticsByElizabeth"  # Update this with your actual repo
 fi
 
@@ -64,6 +65,7 @@ if [ "$DEPLOY_MODE" = "prepare" ]; then
     echo "🗄️ Database server: $DB_SERVER"
     echo "💾 Storage account: $STORAGE_ACCOUNT"
     echo "📱 Static Web App: $WEBAPP_NAME"
+    echo "📧 Communication Services: $ACS_NAME"
     echo ""
     echo "To create and start resources:"
     echo "  ./scripts/deploy.sh activate"
@@ -77,6 +79,7 @@ DB_SERVER=$DB_SERVER
 DB_PASSWORD=$DB_PASSWORD
 STORAGE_ACCOUNT=$STORAGE_ACCOUNT
 WEBAPP_NAME=$WEBAPP_NAME
+ACS_NAME=$ACS_NAME
 GITHUB_REPO=$GITHUB_REPO
 EOF
     
@@ -124,15 +127,35 @@ az storage container create \
     --public-access blob \
     --output table
 
+# Create Azure Communication Services for email
+echo "📧 Creating Azure Communication Services (Email)..."
+az extension add --name communication &>/dev/null || true
+az communication create \
+    --name $ACS_NAME \
+    --resource-group $RESOURCE_GROUP \
+    --data-location unitedstates \
+    --output table
+ACS_CONNECTION=$(az communication list-key \
+    --name $ACS_NAME \
+    --resource-group $RESOURCE_GROUP \
+    --query primaryConnectionString \
+    --output tsv)
+
+# Get storage connection string (for app settings)
+STORAGE_CONNECTION=$(az storage account show-connection-string \
+    --name $STORAGE_ACCOUNT \
+    --query connectionString \
+    --output tsv)
+
 # Create Static Web App with Functions integration
 echo "🌐 Creating Static Web App..."
 az staticwebapp create \
     --name $WEBAPP_NAME \
     --source $GITHUB_REPO \
     --branch main \
-    --app-location "/" \
+    --app-location "src/frontend" \
     --api-location "src/backend/API" \
-    --output-location "src/frontend/dist" \
+    --output-location "dist/app" \
     --output table
 
 # Get connection strings
@@ -145,10 +168,7 @@ DB_CONNECTION=$(az postgres flexible-server show-connection-string \
     --query connectionString \
     --output tsv)
 
-STORAGE_CONNECTION=$(az storage account show-connection-string \
-    --name $STORAGE_ACCOUNT \
-    --query connectionString \
-    --output tsv)
+# STORAGE_CONNECTION is already set above
 
 # Set application settings
 echo "⚙️ Setting application configuration..."
@@ -161,6 +181,8 @@ az staticwebapp appsettings set \
         "Values__ImageStorage__ConnectionString=$STORAGE_CONNECTION" \
         "Values__ImageStorage__ContainerName=images" \
         "Values__Email__Provider=azure" \
+        "Values__Email__Azure__ConnectionString=$ACS_CONNECTION" \
+        "Values__Email__Azure__FromEmail=noreply@estheticsbyelizabeth.com" \
     --output table
 
 # Get the deployed URL
@@ -176,6 +198,7 @@ echo "🌐 Your app is available at: https://$WEBAPP_URL"
 echo "🗄️ Database server: $DB_SERVER"
 echo "💾 Storage account: $STORAGE_ACCOUNT"
 echo "📱 Static Web App: $WEBAPP_NAME"
+echo "📧 Communication Services: $ACS_NAME"
 echo ""
 echo "Next steps:"
 echo "1. Push your code to GitHub to trigger automatic deployment"
@@ -195,6 +218,8 @@ DB_PASSWORD=$DB_PASSWORD
 STORAGE_ACCOUNT=$STORAGE_ACCOUNT
 WEBAPP_NAME=$WEBAPP_NAME
 WEBAPP_URL=$WEBAPP_URL
+ACS_NAME=$ACS_NAME
+ACS_CONNECTION=$ACS_CONNECTION
 GITHUB_REPO=$GITHUB_REPO
 EOF
 

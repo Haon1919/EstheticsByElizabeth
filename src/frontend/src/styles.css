@@ -16,6 +16,11 @@ body {
   background-color: #fff;
 }
 
+html {
+  /* Removed smooth to allow instant jump-to-top */
+  scroll-behavior: auto;
+}
+
 /* Headings */
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Playfair Display', serif;

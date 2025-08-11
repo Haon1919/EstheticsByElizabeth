@@ -1,7 +1,7 @@
 # Multi-stage build for Azure Functions .NET API
 
 # Build stage - Use .NET SDK image for building
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM --platform=linux/amd64 mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Copy project file and restore dependencies
@@ -22,7 +22,7 @@ RUN dotnet build "API.csproj" -c Release -o /app/build
 RUN dotnet publish "API.csproj" -c Release -o /app/publish --no-restore
 
 # Runtime stage - Use Azure Functions runtime image
-FROM mcr.microsoft.com/azure-functions/dotnet-isolated:4-dotnet-isolated8.0 AS runtime
+FROM --platform=linux/amd64 mcr.microsoft.com/azure-functions/dotnet-isolated:4-dotnet-isolated8.0 AS runtime
 
 # Install Python and pip
 RUN apt-get update && \

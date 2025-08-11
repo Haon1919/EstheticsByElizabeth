@@ -19,6 +19,7 @@ services:
       retries: 5
 
   api:
+    platform: linux/amd64
     build:
       context: ../src/backend/API
       dockerfile: Dockerfile
