@@ -27,12 +27,18 @@ namespace API.Functions
         private readonly ILogger<ScheduleAppointment> _logger;
         private readonly ProjectContext _context;
         private readonly IEmailService _emailService; // Add email service
+        private readonly ClientReviewService _clientReviewService;
 
-        public ScheduleAppointment(ILogger<ScheduleAppointment> logger, ProjectContext context, IEmailService emailService)
+        public ScheduleAppointment(
+            ILogger<ScheduleAppointment> logger,
+            ProjectContext context,
+            IEmailService emailService,
+            ClientReviewService clientReviewService)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _context = context ?? throw new ArgumentNullException(nameof(context));
             _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService)); // Initialize email service
+            _clientReviewService = clientReviewService ?? throw new ArgumentNullException(nameof(clientReviewService));
         }        /// <summary>
         /// 🧙‍♂️ The Magical Appointment Scheduling Ritual 🧙‍♂️
         /// Azure Function triggered by HTTP POST to schedule an appointment.
@@ -59,19 +65,22 @@ namespace API.Functions
                 if (!string.IsNullOrEmpty(appointmentDto.Client.Email))
                 {
                     _logger.LogInformation("🚨 Checking if client is under review: {ClientEmail}", appointmentDto.Client.Email);
-                    var clientReviewResult = await CheckClientReviewStatusAsync(appointmentDto.Client.Email, appointmentDto.Time.Date);
-                    
-                    if (clientReviewResult.IsUnderReview)
+                    var isUnderReview = await _clientReviewService.IsClientUnderReviewAsync(appointmentDto.Client.Email);
+
+                    if (isUnderReview)
                     {
                         _logger.LogWarning("⛔ Client {ClientEmail} is currently under review and cannot book appointments", appointmentDto.Client.Email);
                         return new ConflictObjectResult("Your account is currently under review and cannot book appointments. Please contact the admin for assistance.");
                     }
-                    
-                    if (clientReviewResult.ExistingAppointmentsCount > 0)
+
+                    var existingAppointmentsCount = await _clientReviewService.GetClientAppointmentCountForDateAsync(
+                        appointmentDto.Client.Email,
+                        appointmentDto.Time.Date);
+                    if (existingAppointmentsCount > 0)
                     {
-                        _logger.LogWarning("⚠️ Client {ClientEmail} is attempting to book multiple appointments on {Date}", 
+                        _logger.LogWarning("⚠️ Client {ClientEmail} is attempting to book multiple appointments on {Date}",
                             appointmentDto.Client.Email, appointmentDto.Time.ToString("yyyy-MM-dd"));
-                        
+
                         // We'll allow the booking but flag it for review
                         _logger.LogInformation("🔄 Allowing multiple booking but marking for admin review");
                     }
@@ -206,15 +215,18 @@ namespace API.Functions
             _context.Appointments.Add(appointment);            // Check if we need to flag this client for review (multiple bookings on same day)
             if (!string.IsNullOrEmpty(appointmentDto.Client!.Email))
             {
-                var clientReviewResult = await CheckClientReviewStatusAsync(appointmentDto.Client.Email, appointmentDto.Time.Date);                
-                if (clientReviewResult.ExistingAppointmentsCount > 0)
+                var existingAppointmentsCount = await _clientReviewService.GetClientAppointmentCountForDateAsync(
+                    appointmentDto.Client.Email,
+                    appointmentDto.Time.Date);
+                if (existingAppointmentsCount > 0)
                 {
                     // Save the appointment first to get its ID
                     await _context.SaveChangesAsync();
-                    
+
+                    var reason = $"Multiple bookings detected: Client attempted to book {existingAppointmentsCount + 1} appointments on {appointmentDto.Time.Date:yyyy-MM-dd}";
                     // Now flag the client with the appointment ID
-                    await FlagClientForReviewAsync(client.Id, appointmentDto.Time.Date, clientReviewResult.ExistingAppointmentsCount, appointment.Id);
-                    
+                    await _clientReviewService.FlagClientForReviewAsync(client.Id, appointment.Id, reason);
+
                     _logger.LogInformation("✅ Appointment created with ID: {AppointmentId} and flagged for review", appointment.Id);
                 }
                 else
@@ -228,7 +240,9 @@ namespace API.Functions
             {
                 // Save the appointment if there's no client email to check
                 await _context.SaveChangesAsync();
-                _logger.LogInformation("✅ Appointment created with ID: {AppointmentId}", appointment.Id);            }            _logger.LogInformation("🎉 Successfully scheduled appointment ID {AppointmentId} for client {ClientEmail}", appointment.Id, client.Email);
+                _logger.LogInformation("✅ Appointment created with ID: {AppointmentId}", appointment.Id);
+            }
+           _logger.LogInformation("🎉 Successfully scheduled appointment ID {AppointmentId} for client {ClientEmail}", appointment.Id, client.Email);
 
             // --- Send Confirmation Email ---
             try
@@ -263,95 +277,6 @@ namespace API.Functions
             });
         }
 
-        /// <summary>
-        /// 🔍 Checks if a client is under review or if they're attempting to make multiple bookings on the same day.
-        /// </summary>
-        /// <param name="clientEmail">The client's email address</param>
-        /// <param name="appointmentDate">The date of the requested appointment</param>
-        /// <returns>Result containing review status and the count of existing appointments</returns>        /// <summary>
-        /// Checks if a client is under review or has existing appointments on the specified date.
-        /// </summary>
-        /// <param name="clientEmail">The client's email address</param>
-        /// <param name="appointmentDate">The date of the appointment</param>
-        /// <returns>A tuple containing whether the client is under review and the count of existing appointments on the specified date</returns>
-        private async Task<(bool IsUnderReview, int ExistingAppointmentsCount)> CheckClientReviewStatusAsync(
-            string clientEmail, 
-            DateTimeOffset appointmentDate)
-        {
-            try
-            {
-                // Find the client
-                var client = await _context.Clients
-                    .Include(c => c.ReviewFlags)
-                    .FirstOrDefaultAsync(c => c.Email == clientEmail);
-
-                if (client == null)
-                {
-                    _logger.LogInformation("👀 No client found with email {ClientEmail} during review check", clientEmail);
-                    return (false, 0);
-                }                // Check if client is under review
-                var activeReviewFlag = client.ReviewFlags
-                    .Where(rf => rf.Status.ToUpper() == "PENDING" || rf.Status.ToUpper() == "REJECTED" || rf.Status.ToUpper() == "BANNED")
-                    .OrderByDescending(rf => rf.FlagDate)
-                    .FirstOrDefault();
-                
-                if (activeReviewFlag != null)
-                {
-                    _logger.LogWarning("⛔ Client {ClientEmail} has an active review flag with status {Status}", clientEmail, activeReviewFlag.Status);
-                    return (true, 0);
-                }
-
-                // Check for multiple bookings on the same day
-                // Get the start and end of the appointment date
-                var startDate = appointmentDate.Date;
-                var endDate = startDate.AddDays(1);
-
-                var existingAppointments = await _context.Appointments
-                    .CountAsync(a => a.Client.Email == clientEmail && 
-                                    a.Time >= startDate && 
-                                    a.Time < endDate);
-                
-                if (existingAppointments > 0)
-                {
-                    _logger.LogWarning("⚠️ Client {ClientEmail} already has {Count} appointment(s) on {Date}", 
-                        clientEmail, existingAppointments, appointmentDate.ToString("yyyy-MM-dd"));
-                }
-
-                return (false, existingAppointments);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "💥 Error checking client review status for {ClientEmail}", clientEmail);
-                // In case of error, we allow the booking to proceed
-                return (false, 0);
-            }
-        }/// <summary>
-        /// 🚩 Flags a client for review when they attempt to book multiple appointments on the same day.
-        /// </summary>
-        private async Task FlagClientForReviewAsync(int clientId, DateTimeOffset appointmentDate, int appointmentCount, int appointmentId)
-        {
-            try
-            {
-                var reviewFlag = new ClientReviewFlag
-                {
-                    ClientId = clientId,
-                    AppointmentId = appointmentId,
-                    FlagReason = $"Multiple bookings detected: Client attempted to book {appointmentCount + 1} appointments on {appointmentDate:yyyy-MM-dd}",
-                    FlagDate = DateTimeOffset.UtcNow,
-                    Status = "Pending",
-                    AutoFlags = 1
-                };
-
-                _context.ClientReviewFlags.Add(reviewFlag);
-                await _context.SaveChangesAsync();
-                _logger.LogInformation("🚩 Client ID {ClientId} flagged for review due to multiple bookings on {Date}", 
-                    clientId, appointmentDate.ToString("yyyy-MM-dd"));
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "💥 Error flagging client ID {ClientId} for review", clientId);                // We don't throw here to avoid disrupting the appointment booking process
-            }
-        }
 
         /// <summary>
         /// 📧 Sends a confirmation email to the client after successful appointment booking
