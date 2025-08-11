@@ -135,24 +135,28 @@ namespace API.Functions
         {
             _logger.LogDebug("Checking time availability for {AppointmentTime}", appointmentDto.Time);
 
+            const int defaultDuration = 60;
+
             bool timeSlotTaken = await _context.Appointments
                 .AnyAsync(a => a.Time == appointmentDto.Time);
-            
+
             // Skip overlap check if service duration is null
             if (service.Duration == null)
             {
                 return !timeSlotTaken;
-            }            var proposedStartTime = appointmentDto.Time;
+            }
+
+            var proposedStartTime = appointmentDto.Time;
             var proposedEndTime = proposedStartTime.AddMinutes(service.Duration.Value); // Duration is in minutes
 
             var timeSlotOverlaps = await _context.Appointments
+                .Include(a => a.Service)
                 .AnyAsync(existing =>
                     existing.Time < proposedEndTime &&
-                    existing.Time.AddHours(1) > proposedStartTime && 
-                    existing.ServiceId == appointmentDto.ServiceId 
+                    existing.Time.AddMinutes(existing.Service.Duration ?? defaultDuration) > proposedStartTime
                 );
-            
-            if(timeSlotTaken || timeSlotOverlaps)
+
+            if (timeSlotTaken || timeSlotOverlaps)
             {
                 _logger.LogDebug("Time slot {AppointmentTime} is already booked.", appointmentDto.Time);
                 return false;
