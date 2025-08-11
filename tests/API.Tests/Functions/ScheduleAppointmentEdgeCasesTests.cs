@@ -4,6 +4,7 @@ using API.Data;
 using API.DTOs;
 using API.Entities;
 using API.Functions;
+using API.Services;
 using API.Tests.Helpers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -39,8 +40,12 @@ namespace API.Tests.Functions
             // Create empty request body
             string emptyJson = "";
             var request = TestHelpers.CreateMockHttpRequest(emptyJson);
-            
-            var function = new ScheduleAppointment(_loggerMock.Object, CreateContext());
+
+            var context = CreateContext();
+            var emailService = new Mock<IEmailService>();
+            emailService.Setup(s => s.SendEmailAsync(It.IsAny<EmailRequest>())).Returns(Task.CompletedTask);
+            var reviewService = new ClientReviewService(new Mock<ILogger<ClientReviewService>>().Object, context);
+            var function = new ScheduleAppointment(_loggerMock.Object, context, emailService.Object, reviewService);
 
             // Act
             var result = await function.Run(request);
@@ -58,8 +63,12 @@ namespace API.Tests.Functions
             // Create malformed JSON
             string malformedJson = "{ this is not valid json }";
             var request = TestHelpers.CreateMockHttpRequest(malformedJson);
-            
-            var function = new ScheduleAppointment(_loggerMock.Object, CreateContext());
+
+            var context = CreateContext();
+            var emailService = new Mock<IEmailService>();
+            emailService.Setup(s => s.SendEmailAsync(It.IsAny<EmailRequest>())).Returns(Task.CompletedTask);
+            var reviewService = new ClientReviewService(new Mock<ILogger<ClientReviewService>>().Object, context);
+            var function = new ScheduleAppointment(_loggerMock.Object, context, emailService.Object, reviewService);
 
             // Act
             var result = await function.Run(request);

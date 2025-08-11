@@ -5,6 +5,7 @@ using API.Data;
 using API.DTOs;
 using API.Entities;
 using API.Functions;
+using API.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -34,10 +35,9 @@ namespace API.Tests.Functions
         {
             // Arrange
             await SeedDatabase();
-            
+
             string clientEmail = "review@example.com";
-            DateTimeOffset appointmentDate = DateTimeOffset.Now.Date;
-            
+
             // Create a client under review
             using (var context = CreateContext())
             {
@@ -48,10 +48,10 @@ namespace API.Tests.Functions
                     Email = clientEmail,
                     PhoneNumber = "555-REVIEW"
                 };
-                
+
                 context.Clients.Add(client);
                 await context.SaveChangesAsync();
-                
+
                 // Create an appointment first
                 var appointment = new Appointment
                 {
@@ -61,7 +61,7 @@ namespace API.Tests.Functions
                 };
                 context.Appointments.Add(appointment);
                 await context.SaveChangesAsync();
-                
+
                 // Add a review flag
                 context.ClientReviewFlags.Add(new ClientReviewFlag
                 {
@@ -71,39 +71,17 @@ namespace API.Tests.Functions
                     FlagDate = DateTimeOffset.UtcNow,
                     Status = "Pending" // Pending status means under review
                 });
-                
+
                 await context.SaveChangesAsync();
             }
-            
-            // Use reflection to access the private method
-            var function = new ScheduleAppointment(_loggerMock.Object, CreateContext());
-            var method = typeof(ScheduleAppointment).GetMethod(
-                "CheckClientReviewStatusAsync", 
-                BindingFlags.NonPublic | BindingFlags.Instance);
-            
-            // Act
-            if (method != null)
-            {
-                var task = (Task<(bool IsUnderReview, int ExistingAppointmentsCount)>?)method.Invoke(
-                    function, 
-                    new object[] { clientEmail, appointmentDate });
-                
-                if (task != null)
-                {
-                    var result = await task;
 
-                    // Assert
-                    Assert.True(result.IsUnderReview);
-                }
-                else
-                {
-                    Assert.Fail("Task was null");
-                }
-            }
-            else
-            {
-                Assert.Fail("Method not found");
-            }
+            var reviewService = new ClientReviewService(new Mock<ILogger<ClientReviewService>>().Object, CreateContext());
+
+            // Act
+            var isUnderReview = await reviewService.IsClientUnderReviewAsync(clientEmail);
+
+            // Assert
+            Assert.True(isUnderReview);
         }
 
         [Fact]
@@ -111,10 +89,9 @@ namespace API.Tests.Functions
         {
             // Arrange
             await SeedDatabase();
-            
+
             string clientEmail = "rejected@example.com";
-            DateTimeOffset appointmentDate = DateTimeOffset.Now.Date;
-            
+
             // Create a client with rejected status
             using (var context = CreateContext())
             {
@@ -125,10 +102,10 @@ namespace API.Tests.Functions
                     Email = clientEmail,
                     PhoneNumber = "555-REJECTED"
                 };
-                
+
                 context.Clients.Add(client);
                 await context.SaveChangesAsync();
-                
+
                 // Create an appointment first
                 var appointment = new Appointment
                 {
@@ -138,7 +115,7 @@ namespace API.Tests.Functions
                 };
                 context.Appointments.Add(appointment);
                 await context.SaveChangesAsync();
-                
+
                 // Add a review flag with Rejected status
                 context.ClientReviewFlags.Add(new ClientReviewFlag
                 {
@@ -148,39 +125,17 @@ namespace API.Tests.Functions
                     FlagDate = DateTimeOffset.UtcNow,
                     Status = "Rejected" // Rejected status also blocks appointments
                 });
-                
+
                 await context.SaveChangesAsync();
             }
-            
-            // Use reflection to access the private method
-            var function = new ScheduleAppointment(_loggerMock.Object, CreateContext());
-            var method = typeof(ScheduleAppointment).GetMethod(
-                "CheckClientReviewStatusAsync", 
-                BindingFlags.NonPublic | BindingFlags.Instance);
-            
-            // Act
-            if (method != null)
-            {
-                var task = (Task<(bool IsUnderReview, int ExistingAppointmentsCount)>?)method.Invoke(
-                    function, 
-                    new object[] { clientEmail, appointmentDate });
-                
-                if (task != null)
-                {
-                    var result = await task;
 
-                    // Assert
-                    Assert.True(result.IsUnderReview);
-                }
-                else
-                {
-                    Assert.Fail("Task was null");
-                }
-            }
-            else
-            {
-                Assert.Fail("Method not found");
-            }
+            var reviewService = new ClientReviewService(new Mock<ILogger<ClientReviewService>>().Object, CreateContext());
+
+            // Act
+            var isUnderReview = await reviewService.IsClientUnderReviewAsync(clientEmail);
+
+            // Assert
+            Assert.True(isUnderReview);
         }
 
         [Fact]
@@ -188,10 +143,9 @@ namespace API.Tests.Functions
         {
             // Arrange
             await SeedDatabase();
-            
+
             string clientEmail = "approved@example.com";
-            DateTimeOffset appointmentDate = DateTimeOffset.Now.Date;
-            
+
             // Create a client with approved status
             using (var context = CreateContext())
             {
@@ -202,10 +156,10 @@ namespace API.Tests.Functions
                     Email = clientEmail,
                     PhoneNumber = "555-APPROVED"
                 };
-                
+
                 context.Clients.Add(client);
                 await context.SaveChangesAsync();
-                
+
                 // Create an appointment first
                 var appointment = new Appointment
                 {
@@ -215,7 +169,7 @@ namespace API.Tests.Functions
                 };
                 context.Appointments.Add(appointment);
                 await context.SaveChangesAsync();
-                
+
                 // Add a review flag with Approved status
                 context.ClientReviewFlags.Add(new ClientReviewFlag
                 {
@@ -225,25 +179,17 @@ namespace API.Tests.Functions
                     FlagDate = DateTimeOffset.UtcNow,
                     Status = "Approved" // Approved status doesn't block
                 });
-                
+
                 await context.SaveChangesAsync();
             }
-            
-            // Use reflection to access the private method
-            var function = new ScheduleAppointment(_loggerMock.Object, CreateContext());
-            var method = typeof(ScheduleAppointment).GetMethod(
-                "CheckClientReviewStatusAsync", 
-                BindingFlags.NonPublic | BindingFlags.Instance);
-            
+
+            var reviewService = new ClientReviewService(new Mock<ILogger<ClientReviewService>>().Object, CreateContext());
+
             // Act
-            var task = (Task<(bool IsUnderReview, int ExistingAppointmentsCount)>)method.Invoke(
-                function, 
-                new object[] { clientEmail, appointmentDate });
-            
-            var result = await task;
+            var isUnderReview = await reviewService.IsClientUnderReviewAsync(clientEmail);
 
             // Assert
-            Assert.False(result.IsUnderReview);
+            Assert.False(isUnderReview);
         }
 
         [Fact]
@@ -251,10 +197,10 @@ namespace API.Tests.Functions
         {
             // Arrange
             await SeedDatabase();
-            
+
             string clientEmail = "multiple@example.com";
             DateTimeOffset appointmentDate = DateTimeOffset.Now.AddDays(1).Date;
-            
+
             // Create a client with multiple appointments on the same day
             using (var context = CreateContext())
             {
@@ -265,10 +211,10 @@ namespace API.Tests.Functions
                     Email = clientEmail,
                     PhoneNumber = "555-MULTIPLE"
                 };
-                
+
                 context.Clients.Add(client);
                 await context.SaveChangesAsync();
-                
+
                 // Add 2 appointments on the same day
                 context.Appointments.Add(new Appointment
                 {
@@ -276,14 +222,14 @@ namespace API.Tests.Functions
                     ServiceId = 1,
                     Time = appointmentDate.AddHours(9) // 9 AM
                 });
-                
+
                 context.Appointments.Add(new Appointment
                 {
                     ClientId = client.Id,
                     ServiceId = 1,
                     Time = appointmentDate.AddHours(14) // 2 PM
                 });
-                
+
                 // Add 1 appointment on a different day (shouldn't be counted)
                 context.Appointments.Add(new Appointment
                 {
@@ -291,26 +237,17 @@ namespace API.Tests.Functions
                     ServiceId = 1,
                     Time = appointmentDate.AddDays(1).AddHours(10) // 10 AM next day
                 });
-                
+
                 await context.SaveChangesAsync();
             }
-            
-            // Use reflection to access the private method
-            var function = new ScheduleAppointment(_loggerMock.Object, CreateContext());
-            var method = typeof(ScheduleAppointment).GetMethod(
-                "CheckClientReviewStatusAsync", 
-                BindingFlags.NonPublic | BindingFlags.Instance);
-            
+
+            var reviewService = new ClientReviewService(new Mock<ILogger<ClientReviewService>>().Object, CreateContext());
+
             // Act
-            var task = (Task<(bool IsUnderReview, int ExistingAppointmentsCount)>)method.Invoke(
-                function, 
-                new object[] { clientEmail, appointmentDate });
-            
-            var result = await task;
+            var appointmentCount = await reviewService.GetClientAppointmentCountForDateAsync(clientEmail, appointmentDate);
 
             // Assert
-            Assert.False(result.IsUnderReview); // Not under review
-            Assert.Equal(2, result.ExistingAppointmentsCount); // 2 appointments on the specified date
+            Assert.Equal(2, appointmentCount); // 2 appointments on the specified date
         }
 
         [Fact]
@@ -342,7 +279,7 @@ namespace API.Tests.Functions
             }
             
             // Use reflection to access the private method
-            var function = new ScheduleAppointment(_loggerMock.Object, CreateContext());
+            var function = CreateFunction(CreateContext());
             var method = typeof(ScheduleAppointment).GetMethod(
                 "CheckIfTimeIsAvailableAsync", 
                 BindingFlags.NonPublic | BindingFlags.Instance);
@@ -419,7 +356,7 @@ namespace API.Tests.Functions
             var service = await CreateContext().Services.FirstAsync();
             
             // Use reflection to access the private method
-            var function = new ScheduleAppointment(_loggerMock.Object, CreateContext());
+            var function = CreateFunction(CreateContext());
             var method = typeof(ScheduleAppointment).GetMethod(
                 "BookAppointmentStepsAsync", 
                 BindingFlags.NonPublic | BindingFlags.Instance);
@@ -507,7 +444,7 @@ namespace API.Tests.Functions
             var service = await CreateContext().Services.FirstAsync();
             
             // Use reflection to access the private method
-            var function = new ScheduleAppointment(_loggerMock.Object, CreateContext());
+            var function = CreateFunction(CreateContext());
             var method = typeof(ScheduleAppointment).GetMethod(
                 "BookAppointmentStepsAsync", 
                 BindingFlags.NonPublic | BindingFlags.Instance);
@@ -550,7 +487,7 @@ namespace API.Tests.Functions
         {
             // Arrange
             await SeedDatabase();
-            
+
             int clientId;
             int appointmentId;
             using (var context = CreateContext())
@@ -562,11 +499,11 @@ namespace API.Tests.Functions
                     Email = "flag@example.com",
                     PhoneNumber = "555-FLAG"
                 };
-                
+
                 context.Clients.Add(client);
                 await context.SaveChangesAsync();
                 clientId = client.Id;
-                
+
                 // Create an appointment to associate with the review flag
                 var appointment = new Appointment
                 {
@@ -578,31 +515,21 @@ namespace API.Tests.Functions
                 await context.SaveChangesAsync();
                 appointmentId = appointment.Id;
             }
-            
-            // Use reflection to access the private method
-            var function = new ScheduleAppointment(_loggerMock.Object, CreateContext());
-            var method = typeof(ScheduleAppointment).GetMethod(
-                "FlagClientForReviewAsync", 
-                BindingFlags.NonPublic | BindingFlags.Instance);
-            
+
+            var reviewService = new ClientReviewService(new Mock<ILogger<ClientReviewService>>().Object, CreateContext());
+
             // Act
             var date = DateTimeOffset.Now;
             var appointmentCount = 2;
-            var task = (Task?)method?.Invoke(
-                function, 
-                new object[] { clientId, date, appointmentCount, appointmentId });
-            
-            if (task != null)
-            {
-                await task;
-            }
+            var reason = $"Multiple bookings detected: Client attempted to book {appointmentCount + 1} appointments on {date:yyyy-MM-dd}";
+            await reviewService.FlagClientForReviewAsync(clientId, appointmentId, reason);
 
             // Assert
             using (var context = CreateContext())
             {
                 var flag = await context.ClientReviewFlags
                     .FirstOrDefaultAsync(f => f.ClientId == clientId && f.AppointmentId == appointmentId);
-                
+
                 Assert.NotNull(flag);
                 if (flag != null)
                 {
@@ -618,6 +545,14 @@ namespace API.Tests.Functions
         private ProjectContext CreateContext()
         {
             return new ProjectContext(_dbContextOptions);
+        }
+
+        private ScheduleAppointment CreateFunction(ProjectContext context)
+        {
+            var emailService = new Mock<IEmailService>();
+            emailService.Setup(s => s.SendEmailAsync(It.IsAny<EmailRequest>())).Returns(Task.CompletedTask);
+            var reviewService = new ClientReviewService(new Mock<ILogger<ClientReviewService>>().Object, context);
+            return new ScheduleAppointment(_loggerMock.Object, context, emailService.Object, reviewService);
         }
 
         private async Task SeedDatabase()
