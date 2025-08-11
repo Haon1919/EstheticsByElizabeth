@@ -40,14 +40,18 @@ export class AdminLoginComponent implements OnInit {
       
       const password = this.loginForm.get('password')?.value;
       
-      if (this.authService.login(password)) {
-        this.router.navigate(['/admin/submissions']);
-      } else {
-        this.errorMessage = 'Invalid password. Please try again.';
-        this.loginForm.get('password')?.setValue('');
-      }
-      
-      this.isLoading = false;
+      this.authService.login(password).subscribe(success => {
+        this.isLoading = false;
+        if (success) {
+          this.router.navigate(['/admin/submissions']);
+        } else {
+          this.errorMessage = 'Invalid password. Please try again.';
+          this.loginForm.get('password')?.setValue('');
+        }
+      }, () => {
+        this.isLoading = false;
+        this.errorMessage = 'Login failed. Please try again.';
+      });
     } else {
       this.loginForm.markAllAsTouched();
     }

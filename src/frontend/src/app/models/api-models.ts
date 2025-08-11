@@ -25,6 +25,14 @@ export interface AuthResponse {
   expiresAt: string;
 }
 
+export interface AdminLoginRequest {
+  password: string;
+}
+
+export interface AdminLoginResponse {
+  token: string;
+}
+
 // Appointment related interfaces
 export interface Client {
   id?: number;
