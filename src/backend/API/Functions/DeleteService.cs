@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using API.Data;
 using Microsoft.EntityFrameworkCore;
+using API.Services;
 using System;
 using System.Threading.Tasks;
 
@@ -34,6 +35,11 @@ namespace API.Functions
             int serviceId)
         {
             _logger.LogInformation("💅 Delete service request received for service ID: {ServiceId}", serviceId);
+
+            if (!AuthTokenService.ValidateRequest(req))
+            {
+                return new UnauthorizedResult();
+            }
             
             try
             {

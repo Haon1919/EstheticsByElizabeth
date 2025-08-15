@@ -7,6 +7,7 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using API.Data;
+using API.Services;
 
 
 namespace API.Functions
@@ -35,6 +36,11 @@ namespace API.Functions
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "manage/contacts")] HttpRequest req)
         {
             _logger.LogInformation("📋 Contact submissions retrieval request received");
+
+            if (!AuthTokenService.ValidateRequest(req))
+            {
+                return new UnauthorizedResult();
+            }
 
             try
             {

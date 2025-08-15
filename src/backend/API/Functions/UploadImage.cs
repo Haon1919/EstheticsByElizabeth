@@ -36,6 +36,11 @@ namespace API.Functions
         {
             _logger.LogInformation("📤 Image upload request received");
 
+            if (!AuthTokenService.ValidateRequest(req))
+            {
+                return new UnauthorizedResult();
+            }
+
             try
             {
                 // Handle CORS preflight requests
@@ -156,6 +161,11 @@ namespace API.Functions
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "manage/gallery/upload/info")] HttpRequest req)
         {
             _logger.LogInformation("🔍 Upload info request received");
+
+            if (!AuthTokenService.ValidateRequest(req))
+            {
+                return new UnauthorizedResult();
+            }
 
             try
             {

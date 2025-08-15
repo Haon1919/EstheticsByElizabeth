@@ -50,8 +50,8 @@ export class ApiService {
   constructor(private http: HttpClient) { }
 
   // Authentication methods
-  login(credentials: AuthRequest): Observable<ApiResponse<AuthResponse>> {
-    return this.http.post<ApiResponse<AuthResponse>>(`${this.baseUrl}/auth/login`, credentials);
+  login(credentials: AdminLoginRequest): Observable<ApiResponse<AdminLoginResponse>> {
+    return this.http.post<ApiResponse<AdminLoginResponse>>(`${this.baseUrl}/admin/login`, credentials);
   }
 
   // User methods

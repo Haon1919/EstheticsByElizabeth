@@ -42,6 +42,11 @@ namespace API.Functions
         {
             _logger.LogInformation("📋 Gallery images retrieval request received");
 
+            if (!AuthTokenService.ValidateRequest(req))
+            {
+                return new UnauthorizedResult();
+            }
+
             try
             {
                 // Handle CORS preflight requests
@@ -129,6 +134,11 @@ namespace API.Functions
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "manage/gallery")] HttpRequest req)
         {
             _logger.LogInformation("🆕 Create gallery image request received");
+
+            if (!AuthTokenService.ValidateRequest(req))
+            {
+                return new UnauthorizedResult();
+            }
 
             try
             {
@@ -373,6 +383,11 @@ namespace API.Functions
         {
             _logger.LogInformation("📝 Update gallery image request received for ID: {ImageId}", id);
 
+            if (!AuthTokenService.ValidateRequest(req))
+            {
+                return new UnauthorizedResult();
+            }
+
             try
             {
                 // Handle CORS preflight requests
@@ -494,6 +509,11 @@ namespace API.Functions
         {
             _logger.LogInformation("🗑️ Delete gallery image request received for ID: {ImageId}", id);
 
+            if (!AuthTokenService.ValidateRequest(req))
+            {
+                return new UnauthorizedResult();
+            }
+
             try
             {
                 // Handle CORS preflight requests
@@ -594,6 +614,11 @@ namespace API.Functions
         {
             _logger.LogInformation("🔄 Reorder gallery images request received");
 
+            if (!AuthTokenService.ValidateRequest(req))
+            {
+                return new UnauthorizedResult();
+            }
+
             try
             {
                 // Handle CORS preflight requests
@@ -674,6 +699,11 @@ namespace API.Functions
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "manage/gallery/categories")] HttpRequest req)
         {
             _logger.LogInformation("📊 Gallery categories request received");
+
+            if (!AuthTokenService.ValidateRequest(req))
+            {
+                return new UnauthorizedResult();
+            }
 
             try
             {

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using API.Data;
 using API.Entities;
+using API.Services;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -40,6 +41,11 @@ namespace API.Functions
             int serviceId)
         {
             _logger.LogInformation("💅 Update service request received for service ID: {ServiceId}", serviceId);
+
+            if (!AuthTokenService.ValidateRequest(req))
+            {
+                return new UnauthorizedResult();
+            }
             
             try
             {

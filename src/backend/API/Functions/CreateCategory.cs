@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using API.Data;
 using API.Entities;
 using Microsoft.EntityFrameworkCore;
+using API.Services;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -39,6 +40,11 @@ namespace API.Functions
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "manage/categories")] HttpRequest req)
         {
             _logger.LogInformation("🏷️ Create category request received.");
+
+            if (!AuthTokenService.ValidateRequest(req))
+            {
+                return new UnauthorizedResult();
+            }
             
             try
             {
