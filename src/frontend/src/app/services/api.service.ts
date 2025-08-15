@@ -2,13 +2,11 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, catchError, throwError } from 'rxjs';
 import { environment } from '../../environments/environment';
-import { 
-  ApiResponse, 
-  AdminLoginRequest,
-  AdminLoginResponse,
+import {
+  ApiResponse,
+  AuthRequest,
+  AuthResponse,
   User,
-  Service,
-  Category,
   CreateAppointmentRequest,
   Appointment,
   AppointmentHistoryResponse,
@@ -21,19 +19,27 @@ import {
   ClientReviewFlag,
   UpdateReviewFlagRequest,
   BanClientRequest,
-  ClientBanResponse,
+  ClientBanResponse
+} from '../models/api-models';
+
+import {
+  Service,
+  Category,
   CreateServiceRequest,
   UpdateServiceRequest,
   CreateCategoryRequest,
   UpdateCategoryRequest,
-  CategoryServiceCount,
+  CategoryServiceCount
+} from '../models/services.models';
+
+import {
   GalleryImageResponse,
   GalleryImage,
   CreateGalleryImageRequest,
   UpdateGalleryImageRequest,
   UploadImageResponse,
   GalleryCategory
-} from '../models/api-models';
+} from '../models/gallery.models';
 
 @Injectable({
   providedIn: 'root'

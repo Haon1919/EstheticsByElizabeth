@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ApiService } from '../../services/api.service';
-import { GalleryImage } from '../../models/api-models';
+import { GalleryImage } from '../../models/gallery.models';
 
 interface Category {
   id: string;

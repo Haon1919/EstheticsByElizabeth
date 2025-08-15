@@ -4,7 +4,8 @@ import { ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { AppointmentService } from '../../services/appointment.service';
 import { ServiceManagementService } from '../../services/service-management.service';
-import { Service, CreateAppointmentRequest } from '../../models/api-models';
+import { Service } from '../../models/services.models';
+import { CreateAppointmentRequest } from '../../models/api-models';
 
 @Component({
   selector: 'app-booking',

@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ServiceManagementService } from '../../services/service-management.service';
-import { Service, Category } from '../../models/api-models';
+import { Service, Category } from '../../models/services.models';
 
 interface ServiceCategory {
   id: number;

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable, BehaviorSubject, map, catchError, tap } from 'rxjs';
 import { ApiService } from './api.service';
-import { Category, CreateCategoryRequest, UpdateCategoryRequest, CategoryServiceCount } from '../models/api-models';
+import { Category, CreateCategoryRequest, UpdateCategoryRequest, CategoryServiceCount } from '../models/services.models';
 
 @Injectable({
   providedIn: 'root'

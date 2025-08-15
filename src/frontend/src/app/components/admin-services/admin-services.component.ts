@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { ServiceManagementService } from '../../services/service-management.service';
 import { ApiService } from '../../services/api.service';
-import { Service, Category, CreateServiceRequest, UpdateServiceRequest } from '../../models/api-models';
+import { Service, Category, CreateServiceRequest, UpdateServiceRequest } from '../../models/services.models';
 
 @Component({
   selector: 'app-admin-services',
