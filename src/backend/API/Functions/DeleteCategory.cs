@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using API.Data;
 using Microsoft.EntityFrameworkCore;
+using API.Services;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -36,6 +37,11 @@ namespace API.Functions
             int categoryId)
         {
             _logger.LogInformation("🏷️ Delete category request received for ID {CategoryId}.", categoryId);
+
+            if (!AuthTokenService.ValidateRequest(req))
+            {
+                return new UnauthorizedResult();
+            }
             
             try
             {

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using API.Data;
 using API.Entities;
+using API.Services;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -39,6 +40,11 @@ namespace API.Functions
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "manage/services")] HttpRequest req)
         {
             _logger.LogInformation("💅 Create service request received.");
+
+            if (!AuthTokenService.ValidateRequest(req))
+            {
+                return new UnauthorizedResult();
+            }
             
             try
             {

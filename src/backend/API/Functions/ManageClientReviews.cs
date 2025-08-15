@@ -44,6 +44,11 @@ namespace API.Functions
         {
             _logger.LogInformation("📋 Fetching client review flags");
 
+            if (!AuthTokenService.ValidateRequest(req))
+            {
+                return new UnauthorizedResult();
+            }
+
             try
             {
                 string? status = req.Query["status"];
@@ -112,6 +117,11 @@ namespace API.Functions
         {
             _logger.LogInformation("🔍 Fetching client review flag with ID: {FlagId}", id);
 
+            if (!AuthTokenService.ValidateRequest(req))
+            {
+                return new UnauthorizedResult();
+            }
+
             try
             {
                 if (!int.TryParse(id, out int flagId))
@@ -179,6 +189,11 @@ namespace API.Functions
         {
             _logger.LogInformation("✏️ Updating client review flag with ID: {FlagId}", id);
 
+            if (!AuthTokenService.ValidateRequest(req))
+            {
+                return new UnauthorizedResult();
+            }
+
             try
             {
                 if (!int.TryParse(id, out int flagId))
@@ -228,6 +243,11 @@ namespace API.Functions
             string clientId)
         {
             _logger.LogInformation("👤 Fetching pending reviews for client ID: {ClientId}", clientId);
+
+            if (!AuthTokenService.ValidateRequest(req))
+            {
+                return new UnauthorizedResult();
+            }
 
             try
             {
@@ -283,6 +303,11 @@ namespace API.Functions
         {
             _logger.LogInformation("🚫 Processing ban request for client ID: {ClientId}", clientId);
 
+            if (!AuthTokenService.ValidateRequest(req))
+            {
+                return new UnauthorizedResult();
+            }
+
             try
             {
                 if (!int.TryParse(clientId, out int id))
@@ -336,6 +361,11 @@ namespace API.Functions
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "client-reviews")] HttpRequest req)
         {
             _logger.LogInformation("➕ Creating new client review flag");
+
+            if (!AuthTokenService.ValidateRequest(req))
+            {
+                return new UnauthorizedResult();
+            }
 
             try
             {
@@ -408,6 +438,11 @@ namespace API.Functions
             string id)
         {
             _logger.LogInformation("🗑️ Deleting client review flag with ID: {FlagId}", id);
+
+            if (!AuthTokenService.ValidateRequest(req))
+            {
+                return new UnauthorizedResult();
+            }
 
             try
             {

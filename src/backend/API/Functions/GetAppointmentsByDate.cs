@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 using API.Data;
 
 using Microsoft.EntityFrameworkCore;
+using API.Services;
 
 namespace API.Functions
 {    /// <summary>
@@ -37,10 +38,15 @@ namespace API.Functions
             var endDateParam = req.Query["endDate"].ToString();
             var isDateRange = !string.IsNullOrEmpty(endDateParam);
             
-            _logger.LogInformation("📅 Appointments request received for {RequestType}: {Date}{EndDate}", 
-                isDateRange ? "date range" : "single date", 
-                date, 
+            _logger.LogInformation("📅 Appointments request received for {RequestType}: {Date}{EndDate}",
+                isDateRange ? "date range" : "single date",
+                date,
                 isDateRange ? $" to {endDateParam}" : "");
+
+            if (!AuthTokenService.ValidateRequest(req))
+            {
+                return new UnauthorizedResult();
+            }
 
             if (string.IsNullOrEmpty(date))
             {

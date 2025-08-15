@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using API.Data;
 using Microsoft.EntityFrameworkCore;
+using API.Services;
 
 namespace API.Functions
 {
@@ -31,6 +32,11 @@ namespace API.Functions
         public async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "appointments/history")] HttpRequest req)        {
             _logger.LogInformation("📚 Client appointment history request received.");
+
+            if (!AuthTokenService.ValidateRequest(req))
+            {
+                return new UnauthorizedResult();
+            }
 
             // Get the client email from the query string
             string email = req.Query["email"];
