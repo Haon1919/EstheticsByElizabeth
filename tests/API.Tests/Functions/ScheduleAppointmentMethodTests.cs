@@ -395,6 +395,176 @@ namespace API.Tests.Functions
         }
 
         [Fact]
+        public async Task CheckIfTimeIsAvailableAsync_ExistingLongerServiceBlocksAvailability()
+        {
+            // Arrange
+            await SeedDatabase();
+
+            var baseTime = DateTimeOffset.Now.AddDays(1).Date.AddHours(10);
+
+            using (var context = CreateContext())
+            {
+                context.Services.Add(new Service
+                {
+                    Id = 2,
+                    Name = "Long Service",
+                    Duration = 90,
+                    Description = "Long duration service"
+                });
+
+                var client = await context.Clients.FirstAsync();
+
+                context.Appointments.Add(new Appointment
+                {
+                    ClientId = client.Id,
+                    ServiceId = 2,
+                    Time = baseTime
+                });
+
+                await context.SaveChangesAsync();
+            }
+
+            var function = new ScheduleAppointment(_loggerMock.Object, CreateContext());
+            var method = typeof(ScheduleAppointment).GetMethod(
+                "CheckIfTimeIsAvailableAsync",
+                BindingFlags.NonPublic | BindingFlags.Instance);
+
+            Service bookingService;
+            using (var context = CreateContext())
+            {
+                bookingService = await context.Services.FindAsync(1) ?? new Service();
+            }
+
+            var appointmentDto = new CreateAppointmentDto
+            {
+                ServiceId = bookingService.Id,
+                Time = baseTime.AddMinutes(60),
+                Client = new ClientDto
+                {
+                    FirstName = "Test",
+                    LastName = "Client",
+                    Email = "test@example.com",
+                    PhoneNumber = "555-TEST"
+                }
+            };
+
+            var task = (Task<bool>)method.Invoke(
+                function,
+                new object[] { appointmentDto, bookingService });
+
+            var isAvailable = await task;
+            Assert.False(isAvailable);
+
+            var appointmentDtoLater = new CreateAppointmentDto
+            {
+                ServiceId = bookingService.Id,
+                Time = baseTime.AddMinutes(91),
+                Client = new ClientDto
+                {
+                    FirstName = "Test",
+                    LastName = "Client",
+                    Email = "test@example.com",
+                    PhoneNumber = "555-TEST"
+                }
+            };
+
+            task = (Task<bool>)method.Invoke(
+                function,
+                new object[] { appointmentDtoLater, bookingService });
+
+            var isAvailableLater = await task;
+            Assert.True(isAvailableLater);
+        }
+
+        [Fact]
+        public async Task CheckIfTimeIsAvailableAsync_ExistingShorterServiceAllowsEarlierBooking()
+        {
+            // Arrange
+            await SeedDatabase();
+
+            var baseTime = DateTimeOffset.Now.AddDays(1).Date.AddHours(10);
+
+            using (var context = CreateContext())
+            {
+                var shortService = await context.Services.FindAsync(1);
+                if (shortService != null)
+                {
+                    shortService.Duration = 30;
+                }
+
+                var client = await context.Clients.FirstAsync();
+
+                context.Appointments.Add(new Appointment
+                {
+                    ClientId = client.Id,
+                    ServiceId = shortService!.Id,
+                    Time = baseTime
+                });
+
+                context.Services.Add(new Service
+                {
+                    Id = 2,
+                    Name = "Standard Service",
+                    Duration = 60,
+                    Description = "Standard duration"
+                });
+
+                await context.SaveChangesAsync();
+            }
+
+            var function = new ScheduleAppointment(_loggerMock.Object, CreateContext());
+            var method = typeof(ScheduleAppointment).GetMethod(
+                "CheckIfTimeIsAvailableAsync",
+                BindingFlags.NonPublic | BindingFlags.Instance);
+
+            Service bookingService;
+            using (var context = CreateContext())
+            {
+                bookingService = await context.Services.FindAsync(2) ?? new Service();
+            }
+
+            var appointmentDtoOverlap = new CreateAppointmentDto
+            {
+                ServiceId = bookingService.Id,
+                Time = baseTime.AddMinutes(20),
+                Client = new ClientDto
+                {
+                    FirstName = "Test",
+                    LastName = "Client",
+                    Email = "test@example.com",
+                    PhoneNumber = "555-TEST"
+                }
+            };
+
+            var task = (Task<bool>)method.Invoke(
+                function,
+                new object[] { appointmentDtoOverlap, bookingService });
+
+            var isAvailableOverlap = await task;
+            Assert.False(isAvailableOverlap);
+
+            var appointmentDtoFree = new CreateAppointmentDto
+            {
+                ServiceId = bookingService.Id,
+                Time = baseTime.AddMinutes(31),
+                Client = new ClientDto
+                {
+                    FirstName = "Test",
+                    LastName = "Client",
+                    Email = "test@example.com",
+                    PhoneNumber = "555-TEST"
+                }
+            };
+
+            task = (Task<bool>)method.Invoke(
+                function,
+                new object[] { appointmentDtoFree, bookingService });
+
+            var isAvailableFree = await task;
+            Assert.True(isAvailableFree);
+        }
+
+        [Fact]
         public async Task BookAppointmentStepsAsync_CreatesProperObjectHierarchy()
         {
             // Arrange
