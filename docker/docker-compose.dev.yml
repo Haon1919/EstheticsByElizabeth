@@ -4,6 +4,9 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=http://+:80
+      - ADMIN_PASSWORD=admin123
+      - ADMIN_JWT_SECRET=thisIsTheDevSecretSlime
+
     volumes:
       # Mount the source code for development (optional - remove for production)
       # - ../src/backend/API:/home/site/wwwroot:ro

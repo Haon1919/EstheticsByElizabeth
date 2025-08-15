@@ -42,11 +42,6 @@ namespace API.Functions
         {
             _logger.LogInformation("📋 Gallery images retrieval request received");
 
-            if (!AuthTokenService.ValidateRequest(req))
-            {
-                return new UnauthorizedResult();
-            }
-
             try
             {
                 // Handle CORS preflight requests

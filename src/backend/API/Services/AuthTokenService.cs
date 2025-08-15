@@ -14,15 +14,28 @@ namespace API.Services
     {
         private static readonly string? _secret = Environment.GetEnvironmentVariable("ADMIN_JWT_SECRET");
 
-        public static string GenerateToken()
+        private static byte[] GetValidKey()
         {
             if (string.IsNullOrEmpty(_secret))
             {
                 throw new InvalidOperationException("ADMIN_JWT_SECRET is not configured");
             }
 
+            var keyBytes = Encoding.UTF8.GetBytes(_secret);
+            
+            // HMAC SHA256 requires at least 256 bits (32 bytes)
+            if (keyBytes.Length < 32)
+            {
+                throw new InvalidOperationException($"ADMIN_JWT_SECRET must be at least 32 characters long. Current length: {keyBytes.Length}");
+            }
+
+            return keyBytes;
+        }
+
+        public static string GenerateToken()
+        {
             var handler = new JwtSecurityTokenHandler();
-            var key = Encoding.UTF8.GetBytes(_secret);
+            var key = GetValidKey();
             var descriptor = new SecurityTokenDescriptor
             {
                 Expires = DateTime.UtcNow.AddHours(12),
@@ -34,10 +47,9 @@ namespace API.Services
 
         public static bool ValidateRequest(HttpRequest req)
         {
-            if (string.IsNullOrEmpty(_secret))
+            try
             {
-                return false;
-            }
+                var key = GetValidKey();
 
             if (!req.Headers.TryGetValue("Authorization", out var authHeader))
             {
@@ -60,10 +72,15 @@ namespace API.Services
                     ValidateIssuer = false,
                     ValidateAudience = false,
                     ValidateLifetime = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secret))
+                    IssuerSigningKey = new SymmetricSecurityKey(key)
                 };
                 handler.ValidateToken(token, validations, out _);
                 return true;
+            }
+            catch
+            {
+                return false;
+            }
             }
             catch
             {

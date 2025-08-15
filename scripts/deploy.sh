@@ -4,18 +4,61 @@
 # This script creates all Azure resources needed for the application
 # 
 # Usage:
-#   ./scripts/deploy.sh prepare   - Creates resource group and saves config (no charges)
-#   ./scripts/deploy.sh activate  - Creates and starts all resources
-#   ./scripts/deploy.sh full      - Creates and starts all resources (default)
+#   ./scripts/deploy.sh prepare                 - Creates resource group only (no cost)
+#   ./scripts/deploy.sh activate [--stop-db-after-create] - Creates resources; optionally stops DB after creation
+#   ./scripts/deploy.sh full [--stop-db-after-create]     - Same as activate (default)
+#   ./scripts/deploy.sh start-db               - Starts existing PostgreSQL server
+#   ./scripts/deploy.sh stop-db                - Stops existing PostgreSQL server (halt compute charges)
+#   Env alternative: set DB_STOP_AFTER_CREATE=1 to auto-stop DB after create
 
 set -e  # Exit on any error
 
 # Get deployment mode
 DEPLOY_MODE=${1:-"full"}
+shift || true
+# Parse optional flags
+for arg in "$@"; do
+  case "$arg" in
+    --stop-db-after-create) DB_STOP_AFTER_CREATE=1 ;;
+  esac
+done
 
 # Configuration Variables
 RESOURCE_GROUP="esthetics-rg"
 LOCATION="eastus"
+
+# Helper to generate random values (length param optional)
+rand_b64() {
+  local LEN=${1:-32}
+  # Remove characters Azure may not like in some contexts and trim length
+  openssl rand -base64 $((LEN*2)) | tr -d '=+/' | cut -c1-${LEN}
+}
+
+# If performing start/stop operations, load config early
+if [[ "$DEPLOY_MODE" =~ ^(start-db|stop-db)$ ]]; then
+  if [ ! -f .azure-config ]; then
+    echo "Missing .azure-config. Run activate/full first." >&2
+    exit 1
+  fi
+  # shellcheck disable=SC1091
+  source .azure-config
+  echo "Using resource group: $RESOURCE_GROUP"
+  if [ -z "${DB_SERVER:-}" ]; then
+    echo "DB_SERVER not found in .azure-config" >&2
+    exit 1
+  fi
+  if [ "$DEPLOY_MODE" = "start-db" ]; then
+    echo "▶️ Starting PostgreSQL server $DB_SERVER ..."
+    az postgres flexible-server start --name "$DB_SERVER" --resource-group "$RESOURCE_GROUP" --output table
+    echo "✅ Database server started."
+    exit 0
+  elif [ "$DEPLOY_MODE" = "stop-db" ]; then
+    echo "⏸️ Stopping PostgreSQL server $DB_SERVER ..."
+    az postgres flexible-server stop --name "$DB_SERVER" --resource-group "$RESOURCE_GROUP" --output table
+    echo "✅ Database server stopped (compute billing paused; storage persists)."
+    exit 0
+  fi
+fi
 
 # Check if we have existing config
 if [ -f ".azure-config" ] && [ "$DEPLOY_MODE" = "activate" ]; then
@@ -24,15 +67,38 @@ if [ -f ".azure-config" ] && [ "$DEPLOY_MODE" = "activate" ]; then
 else
     # Generate new resource names with timestamps
     DB_SERVER="esthetics-db-server-$(date +%s)"
-    DB_PASSWORD=""
     STORAGE_ACCOUNT="estheticsstorage$(date +%s | cut -c6-)"
     WEBAPP_NAME="esthetics-webapp-$(date +%s)"
     ACS_NAME="esthetics-comm-$(date +%s)"
     GITHUB_REPO="https://github.com/yourusername/EstheticsByElizabeth"  # Update this with your actual repo
 fi
 
+# Generate secrets only if not already specified (never leave blank)
+if [ -z "${DB_PASSWORD:-}" ]; then
+  DB_PASSWORD="$(rand_b64 25)"
+fi
+if [ -z "${ADMIN_PASSWORD:-}" ]; then
+  ADMIN_PASSWORD="$(rand_b64 20)"
+fi
+# JWT secret should be at least 32 chars
+if [ -z "${ADMIN_JWT_SECRET:-}" ]; then
+  ADMIN_JWT_SECRET="$(rand_b64 48)"
+fi
+
+# Optionally write secrets to a local (gitignored) file for operator reference
+SECRETS_FILE=".azure-secrets"
+echo "Writing generated secrets to $SECRETS_FILE (local only)..."
+cat > "$SECRETS_FILE" << EOF
+# Local reference only. Do NOT commit.
+DB_PASSWORD=$DB_PASSWORD
+ADMIN_PASSWORD=$ADMIN_PASSWORD
+ADMIN_JWT_SECRET=$ADMIN_JWT_SECRET
+EOF
+chmod 600 "$SECRETS_FILE" 2>/dev/null || true
+
 echo "🚀 Starting Azure deployment for Esthetics by Elizabeth..."
 echo "Mode: $DEPLOY_MODE"
+# Avoid echoing secrets
 echo "Resource Group: $RESOURCE_GROUP"
 echo "Location: $LOCATION"
 
@@ -76,7 +142,7 @@ if [ "$DEPLOY_MODE" = "prepare" ]; then
 RESOURCE_GROUP=$RESOURCE_GROUP
 LOCATION=$LOCATION
 DB_SERVER=$DB_SERVER
-DB_PASSWORD=$DB_PASSWORD
+# DB_PASSWORD intentionally omitted (stored only in .azure-secrets)
 STORAGE_ACCOUNT=$STORAGE_ACCOUNT
 WEBAPP_NAME=$WEBAPP_NAME
 ACS_NAME=$ACS_NAME
@@ -102,6 +168,13 @@ az postgres flexible-server create \
     --storage-size 32 \
     --public-access 0.0.0.0 \
     --output table
+
+# If requested, stop DB immediately after creation
+if [ "${DB_STOP_AFTER_CREATE:-}" = "1" ]; then
+  echo "⏸️ Stopping DB server immediately to avoid compute charges..."
+  az postgres flexible-server stop --name "$DB_SERVER" --resource-group "$RESOURCE_GROUP" --output table
+  echo "ℹ️ DB server is now stopped. Start later with: ./scripts/deploy.sh start-db"
+fi
 
 # Create database
 echo "📊 Creating esthetics database..."
@@ -171,7 +244,7 @@ DB_CONNECTION=$(az postgres flexible-server show-connection-string \
 # STORAGE_CONNECTION is already set above
 
 # Set application settings
-echo "⚙️ Setting application configuration..."
+echo "⚙️ Setting application configuration (including admin credentials & secrets)..."
 az staticwebapp appsettings set \
     --name $WEBAPP_NAME \
     --setting-names \
@@ -183,6 +256,8 @@ az staticwebapp appsettings set \
         "Values__Email__Provider=azure" \
         "Values__Email__Azure__ConnectionString=$ACS_CONNECTION" \
         "Values__Email__Azure__FromEmail=noreply@estheticsbyelizabeth.com" \
+        "Values__Admin__Password=$ADMIN_PASSWORD" \
+        "Values__Auth__AdminJwtSecret=$ADMIN_JWT_SECRET" \
     --output table
 
 # Get the deployed URL
@@ -209,12 +284,12 @@ echo ""
 echo "💰 Current monthly cost: ~$0 (within free tiers)"
 echo "================================================"
 
-# Save configuration to file for later use
+# Save configuration to file for later use (exclude sensitive secrets)
 cat > .azure-config << EOF
 RESOURCE_GROUP=$RESOURCE_GROUP
 LOCATION=$LOCATION
 DB_SERVER=$DB_SERVER
-DB_PASSWORD=$DB_PASSWORD
+# DB_PASSWORD excluded
 STORAGE_ACCOUNT=$STORAGE_ACCOUNT
 WEBAPP_NAME=$WEBAPP_NAME
 WEBAPP_URL=$WEBAPP_URL

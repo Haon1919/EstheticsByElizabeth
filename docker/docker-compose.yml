@@ -25,6 +25,8 @@ services:
       dockerfile: Dockerfile
     container_name: esthetics-api
     environment:
+      - ADMIN_PASSWORD=admin123
+      - ADMIN_JWT_SECRET=thisIsTheDevSecretSlimeButNowItIsLongEnoughForJWTSecurity32Plus
       - ASPNETCORE_ENVIRONMENT=Development
       - AZURE_FUNCTIONS_ENVIRONMENT=Development
       - FUNCTIONS_WORKER_RUNTIME=dotnet-isolated

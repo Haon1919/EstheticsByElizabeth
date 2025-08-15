@@ -7,6 +7,8 @@ import {
   AuthRequest,
   AuthResponse,
   User,
+  AdminLoginRequest,
+  AdminLoginResponse,
   CreateAppointmentRequest,
   Appointment,
   AppointmentHistoryResponse,
@@ -51,7 +53,7 @@ export class ApiService {
 
   // Authentication methods
   login(credentials: AdminLoginRequest): Observable<ApiResponse<AdminLoginResponse>> {
-    return this.http.post<ApiResponse<AdminLoginResponse>>(`${this.baseUrl}/admin/login`, credentials);
+    return this.http.post<ApiResponse<AdminLoginResponse>>(`${this.baseUrl}/auth/admin`, credentials);
   }
 
   // User methods

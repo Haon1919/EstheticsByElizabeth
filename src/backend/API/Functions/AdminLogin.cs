@@ -21,7 +21,7 @@ namespace API.Functions
 
         [Function("AdminLogin")]
         public async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", "options", Route = "admin/login")] HttpRequest req)
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", "options", Route = "auth/admin")] HttpRequest req)
         {
             // Handle CORS preflight
             if (req.Method == HttpMethods.Options)
@@ -62,7 +62,7 @@ namespace API.Functions
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error processing admin login request");
-                return new ObjectResult(new { success = false, message = "An error occurred." })
+                return new ObjectResult(new { success = false, message = ex.Message })
                 {
                     StatusCode = StatusCodes.Status500InternalServerError
                 };
