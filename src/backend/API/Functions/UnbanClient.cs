@@ -41,6 +41,11 @@ namespace API.Functions
         {
             _logger.LogInformation("✅ Processing unban request for client ID: {ClientId}", clientId);
 
+            if (!AuthTokenService.ValidateRequest(req))
+            {
+                return new UnauthorizedResult();
+            }
+
             try
             {
                 if (!int.TryParse(clientId, out int id))

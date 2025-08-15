@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
+using API.Services;
 
 namespace API.Functions
 {
@@ -48,7 +49,7 @@ namespace API.Functions
 
                 if (loginRequest.Password == adminPassword)
                 {
-                    var token = Guid.NewGuid().ToString();
+                    var token = AuthTokenService.GenerateToken();
                     return new OkObjectResult(new
                     {
                         success = true,

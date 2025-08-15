@@ -6,6 +6,7 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using API.Data;
+using API.Services;
 
 
 namespace API.Functions
@@ -35,6 +36,11 @@ namespace API.Functions
             string id)
         {
             _logger.LogInformation("🗑️ Contact submission deletion request received for ID: {Id}", id);
+
+            if (!AuthTokenService.ValidateRequest(req))
+            {
+                return new UnauthorizedResult();
+            }
 
             try
             {

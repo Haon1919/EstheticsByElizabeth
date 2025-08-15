@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using API.Data;
 using API.Entities;
 using Microsoft.EntityFrameworkCore;
+using API.Services;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -40,6 +41,11 @@ namespace API.Functions
             int categoryId)
         {
             _logger.LogInformation("🏷️ Update category request received for ID {CategoryId}.", categoryId);
+
+            if (!AuthTokenService.ValidateRequest(req))
+            {
+                return new UnauthorizedResult();
+            }
             
             try
             {
