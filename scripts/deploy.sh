@@ -20,12 +20,13 @@ shift || true
 for arg in "$@"; do
   case "$arg" in
     --stop-db-after-create) DB_STOP_AFTER_CREATE=1 ;;
+    --fresh) FRESH=1 ;;
   esac
 done
 
 # Configuration Variables
 RESOURCE_GROUP="esthetics-rg"
-LOCATION="eastus"
+LOCATION="centralus"
 
 # Helper to generate random values (length param optional)
 rand_b64() {
@@ -60,41 +61,57 @@ if [[ "$DEPLOY_MODE" =~ ^(start-db|stop-db)$ ]]; then
   fi
 fi
 
-# Check if we have existing config
-if [ -f ".azure-config" ] && [ "$DEPLOY_MODE" = "activate" ]; then
-    echo "📋 Loading existing configuration..."
-    source .azure-config
-else
-    # Generate new resource names with timestamps
-    DB_SERVER="esthetics-db-server-$(date +%s)"
-    STORAGE_ACCOUNT="estheticsstorage$(date +%s | cut -c6-)"
-    WEBAPP_NAME="esthetics-webapp-$(date +%s)"
-    ACS_NAME="esthetics-comm-$(date +%s)"
-    GITHUB_REPO="https://github.com/yourusername/EstheticsByElizabeth"  # Update this with your actual repo
+# Load existing config also for full (idempotent) unless --fresh provided
+if [ -f ".azure-config" ] && [[ "$DEPLOY_MODE" =~ ^(activate|full)$ ]] && [ -z "${FRESH:-}" ]; then
+  echo "📋 Reusing existing configuration (.azure-config)"
+  # shellcheck disable=SC1091
+  source .azure-config
+  REUSE=1
 fi
 
-# Generate secrets only if not already specified (never leave blank)
-if [ -z "${DB_PASSWORD:-}" ]; then
-  DB_PASSWORD="$(rand_b64 25)"
+# Generate new names only if not reusing
+if [ -z "${REUSE:-}" ] && ! [[ "$DEPLOY_MODE" =~ ^(start-db|stop-db)$ ]]; then
+  DB_SERVER="esthetics-db-server-$(date +%s)"
+  STORAGE_ACCOUNT="estheticsstorage$(date +%s | cut -c6-)"
+  WEBAPP_NAME="esthetics-webapp-$(date +%s)"
+  ACS_NAME="esthetics-comm-$(date +%s)"
 fi
-if [ -z "${ADMIN_PASSWORD:-}" ]; then
-  ADMIN_PASSWORD="$(rand_b64 20)"
+
+# Auto-detect repo URL & branch if possible
+if [ -z "${GITHUB_REPO:-}" ]; then
+  GITHUB_REPO=$(git config --get remote.origin.url 2>/dev/null || true)
 fi
-# JWT secret should be at least 32 chars
-if [ -z "${ADMIN_JWT_SECRET:-}" ]; then
-  ADMIN_JWT_SECRET="$(rand_b64 48)"
+if [ -z "${GITHUB_REPO:-}" ]; then
+  GITHUB_REPO="https://github.com/Haon1919/EstheticsByElizabeth" # fallback
+fi
+GIT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo main)
+
+# Load secrets early if present
+if [ -f .azure-secrets ]; then
+  # shellcheck disable=SC1091
+  source .azure-secrets
+fi
+
+# Generate secrets only if not already specified (never leave blank). Only when creating new resources.
+if [ -z "${REUSE:-}" ]; then
+  if [ -z "${DB_PASSWORD:-}" ]; then DB_PASSWORD="$(rand_b64 25)"; fi
+  if [ -z "${ADMIN_PASSWORD:-}" ]; then ADMIN_PASSWORD="$(rand_b64 20)"; fi
+  if [ -z "${ADMIN_JWT_SECRET:-}" ]; then ADMIN_JWT_SECRET="$(rand_b64 48)"; fi
 fi
 
 # Optionally write secrets to a local (gitignored) file for operator reference
-SECRETS_FILE=".azure-secrets"
-echo "Writing generated secrets to $SECRETS_FILE (local only)..."
-cat > "$SECRETS_FILE" << EOF
+# Persist secrets file only if (a) new or (b) file missing
+if [ ! -f .azure-secrets ] || [ -z "${REUSE:-}" ]; then
+  SECRETS_FILE=".azure-secrets"
+  echo "Writing secrets to $SECRETS_FILE (local only)..."
+  cat > "$SECRETS_FILE" << EOF
 # Local reference only. Do NOT commit.
 DB_PASSWORD=$DB_PASSWORD
 ADMIN_PASSWORD=$ADMIN_PASSWORD
 ADMIN_JWT_SECRET=$ADMIN_JWT_SECRET
 EOF
-chmod 600 "$SECRETS_FILE" 2>/dev/null || true
+  chmod 600 "$SECRETS_FILE" 2>/dev/null || true
+fi
 
 echo "🚀 Starting Azure deployment for Esthetics by Elizabeth..."
 echo "Mode: $DEPLOY_MODE"
@@ -109,12 +126,15 @@ if ! az account show &> /dev/null; then
     az login
 fi
 
-# Create resource group
-echo "📦 Creating resource group..."
-az group create \
-    --name $RESOURCE_GROUP \
-    --location $LOCATION \
-    --output table
+# (Optional) Show active subscription
+ACTIVE_SUB=$(az account show --query name -o tsv 2>/dev/null || true)
+if [ -n "$ACTIVE_SUB" ]; then
+  echo "Azure Subscription: $ACTIVE_SUB"
+fi
+
+# Create resource group (idempotent)
+echo "📦 Ensuring resource group exists..."
+az group create --name $RESOURCE_GROUP --location $LOCATION --output none
 
 # Set default resource group and location
 az configure --defaults group=$RESOURCE_GROUP location=$LOCATION
@@ -153,12 +173,21 @@ EOF
     exit 0
 fi
 
-# For 'activate' and 'full' modes, create all resources
-echo "🚀 Creating all Azure resources..."
+# For 'activate' and 'full' modes, create/ensure all resources
+# Helper: test existence
+pg_exists() { az postgres flexible-server show --name "$DB_SERVER" --resource-group "$RESOURCE_GROUP" &>/dev/null; }
+store_exists() { az storage account show --name "$STORAGE_ACCOUNT" --resource-group "$RESOURCE_GROUP" &>/dev/null; }
+acs_exists() { az communication list --resource-group "$RESOURCE_GROUP" --query "[?name=='$ACS_NAME']|length(@)" -o tsv 2>/dev/null | grep -q '^1$'; }
+swa_exists() { az staticwebapp show --name "$WEBAPP_NAME" &>/dev/null; }
 
-# Create PostgreSQL server (free tier)
-echo "🗄️ Creating PostgreSQL database server..."
-az postgres flexible-server create \
+echo "🚀 Ensuring Azure resources..."
+
+# PostgreSQL server
+if pg_exists; then
+  echo "🗄️ PostgreSQL server exists: $DB_SERVER (skipping create)"
+else
+  echo "🗄️ Creating PostgreSQL database server $DB_SERVER..."
+  az postgres flexible-server create \
     --name $DB_SERVER \
     --admin-user dbadmin \
     --admin-password $DB_PASSWORD \
@@ -167,104 +196,104 @@ az postgres flexible-server create \
     --version 14 \
     --storage-size 32 \
     --public-access 0.0.0.0 \
-    --output table
-
-# If requested, stop DB immediately after creation
-if [ "${DB_STOP_AFTER_CREATE:-}" = "1" ]; then
-  echo "⏸️ Stopping DB server immediately to avoid compute charges..."
-  az postgres flexible-server stop --name "$DB_SERVER" --resource-group "$RESOURCE_GROUP" --output table
-  echo "ℹ️ DB server is now stopped. Start later with: ./scripts/deploy.sh start-db"
+    --output none
+  CREATED_DB=1
 fi
 
-# Create database
-echo "📊 Creating esthetics database..."
-az postgres flexible-server db create \
-    --server-name $DB_SERVER \
-    --database-name esthetics \
-    --output table
+if [ "${CREATED_DB:-}" = 1 ] && [ "${DB_STOP_AFTER_CREATE:-}" = "1" ]; then
+  echo "⏸️ Stopping DB server immediately to avoid compute charges..."
+  az postgres flexible-server stop --name "$DB_SERVER" --resource-group "$RESOURCE_GROUP" --output none
+  echo "ℹ️ DB server stopped. Start later with: ./scripts/deploy.sh start-db"
+fi
 
-# Create storage account for blob storage
-echo "💾 Creating storage account..."
-az storage account create \
-    --name $STORAGE_ACCOUNT \
-    --sku Standard_LRS \
-    --kind StorageV2 \
-    --access-tier Hot \
-    --output table
+# Database
+if az postgres flexible-server db show --server-name "$DB_SERVER" --database-name esthetics &>/dev/null; then
+  echo "📊 Database esthetics exists (skipping create)"
+else
+  echo "📊 Creating esthetics database..."
+  az postgres flexible-server db create --server-name $DB_SERVER --database-name esthetics --output none
+fi
 
-# Create blob container for images
-echo "🖼️ Creating blob container for images..."
-az storage container create \
-    --name images \
-    --account-name $STORAGE_ACCOUNT \
-    --public-access blob \
-    --output table
-
-# Create Azure Communication Services for email
-echo "📧 Creating Azure Communication Services (Email)..."
-az extension add --name communication &>/dev/null || true
-az communication create \
-    --name $ACS_NAME \
-    --resource-group $RESOURCE_GROUP \
-    --data-location unitedstates \
-    --output table
-ACS_CONNECTION=$(az communication list-key \
-    --name $ACS_NAME \
-    --resource-group $RESOURCE_GROUP \
-    --query primaryConnectionString \
-    --output tsv)
-
-# Get storage connection string (for app settings)
-STORAGE_CONNECTION=$(az storage account show-connection-string \
-    --name $STORAGE_ACCOUNT \
-    --query connectionString \
-    --output tsv)
-
-# Create Static Web App with Functions integration
-echo "🌐 Creating Static Web App..."
-az staticwebapp create \
+# Static Web App
+if swa_exists; then
+  echo "🌐 Static Web App exists: $WEBAPP_NAME (skipping create)"
+else
+  echo "🌐 Creating Static Web App $WEBAPP_NAME (branch: $GIT_BRANCH)..."
+  az staticwebapp create \
     --name $WEBAPP_NAME \
     --source $GITHUB_REPO \
-    --branch main \
-    --app-location "src/frontend" \
-    --api-location "src/backend/API" \
+    --branch $GIT_BRANCH \
+    --app-location "frontend" \
+    --api-location "api" \
     --output-location "dist/app" \
-    --output table
+    --token $GITHUB_TOKEN \
+    --output none
+fi
+
+# Communication Services
+if acs_exists; then
+  echo "📧 Azure Communication Service exists: $ACS_NAME"
+else
+  echo "📧 Creating Azure Communication Services (Email) $ACS_NAME..."
+  az extension add --name communication &>/dev/null || true
+  az communication create --name $ACS_NAME --resource-group $RESOURCE_GROUP --data-location unitedstates --location global --output none
+fi
+ACS_CONNECTION=$(az communication list-key --name $ACS_NAME --resource-group $RESOURCE_GROUP --query primaryConnectionString -o tsv)
+
+# Storage account
+if store_exists; then
+  echo "💾 Storage account exists: $STORAGE_ACCOUNT"
+else
+  echo "💾 Creating storage account $STORAGE_ACCOUNT..."
+  az storage account create --name $STORAGE_ACCOUNT --sku Standard_LRS --kind StorageV2 --access-tier Hot --output none
+fi
+# Container
+if az storage container show --name images --account-name $STORAGE_ACCOUNT &>/dev/null; then
+  echo "🖼️ Blob container 'images' exists"
+else
+  echo "🖼️ Creating blob container 'images'..."
+  az storage container create --name images --account-name $STORAGE_ACCOUNT --public-access blob --output none >/dev/null
+fi
+
+# Storage connection string
+STORAGE_CONNECTION=$(az storage account show-connection-string --name $STORAGE_ACCOUNT --query connectionString -o tsv)
 
 # Get connection strings
 echo "🔗 Configuring connection strings..."
-DB_CONNECTION=$(az postgres flexible-server show-connection-string \
+# Connection string (only if have DB_PASSWORD)
+if [ -n "${DB_PASSWORD:-}" ]; then
+  DB_CONNECTION=$(az postgres flexible-server show-connection-string \
     --server-name $DB_SERVER \
     --admin-user dbadmin \
     --admin-password $DB_PASSWORD \
     --database-name esthetics \
-    --query connectionString \
-    --output tsv)
+    --query connectionString -o tsv)
+else
+  echo "⚠️ DB password not available; skipping DB connection string update."
+fi
 
 # STORAGE_CONNECTION is already set above
 
 # Set application settings
-echo "⚙️ Setting application configuration (including admin credentials & secrets)..."
-az staticwebapp appsettings set \
-    --name $WEBAPP_NAME \
-    --setting-names \
-        "ConnectionStrings__DefaultConnection=$DB_CONNECTION" \
-        "AzureWebJobsStorage=$STORAGE_CONNECTION" \
-        "Values__ImageStorage__Provider=Azure" \
-        "Values__ImageStorage__ConnectionString=$STORAGE_CONNECTION" \
-        "Values__ImageStorage__ContainerName=images" \
-        "Values__Email__Provider=azure" \
-        "Values__Email__Azure__ConnectionString=$ACS_CONNECTION" \
-        "Values__Email__Azure__FromEmail=noreply@estheticsbyelizabeth.com" \
-        "Values__Admin__Password=$ADMIN_PASSWORD" \
-        "Values__Auth__AdminJwtSecret=$ADMIN_JWT_SECRET" \
-    --output table
+# Application settings (always ensure non-secret settings; include secrets if present)
+APPSET_ARGS=("--name" "$WEBAPP_NAME" "--setting-names"
+  "AzureWebJobsStorage=$STORAGE_CONNECTION"
+  "Values__ImageStorage__Provider=Azure"
+  "Values__ImageStorage__ConnectionString=$STORAGE_CONNECTION"
+  "Values__ImageStorage__ContainerName=images"
+  "Values__Email__Provider=azure"
+  "Values__Email__Azure__ConnectionString=$ACS_CONNECTION"
+  "Values__Email__Azure__FromEmail=noreply@estheticsbyelizabeth.com"
+)
+if [ -n "${DB_CONNECTION:-}" ]; then APPSET_ARGS+=("ConnectionStrings__DefaultConnection=$DB_CONNECTION"); fi
+if [ -n "${ADMIN_PASSWORD:-}" ]; then APPSET_ARGS+=("Values__Admin__Password=$ADMIN_PASSWORD"); fi
+if [ -n "${ADMIN_JWT_SECRET:-}" ]; then APPSET_ARGS+=("Values__Auth__AdminJwtSecret=$ADMIN_JWT_SECRET"); fi
+
+echo "⚙️ Setting application configuration (idempotent)..."
+az staticwebapp appsettings set "${APPSET_ARGS[@]}" --output none
 
 # Get the deployed URL
-WEBAPP_URL=$(az staticwebapp show \
-    --name $WEBAPP_NAME \
-    --query "defaultHostname" \
-    --output tsv)
+WEBAPP_URL=$(az staticwebapp show --name $WEBAPP_NAME --query "defaultHostname" -o tsv)
 
 echo ""
 echo "✅ Deployment Complete!"
@@ -285,6 +314,7 @@ echo "💰 Current monthly cost: ~$0 (within free tiers)"
 echo "================================================"
 
 # Save configuration to file for later use (exclude sensitive secrets)
+# Save configuration (always up to date)
 cat > .azure-config << EOF
 RESOURCE_GROUP=$RESOURCE_GROUP
 LOCATION=$LOCATION

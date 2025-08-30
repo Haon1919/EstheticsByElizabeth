@@ -23,9 +23,8 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
   </ItemGroup>
-
   <ItemGroup>
-    <ProjectReference Include="..\..\src\backend\API\API.csproj" />
+    <ProjectReference Include="..\..\api\API.csproj" />
   </ItemGroup>
 
 </Project>

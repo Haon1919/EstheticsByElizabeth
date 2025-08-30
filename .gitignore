@@ -11,6 +11,10 @@
 npm-debug.log
 yarn-error.log
 
+# Azure deployment local config (do not commit)
+.azure-config
+.azure-secrets
+
 # IDEs and editors
 .idea/
 .project

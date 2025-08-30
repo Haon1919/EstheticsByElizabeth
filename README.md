@@ -22,7 +22,7 @@ src/
 ### Frontend Setup
 1. Navigate to the frontend directory:
    ```
-   cd src/frontend
+   cd frontend
    ```
 
 2. Install dependencies:
@@ -38,7 +38,7 @@ src/
 ### Backend Setup
 1. Navigate to the backend directory:
    ```
-   cd src/backend
+   cd api
    ```
 
 2. Restore packages:

@@ -9,7 +9,7 @@ services:
 
     volumes:
       # Mount the source code for development (optional - remove for production)
-      # - ../src/backend/API:/home/site/wwwroot:ro
+      # - ../api:/home/site/wwwroot:ro
       # Mount logs directory for easier debugging
       - api-logs:/tmp/LogFiles
     networks:

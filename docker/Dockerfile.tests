@@ -14,7 +14,7 @@ WORKDIR /app
 
 # Copy solution file and project files
 COPY tests/API.Tests/API.Tests.csproj tests/API.Tests/
-COPY src/backend/API/API.csproj src/backend/API/
+COPY api/API.csproj api/
 
 # Restore dependencies
 RUN dotnet restore tests/API.Tests/API.Tests.csproj
@@ -24,7 +24,7 @@ COPY . .
 
 # Create necessary directories with proper permissions
 RUN mkdir -p /app/tests/API.Tests/bin /app/tests/API.Tests/obj \
-    /app/src/backend/API/bin /app/src/backend/API/obj \
+    /app/api/bin /app/api/obj \
     /app/tests/API.Tests/TestResults \
     && chown -R testuser:testuser /app \
     && chown -R testuser:testuser /home/testuser

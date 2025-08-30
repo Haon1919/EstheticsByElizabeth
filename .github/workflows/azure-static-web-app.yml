@@ -2,10 +2,10 @@ name: Azure Static Web App Deploy
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
   pull_request:
     types: [opened, synchronize, reopened]
-    branches: [ main ]
+    branches: [ master ]
   workflow_dispatch:
 
 permissions:
@@ -17,8 +17,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  APP_LOCATION: src/frontend
-  API_LOCATION: src/backend/API
+  APP_LOCATION: frontend
+  API_LOCATION: api
   OUTPUT_LOCATION: dist/app
   DOTNET_VERSION: '8.0.x'
   NODE_VERSION: '18'

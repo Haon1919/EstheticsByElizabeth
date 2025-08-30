@@ -21,7 +21,7 @@ services:
   api:
     platform: linux/amd64
     build:
-      context: ../src/backend/API
+      context: ../api
       dockerfile: Dockerfile
     container_name: esthetics-api
     environment:
