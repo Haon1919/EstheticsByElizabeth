@@ -1,0 +1,15 @@
+/* GitHub Pages Path Override */
+.hero-background {
+  /* Try multiple path variations to ensure compatibility */
+  background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('assets/images/image7.jpeg') !important;
+}
+
+/* Media query to apply this only when the base rule fails */
+@media (min-width: 0px) {
+  .hero-background {
+    background-image: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), 
+      url('images/image7.jpeg'), 
+      url('../images/image7.jpeg'),
+      url('/EstheticsByElizabeth/assets/images/image7.jpeg') !important;
+  }
+} 
