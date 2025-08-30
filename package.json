@@ -1,4 +1,12 @@
 {
+  "name": "esthetics-by-elizabeth",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "cd frontend && npm install && npm run build",
+    "build:azure": "cd frontend && npm install && npm run build",
+    "start": "cd frontend && npm start",
+    "install-frontend": "cd frontend && npm install"
+  },
   "dependencies": {
     "@angular/animations": "^19.2.0",
     "@angular/common": "^19.2.0",
