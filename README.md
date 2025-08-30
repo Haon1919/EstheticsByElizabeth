@@ -65,4 +65,4 @@ src/
 ## Development Notes
 - Frontend runs on `http://localhost:4200` by default
 - Backend API runs on `http://localhost:5000` by default
-- Configure CORS in the backend to allow frontend requests
+- Configure CORS in the backend to allow frontend requests# Updated Sat Aug 30 13:40:02 EDT 2025
