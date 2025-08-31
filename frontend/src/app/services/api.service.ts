@@ -288,13 +288,30 @@ export class ApiService {
     
     if (error.error instanceof ErrorEvent) {
       // Client-side error
-      errorMessage = `Error: ${error.error.message}`;
+      errorMessage = `Network Error: ${error.error.message}`;
     } else {
       // Server-side error
-      errorMessage = error.error?.message || `Error Code: ${error.status}\nMessage: ${error.message}`;
+      if (error.status === 502) {
+        errorMessage = `Server temporarily unavailable (502). The API service may be starting up or experiencing issues.`;
+      } else if (error.status === 500) {
+        errorMessage = `Internal server error (500). Please try again later.`;
+      } else if (error.status === 404) {
+        errorMessage = `Resource not found (404).`;
+      } else if (error.status === 0) {
+        errorMessage = `Unable to connect to the server. Please check your internet connection.`;
+      } else {
+        errorMessage = error.error?.message || `Error Code: ${error.status}\nMessage: ${error.message}`;
+      }
     }
     
-    console.error('API Error:', error);
+    console.error('API Error Details:', {
+      status: error.status,
+      statusText: error.statusText,
+      url: error.url,
+      error: error.error,
+      message: errorMessage
+    });
+    
     return throwError(() => new Error(errorMessage));
   }
 }

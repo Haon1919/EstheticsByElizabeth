@@ -11,12 +11,17 @@
       "Default": "Information",
       "Microsoft.Azure.Functions.Worker": "Warning",
       "Function.ScheduleAppointment": "Debug"    }
-  },
-  "extensions": {
+  },  "extensions": {
     "http": {
       "routePrefix": "api",
       "enableHttps": false
     }
+  },
+  "cors": {
+    "allowedOrigins": ["*"],
+    "allowedMethods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    "allowedHeaders": ["*"],
+    "allowCredentials": false
   },
   "functionTimeout": "00:10:00"
 }

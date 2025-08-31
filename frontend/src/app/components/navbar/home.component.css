@@ -143,7 +143,8 @@
 }
 
 .cta {
-  background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('/assets/images/cta-bg.jpg');
+  background: linear-gradient(135deg, #b27092 0%, #d4a5c4 100%);
+  /* Fallback for missing cta-bg.jpg: background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('/assets/images/cta-bg.jpg'); */
   background-size: cover;
   background-position: center;
   padding: 5rem 0;

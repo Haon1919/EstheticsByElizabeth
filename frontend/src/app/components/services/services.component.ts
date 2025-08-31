@@ -37,14 +37,24 @@ export class ServicesComponent implements OnInit {
       this.serviceManagementService.loadServices().toPromise(),
       this.serviceManagementService.loadCategories().toPromise()
     ]).then(([services, categories]) => {
+      console.log('API Data loaded successfully:', { services: services?.length, categories: categories?.length });
       this.organizeServicesByCategory(services || [], categories || []);
       this.isLoading = false;
+      this.errorMessage = ''; // Clear any previous errors
     }).catch((error) => {
       console.error('Error loading services and categories:', error);
-      this.errorMessage = 'Failed to load services. Please try again later.';
+      
+      // Check if it's a network/server error (502, 500, etc.)
+      if (error.status >= 500) {
+        this.errorMessage = 'Our services are temporarily unavailable. Please try again in a few minutes.';
+      } else {
+        this.errorMessage = 'Failed to load services. Using cached data.';
+      }
+      
       this.isLoading = false;
       
-      // Fallback to hardcoded data if API fails
+      // Always fallback to hardcoded data if API fails
+      console.log('Loading fallback data due to API error');
       this.loadFallbackData();
     });
   }
