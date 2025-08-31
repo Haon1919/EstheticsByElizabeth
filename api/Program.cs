@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging; // Needed for LogLevel and LogTo
 using Microsoft.EntityFrameworkCore; // Needed for EF Core configuration
+using Microsoft.EntityFrameworkCore.InMemory; // Needed for UseInMemoryDatabase
 using API.Data; // Your DbContext namespace
 using Npgsql; // Needed for UseNpgsql and options
 using System; // Needed for TimeSpan, StringComparison etc.
