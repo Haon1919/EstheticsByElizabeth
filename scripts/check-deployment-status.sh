@@ -41,9 +41,31 @@ curl -s "$APP_URL/api/services" | head -c 200
 echo ""
 
 echo ""
-echo "🔧 Troubleshooting Tips:"
-echo "1. Check Azure Portal for Static Web App logs"
-echo "2. Verify database connection string in App Settings"
-echo "3. Check if Azure Functions are properly deployed"
-echo "4. Ensure database is accessible from Azure"
-echo "5. Check for any recent deployment failures"
+echo "🔍 Extended Diagnostics..."
+
+# Check if the functions are actually deployed
+echo "📦 Checking Functions Deployment:"
+curl -s "$APP_URL/api/" 2>/dev/null | head -c 200 || echo "No response"
+
+# Check Azure Static Web Apps configuration
+echo ""
+echo "⚙️ Checking SWA Configuration:"
+curl -s "$APP_URL/.well-known/staticwebapps.config" 2>/dev/null | head -c 200 || echo "No config found"
+
+# Test with different headers
+echo ""
+echo "🌐 Testing with User-Agent:"
+curl -s -H "User-Agent: Mozilla/5.0" "$APP_URL/api/health" | head -c 200 || echo "No response"
+
+# Check verbose curl output for health endpoint
+echo ""
+echo "🔍 Verbose Health Check:"
+curl -s "$APP_URL/api/health" -v 2>&1 | grep -E "(HTTP|error|timeout|refused)" || echo "No verbose info"
+
+echo ""
+echo "🔧 Next Steps:"
+echo "1. Check Azure Portal → Static Web App → Functions → Logs"
+echo "2. Verify Application Settings in Azure Portal"
+echo "3. Check if database is accessible from Azure"
+echo "4. Review the latest deployment logs in GitHub Actions"
+echo "5. If 503 persists, Functions runtime is not starting properly"
