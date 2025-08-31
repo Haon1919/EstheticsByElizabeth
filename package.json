@@ -2,8 +2,8 @@
   "name": "esthetics-by-elizabeth",
   "version": "1.0.0",
   "scripts": {
-    "build": "cd frontend && npm install && npm run build",
-    "build:azure": "cd frontend && npm install && npm run build",
+    "build": "cd frontend && npm install && npm run build && cd .. && cp -r frontend/dist ./",
+    "build:azure": "cd frontend && npm install && npm run build && cd .. && cp -r frontend/dist ./",
     "start": "cd frontend && npm start",
     "install-frontend": "cd frontend && npm install"
   },
