@@ -7,6 +7,8 @@ using API.Data;
 using API.Services;
 using API.Entities;
 using System.Linq;
+using Microsoft.Azure.Functions.Worker.Http;
+using Microsoft.AspNetCore.Mvc;
 
 namespace API.Functions
 {
@@ -27,12 +29,13 @@ namespace API.Functions
         }
 
         /// <summary>
-        /// Azure Timer Function that runs on startup and daily at 7:00 AM to send appointment reminder emails
-        /// CRON expression: "0 0 7 * * *" = run at 07:00 (7:00 AM) every day
-        /// RunOnStartup = true for testing purposes
+        /// Azure Function that sends appointment reminder emails
+        /// Converted from TimerTrigger to HttpTrigger for Azure Static Web Apps compatibility
+        /// Originally: CRON expression "0 0 7 * * *" = run at 07:00 (7:00 AM) every day
+        /// Now: Manual trigger via HTTP POST to /api/send-appointment-reminders
         /// </summary>
         [Function("AppointmentReminderTimer")]
-        public async Task Run([TimerTrigger("0 0 7 * * *")] object myTimer)
+        public async Task<IActionResult> Run([HttpTrigger(AuthorizationLevel.Function, "post", Route = "send-appointment-reminders")] HttpRequest req)
         {
             _logger.LogInformation($"Appointment reminder timer function executed at: {DateTime.UtcNow}");
 
@@ -92,11 +95,12 @@ namespace API.Functions
                 }
 
                 _logger.LogInformation($"Appointment reminder process completed. Processed {appointmentsTomorrow.Count} appointments");
+                return new OkObjectResult(new { message = $"Successfully processed {appointmentsTomorrow.Count} appointment reminders", count = appointmentsTomorrow.Count });
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error occurred while processing appointment reminders");
-                throw;
+                return new BadRequestObjectResult(new { error = "Failed to process appointment reminders", details = ex.Message });
             }
         }
 
