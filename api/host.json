@@ -10,18 +10,13 @@
     "logLevel": {
       "Default": "Information",
       "Microsoft.Azure.Functions.Worker": "Warning",
-      "Function.ScheduleAppointment": "Debug"    }
-  },  "extensions": {
-    "http": {
-      "routePrefix": "api",
-      "enableHttps": false
+      "Function.ScheduleAppointment": "Debug"
     }
   },
-  "cors": {
-    "allowedOrigins": ["*"],
-    "allowedMethods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    "allowedHeaders": ["*"],
-    "allowCredentials": false
+  "extensions": {
+    "http": {
+      "routePrefix": "api"
+    }
   },
   "functionTimeout": "00:10:00"
 }
