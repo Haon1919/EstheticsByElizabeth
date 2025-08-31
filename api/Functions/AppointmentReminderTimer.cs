@@ -7,7 +7,7 @@ using API.Data;
 using API.Services;
 using API.Entities;
 using System.Linq;
-using Microsoft.Azure.Functions.Worker.Http;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace API.Functions
