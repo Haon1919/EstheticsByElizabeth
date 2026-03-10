@@ -49,7 +49,7 @@ if [ "$STATUS" = "Stopped" ]; then
 fi
 
 # Navigate to API project
-cd src/backend/API
+cd api
 
 echo "🗄️ Running database migrations on Azure PostgreSQL..."
 echo "Database server: $DB_SERVER"
@@ -93,4 +93,4 @@ echo "Your Azure database is now ready with the latest schema"
 echo "================================================"
 
 # Return to root directory
-cd ../../..
+cd ..

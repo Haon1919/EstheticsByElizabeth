@@ -19,6 +19,7 @@ namespace API.Data // Adjust namespace
         public DbSet<ClientReviewFlag> ClientReviewFlags { get; set; } = null!;
         public DbSet<ContactSubmission> ContactSubmissions { get; set; } = null!;
         public DbSet<GalleryImage> GalleryImages { get; set; } = null!;
+        public DbSet<SystemSetting> SystemSettings { get; set; } = null!;
 
         // Optional: Configure model details using Fluent API (alternative/complement to Data Annotations)
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -33,6 +34,7 @@ namespace API.Data // Adjust namespace
             modelBuilder.Entity<ClientReviewFlag>().ToTable("clientreviewflags");
             modelBuilder.Entity<ContactSubmission>().ToTable("contactsubmissions");
             modelBuilder.Entity<GalleryImage>().ToTable("galleryimages");
+            modelBuilder.Entity<SystemSetting>().ToTable("systemsettings");
 
             // Example: Configuring UNIQUE constraints using Fluent API (more robust than annotations)
             modelBuilder.Entity<Client>()
@@ -41,6 +43,11 @@ namespace API.Data // Adjust namespace
 
             modelBuilder.Entity<Category>()
                 .HasIndex(cat => cat.Name)
+                .IsUnique();
+
+            // Enforce unique appointment times to prevent double-booking race conditions
+            modelBuilder.Entity<Appointment>()
+                .HasIndex(a => a.Time)
                 .IsUnique();
 
             // Example: Defining relationship behavior (e.g., ON DELETE) - Default is usually RESTRICT

@@ -22,11 +22,13 @@ namespace API.Functions
     {
         private readonly ILogger<SubmitContactForm> _logger;
         private readonly ProjectContext _context;
+        private readonly ILlmService _llmService;
 
-        public SubmitContactForm(ILogger<SubmitContactForm> logger, ProjectContext context)
+        public SubmitContactForm(ILogger<SubmitContactForm> logger, ProjectContext context, ILlmService llmService)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _context = context ?? throw new ArgumentNullException(nameof(context));
+            _llmService = llmService ?? throw new ArgumentNullException(nameof(llmService));
         }
 
         /// <summary>
@@ -108,6 +110,19 @@ namespace API.Functions
                     SubmittedAt = DateTimeOffset.UtcNow,
                     Status = "unread"
                 };
+
+                // Call LLM to analyze the submission
+                try
+                {
+                    var llmResult = await _llmService.AnalyzeContactSubmissionAsync(contactSubmission.Subject, contactSubmission.Message);
+                    contactSubmission.SuggestedCategory = llmResult.Category;
+                    contactSubmission.DraftResponse = llmResult.DraftResponse;
+                    contactSubmission.UrgencyScore = llmResult.UrgencyScore;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to analyze contact submission with LLM");
+                }
 
                 // Save to database
                 _context.ContactSubmissions.Add(contactSubmission);

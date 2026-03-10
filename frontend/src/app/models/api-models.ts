@@ -105,10 +105,13 @@ export interface ContactSubmission {
   interestedService?: string;
   preferredContactMethod?: string;
   submittedAt: string;
-  status: 'unread' | 'read' | 'responded' | 'banned';
+  status: 'unread' | 'read' | 'responded';
   readAt?: string;
   respondedAt?: string;
   adminNotes?: string;
+  suggestedCategory?: string;
+  draftResponse?: string;
+  urgencyScore?: number;
 }
 
 export interface ContactSubmissionsResponse {

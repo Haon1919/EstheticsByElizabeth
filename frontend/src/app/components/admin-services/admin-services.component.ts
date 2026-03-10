@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
 import { AuthService } from '../../services/auth.service';
 import { ServiceManagementService } from '../../services/service-management.service';
 import { ApiService } from '../../services/api.service';
@@ -34,13 +36,15 @@ export class AdminServicesComponent implements OnInit {
   // Messages
   successMessage = '';
   errorMessage = '';
+  isGeneratingContent = false;
 
   constructor(
     private authService: AuthService,
     private serviceManagementService: ServiceManagementService,
     private apiService: ApiService,
     private router: Router,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private http: HttpClient
   ) {
     this.serviceForm = this.fb.group({
       name: ['', [Validators.required, Validators.maxLength(255)]],
@@ -283,6 +287,40 @@ export class AdminServicesComponent implements OnInit {
   clearMessages(): void {
     this.successMessage = '';
     this.errorMessage = '';
+  }
+
+  generateContentWithAI(): void {
+    const name = this.serviceForm.get('name')?.value;
+    const price = this.serviceForm.get('price')?.value;
+
+    if (!name) {
+      this.errorMessage = 'Please enter a service name first to generate content.';
+      return;
+    }
+
+    this.isGeneratingContent = true;
+    this.clearMessages();
+
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${this.authService.getToken()}`);
+    
+    this.http.post<any>(`${environment.apiUrl}/manage/llm/generate-service`, { name, price: price || 0 }, { headers })
+      .subscribe({
+        next: (response) => {
+          if (response.description) {
+            this.serviceForm.patchValue({ description: response.description });
+          }
+          if (response.aftercare) {
+            this.serviceForm.patchValue({ afterCareInstructions: response.aftercare });
+          }
+          this.successMessage = 'Content generated successfully!';
+          this.isGeneratingContent = false;
+        },
+        error: (err) => {
+          console.error('Error generating content:', err);
+          this.errorMessage = 'Failed to generate content. Please check your AI settings.';
+          this.isGeneratingContent = false;
+        }
+      });
   }
 
   logout(): void {

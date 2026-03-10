@@ -21,6 +21,16 @@ namespace API.Functions
         private static readonly string[] AllowedExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
         private const long MaxFileSize = 5 * 1024 * 1024; // 5MB
 
+        // File signatures (Magic Numbers)
+        private static readonly Dictionary<string, List<byte[]>> _fileSignatures = new()
+        {
+            { ".jpg", new List<byte[]> { new byte[] { 0xFF, 0xD8, 0xFF } } },
+            { ".jpeg", new List<byte[]> { new byte[] { 0xFF, 0xD8, 0xFF } } },
+            { ".png", new List<byte[]> { new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A } } },
+            { ".gif", new List<byte[]> { new byte[] { 0x47, 0x49, 0x46, 0x38 } } },
+            { ".webp", new List<byte[]> { new byte[] { 0x52, 0x49, 0x46, 0x46 }, new byte[] { 0x57, 0x45, 0x42, 0x50 } } } // WEBP is complex (RIFF...WEBP)
+        };
+
         public UploadImage(ILogger<UploadImage> logger, IImageStorageService storageService)
         {
             _logger = logger;
@@ -104,6 +114,19 @@ namespace API.Functions
                         Url = "",
                         Filename = "",
                         Message = $"Invalid file type. Allowed types: {string.Join(", ", AllowedExtensions)}"
+                    });
+                }
+
+                // Validate Magic Number (Content Inspection)
+                if (!IsValidFileSignature(file, fileExtension))
+                {
+                    _logger.LogWarning("🚫 Invalid file signature for extension {Extension}", fileExtension);
+                    return new BadRequestObjectResult(new UploadImageResponseDto
+                    {
+                        Success = false,
+                        Url = "",
+                        Filename = "",
+                        Message = "Invalid file content. The file does not match its extension."
                     });
                 }
 
@@ -207,6 +230,52 @@ namespace API.Functions
                 {
                     StatusCode = StatusCodes.Status500InternalServerError
                 };
+            }
+        }
+        private bool IsValidFileSignature(IFormFile file, string extension)
+        {
+            try
+            {
+                using var stream = file.OpenReadStream();
+                if (stream.Length == 0) return false;
+
+                // Read header bytes
+                var headerBytes = new byte[12]; // Enough for most signatures
+                stream.Read(headerBytes, 0, headerBytes.Length);
+
+                // Reset stream position is unnecessary here because we open a new stream later in storage service
+                // But good practice if checking allows seeking:
+                // if (stream.CanSeek) stream.Position = 0;
+
+                if (_fileSignatures.TryGetValue(extension, out var signatures))
+                {
+                    foreach (var signature in signatures)
+                    {
+                        // Check if header starts with signature
+                        if (headerBytes.Take(signature.Length).SequenceEqual(signature))
+                        {
+                            // Special check for WEBP (RIFF....WEBP)
+                            if (extension == ".webp")
+                            {
+                                // WEBP check is: RIFF (4 bytes) + size (4 bytes) + WEBP (4 bytes)
+                                // We already checked RIFF (first 4 bytes). Now check WEBP at offset 8.
+                                var webpMagic = new byte[] { 0x57, 0x45, 0x42, 0x50 };
+                                if (headerBytes.Skip(8).Take(4).SequenceEqual(webpMagic))
+                                {
+                                    return true;
+                                }
+                                continue; 
+                            }
+                            return true;
+                        }
+                    }
+                }
+                
+                return false;
+            }
+            catch
+            {
+                return false;
             }
         }
     }

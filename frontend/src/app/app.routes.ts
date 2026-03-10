@@ -12,6 +12,8 @@ import { ClientManagementComponent } from './components/client-management/client
 import { AdminServicesComponent } from './components/admin-services/admin-services.component';
 import { AdminCategoriesComponent } from './components/admin-categories/admin-categories.component';
 import { AdminGalleryComponent } from './components/admin-gallery/admin-gallery.component';
+import { AdminSettingsComponent } from './components/admin-settings/admin-settings.component';
+import { AdminDashboardComponent } from './components/admin-dashboard/admin-dashboard.component';
 import { AuthGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
@@ -53,8 +55,13 @@ export const routes: Routes = [
     canActivate: [AuthGuard]
   },
   { 
+    path: 'admin/settings', 
+    component: AdminSettingsComponent,
+    canActivate: [AuthGuard]
+  },
+  { 
     path: 'admin/dashboard', 
-    component: ContactSubmissionsComponent,
+    component: AdminDashboardComponent,
     canActivate: [AuthGuard]
   },
   { path: '**', redirectTo: '' }

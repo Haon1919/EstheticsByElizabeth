@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
 import { ClientManagementService } from '../../services/client-management.service';
 import { AuthService } from '../../services/auth.service';
 import { ClientReviewFlag } from '../../models/api-models';
@@ -30,6 +32,8 @@ export class ClientManagementComponent implements OnInit {
   // Loading states
   loading: boolean = false;
   actionLoading: Set<number> = new Set();
+  loadingSummary: Set<number> = new Set();
+  aiSummaries: Map<number, string> = new Map();
   
   // Admin details for actions
   adminName: string = 'Admin';
@@ -37,7 +41,8 @@ export class ClientManagementComponent implements OnInit {
   constructor(
     private clientManagementService: ClientManagementService,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private http: HttpClient
   ) {}
 
   ngOnInit(): void {
@@ -392,6 +397,26 @@ export class ClientManagementComponent implements OnInit {
       return 'No clients are currently banned.';
     }
     return 'No client review flags have been created yet.';
+  }
+
+  generateAiSummary(clientId: number): void {
+    this.loadingSummary.add(clientId);
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${this.authService.getToken()}`);
+    
+    this.http.get<any>(`${environment.apiUrl}/manage/llm/summarize-client/${clientId}`, { headers })
+      .subscribe({
+        next: (response) => {
+          if (response && response.summary) {
+            this.aiSummaries.set(clientId, response.summary);
+          }
+          this.loadingSummary.delete(clientId);
+        },
+        error: (err) => {
+          console.error('Error generating AI summary:', err);
+          this.aiSummaries.set(clientId, 'Failed to generate summary. Please check your AI settings.');
+          this.loadingSummary.delete(clientId);
+        }
+      });
   }
 
   logout(): void {

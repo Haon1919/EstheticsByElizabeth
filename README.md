@@ -1,68 +1,78 @@
-# Angular + C# Web API Project
+# Esthetics by Elizabeth
 
-This is a full-stack application with an Angular frontend and a C# Web API backend.
+This is a full-stack application with an Angular frontend and a C# Azure Functions backend, using PostgreSQL for the database.
 
 ## Project Structure
 
 ```
-src/
-  ├── frontend/  # Angular application
-  ├── backend/   # C# Web API
-  └── scripts/   # Azure setup scripts
+.
+├── frontend/  # Angular 19 application
+├── api/       # C# .NET 8 Azure Functions backend
+├── docker/    # Docker Compose setup for local development
+└── tests/     # Backend xUnit tests
 ```
 
 ## Setup Instructions
 
 ### Prerequisites
-- Node.js and npm for Angular
-- .NET 8 SDK for C# API
-- PowerShell for Azure scripts
-- Azure CLI (for Azure deployments)
+- Node.js and npm (for Angular)
+- .NET 8 SDK (for C# API)
+- Azure Functions Core Tools (`func` CLI)
+- Docker Desktop (for local database and storage emulation)
 
-### Frontend Setup
-1. Navigate to the frontend directory:
-   ```
-   cd frontend
-   ```
+### Local Development Environment (Docker)
+The easiest way to run the backend dependencies locally is using Docker Compose.
 
-2. Install dependencies:
-   ```
-   npm install
+1. Navigate to the `docker` directory:
+   ```bash
+   cd docker
    ```
 
-3. Start the development server:
+2. Copy the example environment file and configure it if necessary:
+   ```bash
+   cp .env.example .env
    ```
-   npm run start
+
+3. Start the services (PostgreSQL, MinIO, Azurite, MailHog):
+   ```bash
+   docker-compose up -d
    ```
 
 ### Backend Setup
 1. Navigate to the backend directory:
-   ```
+   ```bash
    cd api
    ```
 
 2. Restore packages:
-   ```
+   ```bash
    dotnet restore
    ```
 
-3. Run the API:
+3. Run the Azure Functions API:
+   ```bash
+   func start
    ```
-   dotnet run
+   The API will run on `http://localhost:7071` by default.
+
+### Frontend Setup
+1. Navigate to the frontend directory:
+   ```bash
+   cd frontend
    ```
 
-### Azure SQL Database Setup
-1. Make sure you have the Azure PowerShell module installed:
-   ```
-   Install-Module -Name Az -Scope CurrentUser -Repository PSGallery -Force
+2. Install dependencies:
+   ```bash
+   npm install
    ```
 
-2. Run the setup script with required parameters:
+3. Start the development server:
+   ```bash
+   npm run start
    ```
-   pwsh src/scripts/setup-azure-sql.ps1 -ResourceGroupName "YourResourceGroup" -Location "EastUS" -ServerName "yourserver" -DatabaseName "yourdb" -AdminUsername "youradmin" -AdminPassword "yourpassword"
-   ```
+   The frontend will run on `http://localhost:4200` by default.
 
 ## Development Notes
-- Frontend runs on `http://localhost:4200` by default
-- Backend API runs on `http://localhost:5000` by default
-- Configure CORS in the backend to allow frontend requests# Updated Sat Aug 30 13:40:02 EDT 2025
+- **Database**: The project uses PostgreSQL. Entity Framework Core is used for data access. To manage database schema changes, use EF Core Migrations (e.g., `dotnet ef migrations add InitialCreate` and `dotnet ef database update`).
+- **Storage**: Local development uses MinIO (S3-compatible) for image storage and Azurite for Azure Storage emulation.
+- **Email**: Local development uses MailHog to capture outgoing emails. Access the MailHog UI at `http://localhost:8025`.

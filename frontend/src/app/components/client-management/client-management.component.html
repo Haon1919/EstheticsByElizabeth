@@ -254,6 +254,17 @@
               </div>
             </div>
           </div>
+
+          <div class="ai-summary-section" style="margin-top: 1rem;">
+            <button class="btn btn-outline btn-sm" (click)="generateAiSummary(flag.clientId)" [disabled]="loadingSummary.has(flag.clientId)">
+              <i class="fas fa-robot" [class.fa-spin]="loadingSummary.has(flag.clientId)"></i>
+              {{ loadingSummary.has(flag.clientId) ? 'Generating Summary...' : 'Generate AI Summary' }}
+            </button>
+            <div class="ai-summary-box" *ngIf="aiSummaries.has(flag.clientId)" style="margin-top: 0.5rem; padding: 1rem; background-color: #f8f9fa; border-left: 4px solid #b27092; border-radius: 4px;">
+              <strong>AI Summary:</strong>
+              <p style="margin-bottom: 0;">{{ aiSummaries.get(flag.clientId) }}</p>
+            </div>
+          </div>
         </div>
       </div>
     </div>

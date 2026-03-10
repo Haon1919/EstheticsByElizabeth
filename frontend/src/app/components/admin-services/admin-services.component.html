@@ -111,6 +111,13 @@
           </div>
         </div>
       </div>
+
+      <div class="form-group" style="margin-bottom: 1rem;">
+        <button type="button" class="btn btn-outline" (click)="generateContentWithAI()" [disabled]="isGeneratingContent || !serviceForm.get('name')?.value">
+          <i class="fas fa-magic" [class.fa-spin]="isGeneratingContent"></i>
+          {{ isGeneratingContent ? 'Generating...' : 'Generate Description & Aftercare with AI' }}
+        </button>
+      </div>
       
       <div class="form-group">
         <label for="description">Description</label>

@@ -59,5 +59,14 @@ namespace API.Entities
 
         [Column("adminnotes")]
         public string? AdminNotes { get; set; }
+
+        [Column("suggestedcategory")]
+        public string? SuggestedCategory { get; set; }
+
+        [Column("draftresponse")]
+        public string? DraftResponse { get; set; }
+
+        [Column("urgencyscore")]
+        public int? UrgencyScore { get; set; }
     }
 }

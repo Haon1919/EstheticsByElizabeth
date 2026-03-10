@@ -1,0 +1,40 @@
+<div class="admin-container">
+  <div class="admin-header">
+    <h2>AI Assistant Setup</h2>
+    <p>Configure your AI assistant to help write service descriptions and draft email responses.</p>
+  </div>
+
+  <div *ngIf="successMessage" class="alert alert-success">
+    {{ successMessage }}
+  </div>
+  <div *ngIf="errorMessage" class="alert alert-danger">
+    {{ errorMessage }}
+  </div>
+
+  <div class="settings-card">
+    <h3>Google Gemini API Key</h3>
+    
+    <div class="instructions-block">
+      <p>To use the AI features, you need a free Google Gemini API key. Follow these simple steps:</p>
+      <ol>
+        <li>Click here to go to <a href="https://aistudio.google.com/" target="_blank" rel="noopener noreferrer">Google AI Studio</a>.</li>
+        <li>Sign in with your Google account.</li>
+        <li>Click the blue <strong>"Create API Key"</strong> button.</li>
+        <li>Copy the key and paste it into the box below.</li>
+      </ol>
+    </div>
+    
+    <form (ngSubmit)="saveSettings()" #settingsForm="ngForm">
+      <div class="form-group">
+        <label for="llmApiKey">Your API Key</label>
+        <input type="password" id="llmApiKey" name="llmApiKey" class="form-control" [(ngModel)]="settings.LlmApiKey" placeholder="Paste your API key here...">
+        <small class="form-text text-muted">Your API key is stored securely. If it shows ********, it is already set up and working!</small>
+      </div>
+
+      <button type="submit" class="btn btn-primary" [disabled]="isLoading">
+        <span *ngIf="isLoading" class="spinner-border spinner-border-sm mr-1"></span>
+        Save API Key
+      </button>
+    </form>
+  </div>
+</div>

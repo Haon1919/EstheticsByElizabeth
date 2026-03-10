@@ -29,7 +29,7 @@ export class AdminLoginComponent implements OnInit {
   ngOnInit(): void {
     // Redirect if already authenticated
     if (this.authService.isAuthenticated()) {
-      this.router.navigate(['/admin/submissions']);
+      this.router.navigate(['/admin/dashboard']);
     }
   }
 
@@ -43,7 +43,7 @@ export class AdminLoginComponent implements OnInit {
       this.authService.login(password).subscribe(success => {
         this.isLoading = false;
         if (success) {
-          this.router.navigate(['/admin/submissions']);
+          this.router.navigate(['/admin/dashboard']);
         } else {
           this.errorMessage = 'Invalid password. Please try again.';
           this.loginForm.get('password')?.setValue('');

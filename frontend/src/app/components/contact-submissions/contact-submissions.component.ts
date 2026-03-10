@@ -306,6 +306,27 @@ export class ContactSubmissionsComponent implements OnInit {
     });
   }
 
+  getCategoryClass(category: string): string {
+    if (!category) return '';
+    const lower = category.toLowerCase();
+    if (lower.includes('complaint') || lower.includes('urgent')) return 'badge-danger';
+    if (lower.includes('reschedul') || lower.includes('cancel')) return 'badge-warning';
+    if (lower.includes('pricing') || lower.includes('question')) return 'badge-info';
+    return 'badge-secondary';
+  }
+
+  getUrgencyClass(score: number): string {
+    if (score >= 8) return 'text-danger font-weight-bold';
+    if (score >= 5) return 'text-warning';
+    return 'text-success';
+  }
+
+  copyToClipboard(text: string): void {
+    navigator.clipboard.writeText(text).then(() => {
+      alert('Draft response copied to clipboard!');
+    });
+  }
+
   logout(): void {
     this.authService.logout();
     this.router.navigate(['/']);

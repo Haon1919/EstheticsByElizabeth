@@ -7,7 +7,7 @@
   position: relative;
   height: 80vh;
   color: #fff;
-  background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('../../../assets/images/image7.jpeg');
+  background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('/images/image7.jpeg');
   background-size: cover;
   background-position: 25% 30%;
   display: flex;
@@ -144,7 +144,7 @@
 
 .cta {
   background: linear-gradient(135deg, #b27092 0%, #d4a5c4 100%);
-  /* Fallback for missing cta-bg.jpg: background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('/assets/images/cta-bg.jpg'); */
+  /* Fallback for missing cta-bg.jpg: background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('/images/cta-bg.jpg'); */
   background-size: cover;
   background-position: center;
   padding: 5rem 0;

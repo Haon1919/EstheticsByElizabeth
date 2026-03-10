@@ -30,8 +30,19 @@ namespace API.Functions
         /// </summary>
         [Function("GetCategories")]
         public async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "categories")] HttpRequest req)
-        {            _logger.LogInformation("🏷️ Service categories request received.");
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "options", Route = "categories")] HttpRequest req)
+        {
+            _logger.LogInformation("🏷️ Service categories request received.");
+
+            // Handle CORS
+            req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
+            req.HttpContext.Response.Headers.Add("Access-Control-Allow-Methods", "GET, OPTIONS");
+            req.HttpContext.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+            if (req.Method == "OPTIONS")
+            {
+                return new OkResult();
+            }
 
             try
             {
@@ -43,6 +54,9 @@ namespace API.Functions
                     .ToListAsync();
                     
                 _logger.LogInformation("✅ Retrieved {Count} categories from database", categories.Count);
+                
+                // Ensure headers are present on response
+                req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
                 
                 return new OkObjectResult(categories);
             }

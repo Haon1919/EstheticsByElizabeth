@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterModule } from '@angular/router';
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { FooterComponent } from './components/footer/footer.component';
+import { AdminSidebarComponent } from './components/admin-sidebar/admin-sidebar.component';
 import { AuthService } from './services/auth.service';
 import { ScrollService } from './services/scroll.service';
 import { Subscription } from 'rxjs';
@@ -15,7 +16,8 @@ import { Subscription } from 'rxjs';
     RouterOutlet, 
     RouterModule,
     NavbarComponent, 
-    FooterComponent
+    FooterComponent,
+    AdminSidebarComponent
   ],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css']

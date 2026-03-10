@@ -128,6 +128,9 @@ var host = new HostBuilder()
         
         // Register HttpClient for HTTP-based services
         services.AddHttpClient();
+        
+        // Register LLM Service
+        services.AddScoped<API.Services.ILlmService, API.Services.LlmService>();
           // Register Image Storage Service based on configuration
         var storageProvider = context.Configuration["Values:ImageStorage:Provider"] ?? "Local";
         Console.WriteLine($"🗄️ [STARTUP] Registering Image Storage Provider: {storageProvider}");

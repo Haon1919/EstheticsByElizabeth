@@ -31,9 +31,19 @@ namespace API.Functions
         /// </summary>
         [Function("GetServiceCountByCategory")]
         public async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "categories/service-counts")] HttpRequest req)
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "options", Route = "categories/service-counts")] HttpRequest req)
         {
             _logger.LogInformation("🏷️ Service count by category request received.");
+
+            // Handle CORS
+            req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
+            req.HttpContext.Response.Headers.Add("Access-Control-Allow-Methods", "GET, OPTIONS");
+            req.HttpContext.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+            if (req.Method == "OPTIONS")
+            {
+                return new OkResult();
+            }
 
             try
             {
@@ -50,6 +60,9 @@ namespace API.Functions
                     .ToListAsync();
                     
                 _logger.LogInformation("✅ Retrieved service counts for {Count} categories", categoryCounts.Count);
+                
+                // Ensure headers are present on response
+                req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
                 
                 return new OkObjectResult(categoryCounts);
             }

@@ -1,0 +1,52 @@
+<div class="admin-sidebar">
+  <div class="sidebar-header">
+    <h2>Admin Panel</h2>
+  </div>
+  
+  <ul class="sidebar-nav">
+    <li>
+      <a routerLink="/admin/dashboard" routerLinkActive="active">
+        <i class="fas fa-home"></i> Today
+      </a>
+    </li>
+    <li>
+      <a routerLink="/admin/submissions" routerLinkActive="active">
+        <i class="fas fa-inbox"></i> Inbox
+      </a>
+    </li>
+    <li>
+      <a routerLink="/admin/appointments" routerLinkActive="active">
+        <i class="fas fa-calendar-alt"></i> Schedule
+      </a>
+    </li>
+    <li>
+      <a routerLink="/admin/clients" routerLinkActive="active">
+        <i class="fas fa-users"></i> Clients & Alerts
+      </a>
+    </li>
+    <li>
+      <a routerLink="/admin/services" routerLinkActive="active">
+        <i class="fas fa-spa"></i> Services
+      </a>
+    </li>
+    <li>
+      <a routerLink="/admin/gallery" routerLinkActive="active">
+        <i class="fas fa-images"></i> Gallery
+      </a>
+    </li>
+    <li>
+      <a routerLink="/admin/settings" routerLinkActive="active">
+        <i class="fas fa-cog"></i> AI Setup
+      </a>
+    </li>
+  </ul>
+
+  <div class="sidebar-footer">
+    <button class="logout-btn" (click)="logout()">
+      <i class="fas fa-sign-out-alt"></i> Logout
+    </button>
+    <a routerLink="/" class="view-site-link">
+      <i class="fas fa-external-link-alt"></i> View Website
+    </a>
+  </div>
+</div>

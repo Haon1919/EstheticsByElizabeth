@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import imageCompression from 'browser-image-compression';
 import { ApiService } from '../../services/api.service';
 import { AuthService } from '../../services/auth.service';
 import {
@@ -154,7 +155,7 @@ export class AdminGalleryComponent implements OnInit {
   }
 
   // File upload methods
-  onFileSelected(event: any): void {
+  async onFileSelected(event: any): Promise<void> {
     const file = event.target.files[0];
     if (file) {
       // Validate file type
@@ -163,18 +164,36 @@ export class AdminGalleryComponent implements OnInit {
         return;
       }
       
-      // Validate file size (5MB limit)
-      if (file.size > 5 * 1024 * 1024) {
-        this.errorMessage = 'File size must be less than 5MB.';
+      // Validate file size (15MB limit before compression)
+      if (file.size > 15 * 1024 * 1024) {
+        this.errorMessage = 'File size must be less than 15MB.';
         return;
       }
       
-      this.selectedFile = file;
-      this.clearMessages();
+      this.loading = true;
+      this.successMessage = 'Compressing image...';
       
-      // Clear URL field since we'll upload with metadata in one step
-      this.imageForm.src = '';
-      this.successMessage = `File selected: ${file.name}. Complete the form and save to upload and create gallery item.`;
+      try {
+        const options = {
+          maxSizeMB: 1,
+          maxWidthOrHeight: 1920,
+          useWebWorker: true
+        };
+        
+        const compressedFile = await imageCompression(file, options);
+        
+        this.selectedFile = compressedFile;
+        this.clearMessages();
+        
+        // Clear URL field since we'll upload with metadata in one step
+        this.imageForm.src = '';
+        this.successMessage = `File selected and compressed: ${compressedFile.name}. Complete the form and save to upload.`;
+      } catch (error) {
+        console.error('Error compressing image:', error);
+        this.errorMessage = 'Failed to compress image. Please try a different file.';
+      } finally {
+        this.loading = false;
+      }
     }
   }
 
