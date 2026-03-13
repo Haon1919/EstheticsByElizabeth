@@ -15,6 +15,9 @@ yarn-error.log
 .azure-config
 .azure-secrets
 
+# Azure Functions local settings (contains secrets - never commit!)
+**/local.settings.json
+
 # IDEs and editors
 .idea/
 .project
@@ -42,3 +45,8 @@ testem.log
 Thumbs.db
 .env
 docker/.env
+
+# Test results and reports
+**/test-results/
+postman/newman-report.html
+newman-results/

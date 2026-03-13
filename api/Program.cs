@@ -55,16 +55,17 @@ var host = new HostBuilder()
             {
                 startupLogger.LogInformation($"✨ [STARTUP] Connection string found, starting with: {connectionString.Substring(0, Math.Min(connectionString.Length, 20))}...");
                 
-                // Configure DbContext with Npgsql and EF Core Retry Strategy
-                services.AddDbContext<ProjectContext>((serviceProvider, options) => {
+                // Configure DbContext with connection pooling for efficient connection
+                // reuse in Azure Functions (avoids exhausting DB connections under load)
+                services.AddDbContextPool<ProjectContext>((serviceProvider, options) => {
                     options.UseNpgsql(connectionString, npgsqlOptions => {
                         // Increase the command timeout to 30 seconds for deployment
                         npgsqlOptions.CommandTimeout(30);
 
                         // Configure EF Core's built-in retry strategy
                         npgsqlOptions.EnableRetryOnFailure(
-                            maxRetryCount: 3, // Reduced for faster startup
-                            maxRetryDelay: TimeSpan.FromSeconds(10), // Reduced delay
+                            maxRetryCount: 3,
+                            maxRetryDelay: TimeSpan.FromSeconds(10),
                             errorCodesToAdd: null);
                     });
 
@@ -75,9 +76,8 @@ var host = new HostBuilder()
                     if (context.HostingEnvironment.IsDevelopment())
                     {
                         options.EnableSensitiveDataLogging();
-                        // options.LogTo(Console.WriteLine, LogLevel.Information);
                     }
-                });
+                }, poolSize: 64);
                 
                 startupLogger.LogInformation("✅ [STARTUP] Database context configured with PostgreSQL");
             }

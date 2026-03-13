@@ -1,6 +1,8 @@
 # Azure Deployment Scripts
 
-This folder contains scripts to deploy and manage your Esthetics by Elizabeth application on Azure.
+> **📌 Prefer Infrastructure as Code?** See [`infra/README.md`](../infra/README.md) for the declarative **Azure Bicep** templates that provision the same resources in a repeatable, version-controlled way. The Bicep templates are the recommended approach for new deployments.
+
+This folder contains **imperative** scripts to deploy and manage your Esthetics by Elizabeth application on Azure.
 
 ## Scripts Overview
 
