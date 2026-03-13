@@ -97,6 +97,13 @@ if [ -z "${REUSE:-}" ]; then
   if [ -z "${DB_PASSWORD:-}" ]; then DB_PASSWORD="$(rand_b64 25)"; fi
   if [ -z "${ADMIN_PASSWORD:-}" ]; then ADMIN_PASSWORD="$(rand_b64 20)"; fi
   if [ -z "${ADMIN_JWT_SECRET:-}" ]; then ADMIN_JWT_SECRET="$(rand_b64 48)"; fi
+
+  # Mask secrets in GitHub Actions logs
+  if [ -n "${GITHUB_ACTIONS:-}" ]; then
+    echo "::add-mask::$DB_PASSWORD"
+    echo "::add-mask::$ADMIN_PASSWORD"
+    echo "::add-mask::$ADMIN_JWT_SECRET"
+  fi
 fi
 
 # Optionally write secrets to a local (gitignored) file for operator reference

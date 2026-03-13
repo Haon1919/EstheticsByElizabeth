@@ -90,7 +90,7 @@ export class ApiService {
   }
 
   getServiceCountByCategory(): Observable<CategoryServiceCount[]> {
-    return this.http.get<CategoryServiceCount[]>(`${this.baseUrl}/categories/service-counts`)
+    return this.http.get<CategoryServiceCount[]>(`${this.baseUrl}/manage/categories/service-counts`)
       .pipe(catchError(this.handleError));
   }
 

@@ -81,8 +81,10 @@ namespace API.Services
                 {
                     var validations = new TokenValidationParameters
                     {
-                        ValidateIssuer = false,
-                        ValidateAudience = false,
+                        ValidateIssuer = true,
+                        ValidIssuer = _issuer,
+                        ValidateAudience = true,
+                        ValidAudience = _audience,
                         ValidateLifetime = true,
                         IssuerSigningKey = new SymmetricSecurityKey(key)
                     };

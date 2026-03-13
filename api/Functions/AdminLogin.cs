@@ -40,7 +40,16 @@ namespace API.Functions
 
 
             // Rate Limiting Check
-            var ipAddress = req.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            var ipAddress = req.Headers["X-Forwarded-For"].ToString();
+            if (string.IsNullOrEmpty(ipAddress))
+            {
+                ipAddress = req.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            }
+            else
+            {
+                // X-Forwarded-For can contain multiple IPs, take the first one
+                ipAddress = ipAddress.Split(',')[0].Trim();
+            }
             
             if (_failedLogins.TryGetValue(ipAddress, out var loginState))
             {

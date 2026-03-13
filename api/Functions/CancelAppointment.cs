@@ -45,6 +45,12 @@ namespace API.Functions
                 return new OkResult();
             }
 
+            if (!_authTokenService.ValidateRequest(req))
+            {
+                _logger.LogWarning("🚫 Unauthorized attempt to cancel appointment.");
+                return new UnauthorizedResult();
+            }
+
             if (string.IsNullOrEmpty(id) || !int.TryParse(id, out int appointmentId))
             {
                 _logger.LogWarning("🚫 Invalid or missing appointment ID: {Id}", id);

@@ -32,6 +32,42 @@ namespace API.Functions
         {
             _logger.LogInformation("✨ Appointment scheduling request received.");
 
+            // Rate Limiting Check
+            var ipAddress = req.Headers["X-Forwarded-For"].ToString();
+            if (string.IsNullOrEmpty(ipAddress))
+            {
+                ipAddress = req.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            }
+            else
+            {
+                ipAddress = ipAddress.Split(',')[0].Trim();
+            }
+            
+            if (_bookingAttempts.TryGetValue(ipAddress, out var attemptState))
+            {
+                if (attemptState.Attempts >= MaxAttempts)
+                {
+                    if (DateTimeOffset.UtcNow < attemptState.LastAttempt.AddMinutes(LockoutMinutes))
+                    {
+                        _logger.LogWarning("🚫 Rate limit exceeded for IP: {IpAddress}", ipAddress);
+                        return new ObjectResult(new { success = false, message = "Too many booking attempts. Please try again later." })
+                        {
+                            StatusCode = StatusCodes.Status429TooManyRequests
+                        };
+                    }
+                    else
+                    {
+                        // Lockout expired, reset
+                         _bookingAttempts.TryRemove(ipAddress, out _);
+                    }
+                }
+            }
+
+            // Increment attempt counter
+            _bookingAttempts.AddOrUpdate(ipAddress, 
+                (1, DateTimeOffset.UtcNow), 
+                (key, oldState) => (oldState.Attempts + 1, DateTimeOffset.UtcNow));
+
             try
             {
                 string requestBody = await new StreamReader(req.Body).ReadToEndAsync();

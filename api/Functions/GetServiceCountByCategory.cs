@@ -31,7 +31,7 @@ namespace API.Functions
         /// </summary>
         [Function("GetServiceCountByCategory")]
         public async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "options", Route = "categories/service-counts")] HttpRequest req)
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "options", Route = "manage/categories/service-counts")] HttpRequest req)
         {
             _logger.LogInformation("🏷️ Service count by category request received.");
 
@@ -43,6 +43,12 @@ namespace API.Functions
             if (req.Method == "OPTIONS")
             {
                 return new OkResult();
+            }
+
+            if (!_authTokenService.ValidateRequest(req))
+            {
+                _logger.LogWarning("🚫 Unauthorized attempt to get service counts.");
+                return new UnauthorizedResult();
             }
 
             try
