@@ -4,6 +4,7 @@ using API.Data;
 using API.DTOs;
 using API.Entities;
 using API.Functions;
+using API.Services;
 using API.Tests.Helpers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -18,6 +19,7 @@ namespace API.Tests.Functions
     {
         private readonly DbContextOptions<ProjectContext> _dbContextOptions;
         private readonly Mock<ILogger<ScheduleAppointment>> _loggerMock;
+        private readonly Mock<IBookingService> _bookingServiceMock;
 
         public ScheduleAppointmentEdgeCasesTests()
         {
@@ -28,6 +30,9 @@ namespace API.Tests.Functions
             
             // Set up logger mock
             _loggerMock = new Mock<ILogger<ScheduleAppointment>>();
+            
+            // Set up booking service mock
+            _bookingServiceMock = new Mock<IBookingService>();
         }
 
         [Fact]
@@ -40,7 +45,7 @@ namespace API.Tests.Functions
             string emptyJson = "";
             var request = TestHelpers.CreateMockHttpRequest(emptyJson);
             
-            var function = new ScheduleAppointment(_loggerMock.Object, CreateContext());
+            var function = new ScheduleAppointment(_loggerMock.Object, CreateContext(), _bookingServiceMock.Object);
 
             // Act
             var result = await function.Run(request);
@@ -59,7 +64,7 @@ namespace API.Tests.Functions
             string malformedJson = "{ this is not valid json }";
             var request = TestHelpers.CreateMockHttpRequest(malformedJson);
             
-            var function = new ScheduleAppointment(_loggerMock.Object, CreateContext());
+            var function = new ScheduleAppointment(_loggerMock.Object, CreateContext(), _bookingServiceMock.Object);
 
             // Act
             var result = await function.Run(request);

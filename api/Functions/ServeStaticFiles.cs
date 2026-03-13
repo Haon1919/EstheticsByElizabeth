@@ -39,9 +39,9 @@ namespace API.Functions
                 // Handle CORS preflight requests
                 if (req.Method == "OPTIONS")
                 {
-                    req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
-                    req.HttpContext.Response.Headers.Add("Access-Control-Allow-Methods", "GET, OPTIONS");
-                    req.HttpContext.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization");
+                    req.HttpContext.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+                    req.HttpContext.Response.Headers.Append("Access-Control-Allow-Methods", "GET, OPTIONS");
+                    req.HttpContext.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Authorization");
                     return new OkResult();
                 }
 
@@ -69,8 +69,7 @@ namespace API.Functions
                 _logger.LogInformation("✅ Serving file: {FileName} ({ContentType})", fileName, contentType);
 
                 // Add CORS headers
-                req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
-                req.HttpContext.Response.Headers.Add("Cache-Control", "public, max-age=31536000"); // Cache for 1 year
+                req.HttpContext.Response.Headers.Append("Cache-Control", "public, max-age=31536000"); // Cache for 1 year
                 
                 return new FileStreamResult(fileStream, contentType)
                 {

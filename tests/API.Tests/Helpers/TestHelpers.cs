@@ -34,5 +34,15 @@ namespace API.Tests.Helpers
             
             return mockRequest.Object;
         }
+
+        /// <summary>
+        /// Gets a property value from an anonymous object using reflection
+        /// </summary>
+        public static object? GetPropertyValue(object obj, string propertyName)
+        {
+            if (obj == null) return null;
+            var property = obj.GetType().GetProperty(propertyName);
+            return property?.GetValue(obj);
+        }
     }
 }

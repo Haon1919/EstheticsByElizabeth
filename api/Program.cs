@@ -12,7 +12,10 @@ using System.Text.Json; // Needed for JsonSerializerOptions
 using System.Text.Json.Serialization; // Needed for ReferenceHandler and JsonIgnoreCondition
 using Minio; // MinIO client
 
-Console.WriteLine("🔧 [STARTUP] Configuring Azure Functions Host (Isolated Process Mode)");
+using var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
+var startupLogger = loggerFactory.CreateLogger("Startup");
+
+startupLogger.LogInformation("🔧 [STARTUP] Configuring Azure Functions Host (Isolated Process Mode)");
 
 var host = new HostBuilder()
     .ConfigureFunctionsWebApplication()
@@ -39,7 +42,7 @@ var host = new HostBuilder()
     })
     .ConfigureServices((context, services) => {        
         // --- Connection String Handling with Graceful Fallback ---
-        Console.WriteLine("🔍 [STARTUP] Locating database connection string...");
+        startupLogger.LogInformation("🔍 [STARTUP] Locating database connection string...");
 
         try
         {
@@ -50,7 +53,7 @@ var host = new HostBuilder()
 
             if (!string.IsNullOrEmpty(connectionString))
             {
-                Console.WriteLine($"✨ [STARTUP] Connection string found, starting with: {connectionString.Substring(0, Math.Min(connectionString.Length, 20))}...");
+                startupLogger.LogInformation($"✨ [STARTUP] Connection string found, starting with: {connectionString.Substring(0, Math.Min(connectionString.Length, 20))}...");
                 
                 // Configure DbContext with Npgsql and EF Core Retry Strategy
                 services.AddDbContext<ProjectContext>((serviceProvider, options) => {
@@ -72,32 +75,32 @@ var host = new HostBuilder()
                     if (context.HostingEnvironment.IsDevelopment())
                     {
                         options.EnableSensitiveDataLogging();
-                        options.LogTo(Console.WriteLine, LogLevel.Information);
+                        // options.LogTo(Console.WriteLine, LogLevel.Information);
                     }
                 });
                 
-                Console.WriteLine("✅ [STARTUP] Database context configured with PostgreSQL");
+                startupLogger.LogInformation("✅ [STARTUP] Database context configured with PostgreSQL");
             }
             else
             {
-                Console.WriteLine("⚠️ [STARTUP] No database connection string found, using in-memory fallback");
+                startupLogger.LogWarning("⚠️ [STARTUP] No database connection string found, using in-memory fallback");
                 
                 // Use in-memory database as fallback for deployment
                 services.AddDbContext<ProjectContext>(options =>
                     options.UseInMemoryDatabase("FallbackDb"));
                     
-                Console.WriteLine("✅ [STARTUP] Database context configured with in-memory fallback");
+                startupLogger.LogInformation("✅ [STARTUP] Database context configured with in-memory fallback");
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"❌ [STARTUP] Database configuration error: {ex.Message}");
-            Console.WriteLine("⚠️ [STARTUP] Using in-memory database fallback");
+            startupLogger.LogError($"❌ [STARTUP] Database configuration error: {ex.Message}");
+            startupLogger.LogWarning("⚠️ [STARTUP] Using in-memory database fallback");
             
             // Use in-memory database as fallback
             services.AddDbContext<ProjectContext>(options =>
                 options.UseInMemoryDatabase("ErrorFallbackDb"));
-                  Console.WriteLine("✅ [STARTUP] Database context configured with error fallback");
+                  startupLogger.LogInformation("✅ [STARTUP] Database context configured with error fallback");
         }
 
         // Register core services with error handling
@@ -105,24 +108,24 @@ var host = new HostBuilder()
         {
             // Register the ClientReviewService
             services.AddScoped<API.Services.ClientReviewService>();
-            Console.WriteLine("✅ [STARTUP] ClientReviewService registered");
+            startupLogger.LogInformation("✅ [STARTUP] ClientReviewService registered");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"⚠️ [STARTUP] Failed to register ClientReviewService: {ex.Message}");
+            startupLogger.LogWarning($"⚠️ [STARTUP] Failed to register ClientReviewService: {ex.Message}");
         }        // Register Email Service based on configuration with error handling
         try
         {
             var emailProvider = context.Configuration["Values:Email:Provider"] ?? "Development";
-            Console.WriteLine($"📧 [STARTUP] Registering Email Provider: {emailProvider}");
+            startupLogger.LogInformation($"📧 [STARTUP] Registering Email Provider: {emailProvider}");
             
             // Use simple fallback for deployment stability
             services.AddScoped<API.Services.IEmailService, API.Services.EmailService>();
-            Console.WriteLine("✅ [STARTUP] Development email service registered (deployment safe)");
+            startupLogger.LogInformation("✅ [STARTUP] Development email service registered (deployment safe)");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"⚠️ [STARTUP] Email service configuration failed: {ex.Message}, using fallback");
+            startupLogger.LogWarning($"⚠️ [STARTUP] Email service configuration failed: {ex.Message}, using fallback");
             services.AddScoped<API.Services.IEmailService, API.Services.EmailService>();
         }
         
@@ -131,9 +134,16 @@ var host = new HostBuilder()
         
         // Register LLM Service
         services.AddScoped<API.Services.ILlmService, API.Services.LlmService>();
+        
+        // Register Booking Service
+        services.AddScoped<API.Services.IBookingService, API.Services.BookingService>();
+        
+        // Register Auth Token Service
+        services.AddScoped<API.Services.IAuthTokenService, API.Services.AuthTokenService>();
+
           // Register Image Storage Service based on configuration
         var storageProvider = context.Configuration["Values:ImageStorage:Provider"] ?? "Local";
-        Console.WriteLine($"🗄️ [STARTUP] Registering Image Storage Provider: {storageProvider}");
+        startupLogger.LogInformation($"🗄️ [STARTUP] Registering Image Storage Provider: {storageProvider}");
         
         if (storageProvider.Equals("MinIO", StringComparison.OrdinalIgnoreCase))
         {
@@ -143,7 +153,7 @@ var host = new HostBuilder()
             var secretKey = context.Configuration["Values:ImageStorage:MinIO:SecretKey"] ?? "minioadmin123";
             var useSSL = bool.Parse(context.Configuration["Values:ImageStorage:MinIO:UseSSL"] ?? "false");
 
-            Console.WriteLine($"🪣 [STARTUP] Configuring MinIO with endpoint: {endpoint}, SSL: {useSSL}");
+            startupLogger.LogInformation($"🪣 [STARTUP] Configuring MinIO with endpoint: {endpoint}, SSL: {useSSL}");
             
             services.AddMinio(configureClient => configureClient
                 .WithEndpoint(endpoint)
@@ -152,14 +162,14 @@ var host = new HostBuilder()
                 .Build());
 
             services.AddScoped<API.Services.IImageStorageService, API.Services.MinioImageStorageService>();
-            Console.WriteLine("✅ [STARTUP] MinIO image storage service configured with official AddMinio");
+            startupLogger.LogInformation("✅ [STARTUP] MinIO image storage service configured with official AddMinio");
         }
         else
         {
             services.AddScoped<API.Services.IImageStorageService, API.Services.LocalImageStorageService>();
-            Console.WriteLine("✅ [STARTUP] Local image storage service configured");
+            startupLogger.LogInformation("✅ [STARTUP] Local image storage service configured");
         }
-          Console.WriteLine("✅ [STARTUP] All services registered successfully");
+          startupLogger.LogInformation("✅ [STARTUP] All services registered successfully");
 
         // Removed the separate Polly policy definition and registration.
         // EF Core's EnableRetryOnFailure is now handling database retries.
@@ -167,5 +177,5 @@ var host = new HostBuilder()
     .Build();
 
 // Launch the Azure Functions host application
-Console.WriteLine("🚀 [STARTUP] Starting Azure Functions Host (Isolated Process Mode with Host-Level CORS from local.settings.json)");
+startupLogger.LogInformation("🚀 [STARTUP] Starting Azure Functions Host (Isolated Process Mode with Host-Level CORS from local.settings.json)");
 host.Run();

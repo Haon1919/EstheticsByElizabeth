@@ -17,11 +17,13 @@ namespace API.Functions
     /// </summary>
     public class DeleteContactSubmission
     {
+        private readonly IAuthTokenService _authTokenService;
         private readonly ILogger<DeleteContactSubmission> _logger;
         private readonly ProjectContext _context;
 
-        public DeleteContactSubmission(ILogger<DeleteContactSubmission> logger, ProjectContext context)
+        public DeleteContactSubmission(ILogger<DeleteContactSubmission> logger, ProjectContext context, IAuthTokenService authTokenService)
         {
+            _authTokenService = authTokenService;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }
@@ -37,7 +39,7 @@ namespace API.Functions
         {
             _logger.LogInformation("🗑️ Contact submission deletion request received for ID: {Id}", id);
 
-            if (!AuthTokenService.ValidateRequest(req))
+            if (!_authTokenService.ValidateRequest(req))
             {
                 return new UnauthorizedResult();
             }

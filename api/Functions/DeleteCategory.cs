@@ -17,11 +17,13 @@ namespace API.Functions
     /// </summary>
     public class DeleteCategory
     {
+        private readonly IAuthTokenService _authTokenService;
         private readonly ILogger<DeleteCategory> _logger;
         private readonly ProjectContext _context;
         
-        public DeleteCategory(ILogger<DeleteCategory> logger, ProjectContext context)
+        public DeleteCategory(ILogger<DeleteCategory> logger, ProjectContext context, IAuthTokenService authTokenService)
         {
+            _authTokenService = authTokenService;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }
@@ -38,7 +40,7 @@ namespace API.Functions
         {
             _logger.LogInformation("🏷️ Delete category request received for ID {CategoryId}.", categoryId);
 
-            if (!AuthTokenService.ValidateRequest(req))
+            if (!_authTokenService.ValidateRequest(req))
             {
                 return new UnauthorizedResult();
             }

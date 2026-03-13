@@ -22,11 +22,13 @@ namespace API.Functions
     /// </summary>
     public class UpdateCategory
     {
+        private readonly IAuthTokenService _authTokenService;
         private readonly ILogger<UpdateCategory> _logger;
         private readonly ProjectContext _context;
         
-        public UpdateCategory(ILogger<UpdateCategory> logger, ProjectContext context)
+        public UpdateCategory(ILogger<UpdateCategory> logger, ProjectContext context, IAuthTokenService authTokenService)
         {
+            _authTokenService = authTokenService;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }
@@ -42,7 +44,7 @@ namespace API.Functions
         {
             _logger.LogInformation("🏷️ Update category request received for ID {CategoryId}.", categoryId);
 
-            if (!AuthTokenService.ValidateRequest(req))
+            if (!_authTokenService.ValidateRequest(req))
             {
                 return new UnauthorizedResult();
             }

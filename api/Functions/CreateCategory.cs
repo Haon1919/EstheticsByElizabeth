@@ -22,11 +22,13 @@ namespace API.Functions
     /// </summary>
     public class CreateCategory
     {
+        private readonly IAuthTokenService _authTokenService;
         private readonly ILogger<CreateCategory> _logger;
         private readonly ProjectContext _context;
         
-        public CreateCategory(ILogger<CreateCategory> logger, ProjectContext context)
+        public CreateCategory(ILogger<CreateCategory> logger, ProjectContext context, IAuthTokenService authTokenService)
         {
+            _authTokenService = authTokenService;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }
@@ -41,7 +43,7 @@ namespace API.Functions
         {
             _logger.LogInformation("🏷️ Create category request received.");
 
-            if (!AuthTokenService.ValidateRequest(req))
+            if (!_authTokenService.ValidateRequest(req))
             {
                 return new UnauthorizedResult();
             }

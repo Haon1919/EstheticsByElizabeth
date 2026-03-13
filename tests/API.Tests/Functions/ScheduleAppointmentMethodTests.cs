@@ -5,6 +5,7 @@ using API.Data;
 using API.DTOs;
 using API.Entities;
 using API.Functions;
+using API.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -16,7 +17,8 @@ namespace API.Tests.Functions
     public class ScheduleAppointmentMethodTests
     {
         private readonly DbContextOptions<ProjectContext> _dbContextOptions;
-        private readonly Mock<ILogger<ScheduleAppointment>> _loggerMock;
+        private readonly Mock<ILogger<BookingService>> _loggerMock;
+        private readonly Mock<IEmailService> _emailServiceMock;
 
         public ScheduleAppointmentMethodTests()
         {
@@ -26,7 +28,10 @@ namespace API.Tests.Functions
                 .Options;
             
             // Set up logger mock
-            _loggerMock = new Mock<ILogger<ScheduleAppointment>>();
+            _loggerMock = new Mock<ILogger<BookingService>>();
+            
+            // Set up booking service mock
+            _emailServiceMock = new Mock<IEmailService>();
         }
         
         [Fact]
@@ -76,10 +81,10 @@ namespace API.Tests.Functions
             }
             
             // Use reflection to access the private method
-            var function = new ScheduleAppointment(_loggerMock.Object, CreateContext());
-            var method = typeof(ScheduleAppointment).GetMethod(
+            var function = new BookingService(_loggerMock.Object, CreateContext(), _emailServiceMock.Object);
+            var method = typeof(BookingService).GetMethod(
                 "CheckClientReviewStatusAsync", 
-                BindingFlags.NonPublic | BindingFlags.Instance);
+                BindingFlags.Public | BindingFlags.Instance);
             
             // Act
             if (method != null)
@@ -153,10 +158,10 @@ namespace API.Tests.Functions
             }
             
             // Use reflection to access the private method
-            var function = new ScheduleAppointment(_loggerMock.Object, CreateContext());
-            var method = typeof(ScheduleAppointment).GetMethod(
+            var function = new BookingService(_loggerMock.Object, CreateContext(), _emailServiceMock.Object);
+            var method = typeof(BookingService).GetMethod(
                 "CheckClientReviewStatusAsync", 
-                BindingFlags.NonPublic | BindingFlags.Instance);
+                BindingFlags.Public | BindingFlags.Instance);
             
             // Act
             if (method != null)
@@ -230,10 +235,10 @@ namespace API.Tests.Functions
             }
             
             // Use reflection to access the private method
-            var function = new ScheduleAppointment(_loggerMock.Object, CreateContext());
-            var method = typeof(ScheduleAppointment).GetMethod(
+            var function = new BookingService(_loggerMock.Object, CreateContext(), _emailServiceMock.Object);
+            var method = typeof(BookingService).GetMethod(
                 "CheckClientReviewStatusAsync", 
-                BindingFlags.NonPublic | BindingFlags.Instance);
+                BindingFlags.Public | BindingFlags.Instance);
             
             // Act
             var task = (Task<(bool IsUnderReview, int ExistingAppointmentsCount)>)method.Invoke(
@@ -296,10 +301,10 @@ namespace API.Tests.Functions
             }
             
             // Use reflection to access the private method
-            var function = new ScheduleAppointment(_loggerMock.Object, CreateContext());
-            var method = typeof(ScheduleAppointment).GetMethod(
+            var function = new BookingService(_loggerMock.Object, CreateContext(), _emailServiceMock.Object);
+            var method = typeof(BookingService).GetMethod(
                 "CheckClientReviewStatusAsync", 
-                BindingFlags.NonPublic | BindingFlags.Instance);
+                BindingFlags.Public | BindingFlags.Instance);
             
             // Act
             var task = (Task<(bool IsUnderReview, int ExistingAppointmentsCount)>)method.Invoke(
@@ -342,10 +347,10 @@ namespace API.Tests.Functions
             }
             
             // Use reflection to access the private method
-            var function = new ScheduleAppointment(_loggerMock.Object, CreateContext());
-            var method = typeof(ScheduleAppointment).GetMethod(
+            var function = new BookingService(_loggerMock.Object, CreateContext(), _emailServiceMock.Object);
+            var method = typeof(BookingService).GetMethod(
                 "CheckIfTimeIsAvailableAsync", 
-                BindingFlags.NonPublic | BindingFlags.Instance);
+                BindingFlags.Public | BindingFlags.Instance);
             
             // Test cases
             var testCases = new[]
@@ -424,10 +429,10 @@ namespace API.Tests.Functions
                 await context.SaveChangesAsync();
             }
 
-            var function = new ScheduleAppointment(_loggerMock.Object, CreateContext());
-            var method = typeof(ScheduleAppointment).GetMethod(
+            var function = new BookingService(_loggerMock.Object, CreateContext(), _emailServiceMock.Object);
+            var method = typeof(BookingService).GetMethod(
                 "CheckIfTimeIsAvailableAsync",
-                BindingFlags.NonPublic | BindingFlags.Instance);
+                BindingFlags.Public | BindingFlags.Instance);
 
             Service bookingService;
             using (var context = CreateContext())
@@ -512,10 +517,10 @@ namespace API.Tests.Functions
                 await context.SaveChangesAsync();
             }
 
-            var function = new ScheduleAppointment(_loggerMock.Object, CreateContext());
-            var method = typeof(ScheduleAppointment).GetMethod(
+            var function = new BookingService(_loggerMock.Object, CreateContext(), _emailServiceMock.Object);
+            var method = typeof(BookingService).GetMethod(
                 "CheckIfTimeIsAvailableAsync",
-                BindingFlags.NonPublic | BindingFlags.Instance);
+                BindingFlags.Public | BindingFlags.Instance);
 
             Service bookingService;
             using (var context = CreateContext())
@@ -589,10 +594,10 @@ namespace API.Tests.Functions
             var service = await CreateContext().Services.FirstAsync();
             
             // Use reflection to access the private method
-            var function = new ScheduleAppointment(_loggerMock.Object, CreateContext());
-            var method = typeof(ScheduleAppointment).GetMethod(
+            var function = new BookingService(_loggerMock.Object, CreateContext(), _emailServiceMock.Object);
+            var method = typeof(BookingService).GetMethod(
                 "BookAppointmentStepsAsync", 
-                BindingFlags.NonPublic | BindingFlags.Instance);
+                BindingFlags.Public | BindingFlags.Instance);
             
             // Act
             var task = (Task<IActionResult>)method.Invoke(
@@ -677,10 +682,10 @@ namespace API.Tests.Functions
             var service = await CreateContext().Services.FirstAsync();
             
             // Use reflection to access the private method
-            var function = new ScheduleAppointment(_loggerMock.Object, CreateContext());
-            var method = typeof(ScheduleAppointment).GetMethod(
+            var function = new BookingService(_loggerMock.Object, CreateContext(), _emailServiceMock.Object);
+            var method = typeof(BookingService).GetMethod(
                 "BookAppointmentStepsAsync", 
-                BindingFlags.NonPublic | BindingFlags.Instance);
+                BindingFlags.Public | BindingFlags.Instance);
             
             // Act
             var task = (Task<IActionResult>)method.Invoke(
@@ -750,8 +755,8 @@ namespace API.Tests.Functions
             }
             
             // Use reflection to access the private method
-            var function = new ScheduleAppointment(_loggerMock.Object, CreateContext());
-            var method = typeof(ScheduleAppointment).GetMethod(
+            var function = new BookingService(_loggerMock.Object, CreateContext(), _emailServiceMock.Object);
+            var method = typeof(BookingService).GetMethod(
                 "FlagClientForReviewAsync", 
                 BindingFlags.NonPublic | BindingFlags.Instance);
             

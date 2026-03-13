@@ -18,11 +18,13 @@ namespace API.Functions
     /// </summary>
     public class GetContactSubmissions
     {
+        private readonly IAuthTokenService _authTokenService;
         private readonly ILogger<GetContactSubmissions> _logger;
         private readonly ProjectContext _context;
 
-        public GetContactSubmissions(ILogger<GetContactSubmissions> logger, ProjectContext context)
+        public GetContactSubmissions(ILogger<GetContactSubmissions> logger, ProjectContext context, IAuthTokenService authTokenService)
         {
+            _authTokenService = authTokenService;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }
@@ -37,7 +39,7 @@ namespace API.Functions
         {
             _logger.LogInformation("📋 Contact submissions retrieval request received");
 
-            if (!AuthTokenService.ValidateRequest(req))
+            if (!_authTokenService.ValidateRequest(req))
             {
                 return new UnauthorizedResult();
             }

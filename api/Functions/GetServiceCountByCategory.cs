@@ -36,9 +36,9 @@ namespace API.Functions
             _logger.LogInformation("🏷️ Service count by category request received.");
 
             // Handle CORS
-            req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
-            req.HttpContext.Response.Headers.Add("Access-Control-Allow-Methods", "GET, OPTIONS");
-            req.HttpContext.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization");
+            req.HttpContext.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+            req.HttpContext.Response.Headers.Append("Access-Control-Allow-Methods", "GET, OPTIONS");
+            req.HttpContext.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
             if (req.Method == "OPTIONS")
             {
@@ -62,7 +62,6 @@ namespace API.Functions
                 _logger.LogInformation("✅ Retrieved service counts for {Count} categories", categoryCounts.Count);
                 
                 // Ensure headers are present on response
-                req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
                 
                 return new OkObjectResult(categoryCounts);
             }

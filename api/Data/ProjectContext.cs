@@ -12,14 +12,14 @@ namespace API.Data // Adjust namespace
         }
 
         // DbSet properties represent the tables in your database
-        public DbSet<Client> Clients { get; set; } = null!; // null! suppresses nullable warnings, EF ensures initialization
-        public DbSet<Category> Categories { get; set; } = null!;
-        public DbSet<Service> Services { get; set; } = null!;
-        public DbSet<Appointment> Appointments { get; set; } = null!;
-        public DbSet<ClientReviewFlag> ClientReviewFlags { get; set; } = null!;
-        public DbSet<ContactSubmission> ContactSubmissions { get; set; } = null!;
-        public DbSet<GalleryImage> GalleryImages { get; set; } = null!;
-        public DbSet<SystemSetting> SystemSettings { get; set; } = null!;
+        public virtual DbSet<Client> Clients { get; set; } = null!; // null! suppresses nullable warnings, EF ensures initialization
+        public virtual DbSet<Category> Categories { get; set; } = null!;
+        public virtual DbSet<Service> Services { get; set; } = null!;
+        public virtual DbSet<Appointment> Appointments { get; set; } = null!;
+        public virtual DbSet<ClientReviewFlag> ClientReviewFlags { get; set; } = null!;
+        public virtual DbSet<ContactSubmission> ContactSubmissions { get; set; } = null!;
+        public virtual DbSet<GalleryImage> GalleryImages { get; set; } = null!;
+        public virtual DbSet<SystemSetting> SystemSettings { get; set; } = null!;
 
         // Optional: Configure model details using Fluent API (alternative/complement to Data Annotations)
         protected override void OnModelCreating(ModelBuilder modelBuilder)

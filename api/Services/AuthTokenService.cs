@@ -3,18 +3,30 @@ using Microsoft.AspNetCore.Http;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.Configuration;
 
 namespace API.Services
 {
+    public interface IAuthTokenService
+    {
+        string GenerateToken();
+        bool ValidateRequest(HttpRequest req);
+    }
+
     /// <summary>
     /// Issues and validates JWT tokens for admin authentication.
     /// Tokens are stateless so they work across multiple function instances.
     /// </summary>
-    public static class AuthTokenService
+    public class AuthTokenService : IAuthTokenService
     {
-        private static readonly string? _secret = Environment.GetEnvironmentVariable("ADMIN_JWT_SECRET");
+        private readonly string? _secret;
 
-        private static byte[] GetValidKey()
+        public AuthTokenService(IConfiguration configuration)
+        {
+            _secret = configuration["ADMIN_JWT_SECRET"] ?? Environment.GetEnvironmentVariable("ADMIN_JWT_SECRET");
+        }
+
+        private byte[] GetValidKey()
         {
             if (string.IsNullOrEmpty(_secret))
             {
@@ -32,7 +44,7 @@ namespace API.Services
             return keyBytes;
         }
 
-        public static string GenerateToken()
+        public string GenerateToken()
         {
             var handler = new JwtSecurityTokenHandler();
             var key = GetValidKey();
@@ -45,42 +57,42 @@ namespace API.Services
             return handler.WriteToken(token);
         }
 
-        public static bool ValidateRequest(HttpRequest req)
+        public bool ValidateRequest(HttpRequest req)
         {
             try
             {
                 var key = GetValidKey();
 
-            if (!req.Headers.TryGetValue("Authorization", out var authHeader))
-            {
-                return false;
-            }
-
-            var header = authHeader.ToString();
-            if (!header.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
-            {
-                return false;
-            }
-
-            var token = header.Substring("Bearer ".Length).Trim();
-            var handler = new JwtSecurityTokenHandler();
-
-            try
-            {
-                var validations = new TokenValidationParameters
+                if (!req.Headers.TryGetValue("Authorization", out var authHeader))
                 {
-                    ValidateIssuer = false,
-                    ValidateAudience = false,
-                    ValidateLifetime = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(key)
-                };
-                handler.ValidateToken(token, validations, out _);
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+                    return false;
+                }
+
+                var header = authHeader.ToString();
+                if (!header.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                {
+                    return false;
+                }
+
+                var token = header.Substring("Bearer ".Length).Trim();
+                var handler = new JwtSecurityTokenHandler();
+
+                try
+                {
+                    var validations = new TokenValidationParameters
+                    {
+                        ValidateIssuer = false,
+                        ValidateAudience = false,
+                        ValidateLifetime = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(key)
+                    };
+                    handler.ValidateToken(token, validations, out _);
+                    return true;
+                }
+                catch
+                {
+                    return false;
+                }
             }
             catch
             {

@@ -20,11 +20,13 @@ namespace API.Functions
     /// </summary>
     public class UpdateContactSubmissionStatus
     {
+        private readonly IAuthTokenService _authTokenService;
         private readonly ILogger<UpdateContactSubmissionStatus> _logger;
         private readonly ProjectContext _context;
 
-        public UpdateContactSubmissionStatus(ILogger<UpdateContactSubmissionStatus> logger, ProjectContext context)
+        public UpdateContactSubmissionStatus(ILogger<UpdateContactSubmissionStatus> logger, ProjectContext context, IAuthTokenService authTokenService)
         {
+            _authTokenService = authTokenService;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }
@@ -40,7 +42,7 @@ namespace API.Functions
         {
             _logger.LogInformation("📝 Contact submission status update request received for ID: {Id}", id);
 
-            if (!AuthTokenService.ValidateRequest(req))
+            if (!_authTokenService.ValidateRequest(req))
             {
                 return new UnauthorizedResult();
             }

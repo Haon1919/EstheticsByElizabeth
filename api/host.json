@@ -18,5 +18,6 @@
       "routePrefix": "api"
     }
   },
-  "functionTimeout": "00:10:00"
+  "functionTimeout": "00:10:00",
+  "_comment_cors": "In production (Azure Static Web Apps), CORS is handled automatically by the SWA reverse proxy. Do NOT deploy wildcard CORS settings to production."
 }

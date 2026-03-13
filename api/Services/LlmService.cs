@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 using API.Data;
+using System.Text.RegularExpressions;
+using System.Linq;
 
 namespace API.Services
 {
@@ -20,6 +22,42 @@ namespace API.Services
             _logger = logger;
             _context = context;
             _httpClient = httpClient;
+        }
+
+        private string SanitizeLlmInput(string input)
+        {
+            if (string.IsNullOrEmpty(input)) return string.Empty;
+
+            // Truncate to 2000 characters
+            if (input.Length > 2000)
+            {
+                input = input.Substring(0, 2000);
+            }
+
+            // Remove control characters
+            input = new string(input.Where(c => !char.IsControl(c) || c == '\n' || c == '\r' || c == '\t').ToArray());
+
+            // Strip obvious injection patterns
+            var injectionPatterns = new[]
+            {
+                "ignore previous instructions",
+                "ignore all previous instructions",
+                "disregard previous instructions",
+                "system prompt",
+                "you are now",
+                "act as",
+                "```"
+            };
+
+            foreach (var pattern in injectionPatterns)
+            {
+                input = Regex.Replace(input, pattern, "[REDACTED]", RegexOptions.IgnoreCase);
+            }
+
+            // Reduce excessive newlines
+            input = Regex.Replace(input, @"\n{3,}", "\n\n");
+
+            return input;
         }
 
         private async Task<(string Provider, string ApiKey, string Endpoint, string Model)> GetSettingsAsync()
@@ -137,7 +175,9 @@ Return a JSON object with exactly these three keys:
 3. ""UrgencyScore"": An integer from 1 to 10, where 10 is extremely urgent (e.g., angry complaint, immediate cancellation) and 1 is low urgency (e.g., general question).
 Do not include markdown formatting like ```json in the output, just the raw JSON.";
 
-            var userPrompt = $"Subject: {subject}\nMessage: {message}";
+            var sanitizedSubject = SanitizeLlmInput(subject);
+            var sanitizedMessage = SanitizeLlmInput(message);
+            var userPrompt = $"Subject: {sanitizedSubject}\nMessage: {sanitizedMessage}";
 
             var result = await CallLlmAsync(systemPrompt, userPrompt);
             if (string.IsNullOrEmpty(result)) return ("Uncategorized", "", 1);
@@ -168,7 +208,8 @@ Return a JSON object with exactly these two keys:
 2. ""Aftercare"": Clear, medically accurate aftercare instructions for the client (bullet points).
 Do not include markdown formatting like ```json in the output, just the raw JSON.";
 
-            var userPrompt = $"Service Name: {serviceName}\nPrice: ${price}";
+            var sanitizedServiceName = SanitizeLlmInput(serviceName);
+            var userPrompt = $"Service Name: {sanitizedServiceName}\nPrice: ${price}";
 
             var result = await CallLlmAsync(systemPrompt, userPrompt);
             if (string.IsNullOrEmpty(result)) return ("", "");

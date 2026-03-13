@@ -17,6 +17,7 @@ namespace API.Functions
     /// </summary>
     public class UnbanClient
     {
+        private readonly IAuthTokenService _authTokenService;
         private readonly ILogger<UnbanClient> _logger;
         private readonly ProjectContext _context;
         private readonly ClientReviewService _reviewService;
@@ -24,8 +25,9 @@ namespace API.Functions
         public UnbanClient(
             ILogger<UnbanClient> logger, 
             ProjectContext context,
-            ClientReviewService reviewService)
+            ClientReviewService reviewService, IAuthTokenService authTokenService)
         {
+            _authTokenService = authTokenService;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _context = context ?? throw new ArgumentNullException(nameof(context));
             _reviewService = reviewService ?? throw new ArgumentNullException(nameof(reviewService));
@@ -36,12 +38,23 @@ namespace API.Functions
         /// </summary>
         [Function("UnbanClient")]
         public async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "clients/{clientId}/ban")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "delete", "options", Route = "clients/{clientId}/ban")] HttpRequest req,
             string clientId)
         {
             _logger.LogInformation("✅ Processing unban request for client ID: {ClientId}", clientId);
 
-            if (!AuthTokenService.ValidateRequest(req))
+            // Handle CORS
+            req.HttpContext.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+            req.HttpContext.Response.Headers.Append("Access-Control-Allow-Methods", "DELETE, OPTIONS");
+            req.HttpContext.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Authorization");
+            req.HttpContext.Response.Headers.Append("Access-Control-Max-Age", "86400");
+
+            if (req.Method == "OPTIONS")
+            {
+                return new OkResult();
+            }
+
+            if (!_authTokenService.ValidateRequest(req))
             {
                 return new UnauthorizedResult();
             }

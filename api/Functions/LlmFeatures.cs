@@ -12,11 +12,13 @@ namespace API.Functions
 {
     public class LlmFeatures
     {
+        private readonly IAuthTokenService _authTokenService;
         private readonly ILogger<LlmFeatures> _logger;
         private readonly ILlmService _llmService;
 
-        public LlmFeatures(ILogger<LlmFeatures> logger, ILlmService llmService)
+        public LlmFeatures(ILogger<LlmFeatures> logger, ILlmService llmService, IAuthTokenService authTokenService)
         {
+            _authTokenService = authTokenService;
             _logger = logger;
             _llmService = llmService;
         }
@@ -25,7 +27,7 @@ namespace API.Functions
         public async Task<IActionResult> GenerateServiceContent(
             [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "manage/llm/generate-service")] HttpRequest req)
         {
-            if (!AuthTokenService.ValidateRequest(req)) return new UnauthorizedResult();
+            if (!_authTokenService.ValidateRequest(req)) return new UnauthorizedResult();
 
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             var data = JsonSerializer.Deserialize<GenerateServiceRequest>(requestBody, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
@@ -46,7 +48,7 @@ namespace API.Functions
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "manage/llm/summarize-client/{id}")] HttpRequest req,
             int id)
         {
-            if (!AuthTokenService.ValidateRequest(req)) return new UnauthorizedResult();
+            if (!_authTokenService.ValidateRequest(req)) return new UnauthorizedResult();
 
             var summary = await _llmService.SummarizeClientHistoryAsync(id);
             return new OkObjectResult(new { summary });

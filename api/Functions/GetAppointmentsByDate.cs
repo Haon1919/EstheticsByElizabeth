@@ -19,11 +19,13 @@ namespace API.Functions
     /// </summary>
     public class GetAppointmentsByDate
     {
+        private readonly IAuthTokenService _authTokenService;
         private readonly ILogger<GetAppointmentsByDate> _logger;
         private readonly ProjectContext _context;
         
-        public GetAppointmentsByDate(ILogger<GetAppointmentsByDate> logger, ProjectContext context)
+        public GetAppointmentsByDate(ILogger<GetAppointmentsByDate> logger, ProjectContext context, IAuthTokenService authTokenService)
         {
+            _authTokenService = authTokenService;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _context = context ?? throw new ArgumentNullException(nameof(context));        }        /// <summary>
         /// 📅 The Magical Daily/Range Schedule Ritual 📅
@@ -32,8 +34,18 @@ namespace API.Functions
         /// </summary>
         [Function("GetAppointmentsByDate")]
         public async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "appointments/date/{date}")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "options", Route = "appointments/date/{date}")] HttpRequest req,
             string date)        {
+            // Handle CORS
+            req.HttpContext.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+            req.HttpContext.Response.Headers.Append("Access-Control-Allow-Methods", "GET, OPTIONS");
+            req.HttpContext.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+            if (req.Method == "OPTIONS")
+            {
+                return new OkResult();
+            }
+
             // Check for date range parameters
             var endDateParam = req.Query["endDate"].ToString();
             var isDateRange = !string.IsNullOrEmpty(endDateParam);
@@ -43,7 +55,7 @@ namespace API.Functions
                 date,
                 isDateRange ? $" to {endDateParam}" : "");
 
-            if (!AuthTokenService.ValidateRequest(req))
+            if (!_authTokenService.ValidateRequest(req))
             {
                 return new UnauthorizedResult();
             }

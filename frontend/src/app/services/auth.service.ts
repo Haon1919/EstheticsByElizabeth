@@ -62,6 +62,10 @@ export class AuthService {
     return this.sessionSubject.value;
   }
 
+  getToken(): string | null {
+    return this.sessionSubject.value.token || localStorage.getItem(this.TOKEN_KEY);
+  }
+
   private saveSession(session: AdminSession): void {
     localStorage.setItem(this.SESSION_KEY, JSON.stringify(session));
     if (session.token) {

@@ -22,12 +22,14 @@ namespace API.Data
         /// <param name="dbContext">Your trusty database companion</param>
         /// <param name="operation">The perilous operation you wish to perform</param>
         /// <param name="policy">The ancient scrolls of retry wisdom</param>
+        /// <param name="logger">The logger to record the adventure</param>
         /// <param name="operationKey">A magic spell to identify this particular operation</param>
         /// <returns>The result of your database adventure</returns>
         public static async Task<T> ExecuteResiliently<T>(
             this DbContext dbContext, 
             Func<Task<T>> operation, 
             IAsyncPolicy policy,
+            ILogger logger,
             string? operationKey = null)
         {
             // Create a context dictionary for the policy
@@ -44,19 +46,19 @@ namespace API.Data
                     }
                     catch (Exception ex) when (IsTransientDatabaseException(ex))
                     {
-                        Console.WriteLine($"[DB Operation] 🚨 ALERT! Transient exception detected in {ctx.OperationKey}! 🚨 {ex.GetType().Name}: {ex.Message}");
+                        logger.LogWarning(ex, "[DB Operation] 🚨 ALERT! Transient exception detected in {OperationKey}! 🚨 {ExceptionType}: {Message}", ctx.OperationKey, ex.GetType().Name, ex.Message);
                         throw; // Rethrow for Polly to handle with its retry policy
                     }
                 }, context);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[DB Operation] 💥 The final boss defeated us after retries for {operationKey}: {ex.GetType().Name}: {ex.Message}");
+                logger.LogError(ex, "[DB Operation] 💥 The final boss defeated us after retries for {OperationKey}: {ExceptionType}: {Message}", operationKey, ex.GetType().Name, ex.Message);
                 
                 // Log inner exception details which often contain the root cause
                 if (ex.InnerException != null)
                 {
-                    Console.WriteLine($"[DB Operation] 🕵️ Detective work: Inner exception found: {ex.InnerException.GetType().Name}: {ex.InnerException.Message}");
+                    logger.LogError(ex.InnerException, "[DB Operation] 🕵️ Detective work: Inner exception found: {ExceptionType}: {Message}", ex.InnerException.GetType().Name, ex.InnerException.Message);
                 }
                 
                 throw;
@@ -72,6 +74,7 @@ namespace API.Data
             this DbContext dbContext, 
             Func<Task> operation, 
             IAsyncPolicy policy,
+            ILogger logger,
             string? operationKey = null)
         {
             // Create a context dictionary for the policy
@@ -88,18 +91,18 @@ namespace API.Data
                     }
                     catch (Exception ex) when (IsTransientDatabaseException(ex))
                     {
-                        Console.WriteLine($"[DB Operation] 🚨 Caught transient exception in operation {ctx.OperationKey}! The database is playing hard to get today! {ex.GetType().Name}: {ex.Message}");
+                        logger.LogWarning(ex, "[DB Operation] 🚨 Caught transient exception in operation {OperationKey}! The database is playing hard to get today! {ExceptionType}: {Message}", ctx.OperationKey, ex.GetType().Name, ex.Message);
                         throw; // Rethrow for Polly to handle with its retry policy
                     }
                 }, context);
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[DB Operation] 💥 Database FATALITY! After valiant retries for {operationKey}: {ex.GetType().Name}: {ex.Message}");
+                logger.LogError(ex, "[DB Operation] 💥 Database FATALITY! After valiant retries for {OperationKey}: {ExceptionType}: {Message}", operationKey, ex.GetType().Name, ex.Message);
                 
                 if (ex.InnerException != null)
                 {
-                    Console.WriteLine($"[DB Operation] 🔍 CSI Database: Inner exception revealed: {ex.InnerException.GetType().Name}: {ex.InnerException.Message}");
+                    logger.LogError(ex.InnerException, "[DB Operation] 🔍 CSI Database: Inner exception revealed: {ExceptionType}: {Message}", ex.InnerException.GetType().Name, ex.InnerException.Message);
                 }
                 
                 throw;
@@ -113,22 +116,24 @@ namespace API.Data
         /// </summary>
         public static async Task<int> SaveChangesResiliently(
             this DbContext dbContext, 
-            IAsyncPolicy policy)
+            IAsyncPolicy policy,
+            ILogger logger)
         {
             try
             {
                 return await dbContext.ExecuteResiliently(
                     () => dbContext.SaveChangesAsync(),
                     policy,
+                    logger,
                     "SaveChanges_TheEpicSaga");
             }
             catch (DbUpdateException ex)
             {
-                Console.WriteLine($"[DB Save] 📝 The database rejected our changes like a bad poetry submission! Error: {ex.Message}");
+                logger.LogError(ex, "[DB Save] 📝 The database rejected our changes like a bad poetry submission! Error: {Message}", ex.Message);
                 
                 if (ex.InnerException != null) 
                 {
-                    Console.WriteLine($"[DB Save] 🔎 The plot thickens! Inner exception: {ex.InnerException.Message}");
+                    logger.LogError(ex.InnerException, "[DB Save] 🔎 The plot thickens! Inner exception: {Message}", ex.InnerException.Message);
                 }
                 
                 throw;

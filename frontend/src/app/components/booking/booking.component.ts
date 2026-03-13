@@ -21,7 +21,6 @@ export class BookingComponent implements OnInit {
   availableTimes: string[] = [];
   services: Service[] = [];
   isSubmitted = false;
-  isPaymentStep = false;
   isLoading = false;
   errorMessage = '';
 
@@ -39,12 +38,7 @@ export class BookingComponent implements OnInit {
       lastName: ['', Validators.required],
       email: ['', [Validators.required, Validators.email]],
       phone: ['', Validators.required],
-      notes: [''],
-      // Payment fields
-      cardName: ['', Validators.required],
-      cardNumber: ['', [Validators.required, Validators.pattern(/^[0-9]{16}$/)]],
-      expiryDate: ['', [Validators.required, Validators.pattern(/^(0[1-9]|1[0-2])\/\d{2}$/)]],
-      cvv: ['', [Validators.required, Validators.pattern(/^[0-9]{3,4}$/)]]
+      notes: ['']
     });
   }
 
@@ -109,24 +103,6 @@ export class BookingComponent implements OnInit {
     return service?.price || 0;
   }
 
-  proceedToPayment(): void {
-    if (this.bookingForm.get('service')?.valid && 
-        this.bookingForm.get('date')?.valid && 
-        this.bookingForm.get('time')?.valid && 
-        this.bookingForm.get('firstName')?.valid && 
-        this.bookingForm.get('lastName')?.valid && 
-        this.bookingForm.get('email')?.valid && 
-        this.bookingForm.get('phone')?.valid) {
-      this.isPaymentStep = true;
-    } else {
-      // Mark all fields as touched to show validation errors
-      Object.keys(this.bookingForm.controls).forEach(key => {
-        const control = this.bookingForm.get(key);
-        control?.markAsTouched();
-      });
-    }
-  }
-
   submitBooking(): void {
     if (this.bookingForm.valid) {
       this.isLoading = true;
@@ -186,13 +162,8 @@ export class BookingComponent implements OnInit {
     }
   }
 
-  goBack(): void {
-    this.isPaymentStep = false;
-  }
-
   bookAnother(): void {
     this.isSubmitted = false;
-    this.isPaymentStep = false;
     this.isLoading = false;
     this.errorMessage = '';
     this.bookingForm.reset();

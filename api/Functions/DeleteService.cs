@@ -16,11 +16,13 @@ namespace API.Functions
     /// </summary>
     public class DeleteService
     {
+        private readonly IAuthTokenService _authTokenService;
         private readonly ILogger<DeleteService> _logger;
         private readonly ProjectContext _context;
         
-        public DeleteService(ILogger<DeleteService> logger, ProjectContext context)
+        public DeleteService(ILogger<DeleteService> logger, ProjectContext context, IAuthTokenService authTokenService)
         {
+            _authTokenService = authTokenService;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }
@@ -36,7 +38,7 @@ namespace API.Functions
         {
             _logger.LogInformation("💅 Delete service request received for service ID: {ServiceId}", serviceId);
 
-            if (!AuthTokenService.ValidateRequest(req))
+            if (!_authTokenService.ValidateRequest(req))
             {
                 return new UnauthorizedResult();
             }

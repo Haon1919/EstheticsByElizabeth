@@ -30,10 +30,20 @@ namespace API.Functions
         /// </summary>
         [Function("CancelAppointment")]
         public async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "appointments/{id}")] HttpRequest req,
+            [HttpTrigger(AuthorizationLevel.Anonymous, "delete", "options", Route = "appointments/{id}")] HttpRequest req,
             string id)
         {
             _logger.LogInformation("🗑️ Appointment cancellation request received for ID: {Id}", id);
+
+            // Handle CORS
+            req.HttpContext.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+            req.HttpContext.Response.Headers.Append("Access-Control-Allow-Methods", "DELETE, OPTIONS");
+            req.HttpContext.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+            if (req.Method == "OPTIONS")
+            {
+                return new OkResult();
+            }
 
             if (string.IsNullOrEmpty(id) || !int.TryParse(id, out int appointmentId))
             {

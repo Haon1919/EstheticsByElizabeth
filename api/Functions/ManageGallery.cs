@@ -22,12 +22,14 @@ namespace API.Functions
     /// </summary>
     public class ManageGallery
     {
+        private readonly IAuthTokenService _authTokenService;
         private readonly ILogger<ManageGallery> _logger;
         private readonly ProjectContext _context;
         private readonly IImageStorageService _storageService;
 
-        public ManageGallery(ILogger<ManageGallery> logger, ProjectContext context, IImageStorageService storageService)
+        public ManageGallery(ILogger<ManageGallery> logger, ProjectContext context, IImageStorageService storageService, IAuthTokenService authTokenService)
         {
+            _authTokenService = authTokenService;
             _logger = logger;
             _context = context;
             _storageService = storageService;
@@ -47,9 +49,9 @@ namespace API.Functions
                 // Handle CORS preflight requests
                 if (req.Method == "OPTIONS")
                 {
-                    req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
-                    req.HttpContext.Response.Headers.Add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-                    req.HttpContext.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization");
+                    req.HttpContext.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+                    req.HttpContext.Response.Headers.Append("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+                    req.HttpContext.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Authorization");
                     return new OkResult();
                 }
 
@@ -104,7 +106,6 @@ namespace API.Functions
                 _logger.LogInformation("✅ Retrieved {Count} gallery images", imageDtos.Count);
 
                 // Add CORS headers
-                req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
 
                 return new OkObjectResult(response);
             }
@@ -130,7 +131,7 @@ namespace API.Functions
         {
             _logger.LogInformation("🆕 Create gallery image request received");
 
-            if (!AuthTokenService.ValidateRequest(req))
+            if (!_authTokenService.ValidateRequest(req))
             {
                 return new UnauthorizedResult();
             }
@@ -140,9 +141,9 @@ namespace API.Functions
                 // Handle CORS preflight requests
                 if (req.Method == "OPTIONS")
                 {
-                    req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
-                    req.HttpContext.Response.Headers.Add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-                    req.HttpContext.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization");
+                    req.HttpContext.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+                    req.HttpContext.Response.Headers.Append("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+                    req.HttpContext.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Authorization");
                     return new OkResult();
                 }
 
@@ -299,7 +300,6 @@ namespace API.Functions
                 galleryImage.Id, newFileName);
 
             // Add CORS headers
-            req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
 
             return new CreatedResult($"/api/manage/gallery/{galleryImage.Id}", responseDto);
         }
@@ -363,7 +363,6 @@ namespace API.Functions
             _logger.LogInformation("✅ Gallery image created successfully (metadata only) with ID: {ImageId}", galleryImage.Id);
 
             // Add CORS headers
-            req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
 
             return new CreatedResult($"/api/manage/gallery/{galleryImage.Id}", responseDto);
         }
@@ -378,7 +377,7 @@ namespace API.Functions
         {
             _logger.LogInformation("📝 Update gallery image request received for ID: {ImageId}", id);
 
-            if (!AuthTokenService.ValidateRequest(req))
+            if (!_authTokenService.ValidateRequest(req))
             {
                 return new UnauthorizedResult();
             }
@@ -388,9 +387,9 @@ namespace API.Functions
                 // Handle CORS preflight requests
                 if (req.Method == "OPTIONS")
                 {
-                    req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
-                    req.HttpContext.Response.Headers.Add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-                    req.HttpContext.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization");
+                    req.HttpContext.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+                    req.HttpContext.Response.Headers.Append("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+                    req.HttpContext.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Authorization");
                     return new OkResult();
                 }
 
@@ -472,7 +471,6 @@ namespace API.Functions
                 _logger.LogInformation("✅ Gallery image updated successfully: {ImageId}", imageId);
 
                 // Add CORS headers
-                req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
 
                 return new OkObjectResult(responseDto);
             }
@@ -504,7 +502,7 @@ namespace API.Functions
         {
             _logger.LogInformation("🗑️ Delete gallery image request received for ID: {ImageId}", id);
 
-            if (!AuthTokenService.ValidateRequest(req))
+            if (!_authTokenService.ValidateRequest(req))
             {
                 return new UnauthorizedResult();
             }
@@ -514,9 +512,9 @@ namespace API.Functions
                 // Handle CORS preflight requests
                 if (req.Method == "OPTIONS")
                 {
-                    req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
-                    req.HttpContext.Response.Headers.Add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-                    req.HttpContext.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization");
+                    req.HttpContext.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+                    req.HttpContext.Response.Headers.Append("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+                    req.HttpContext.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Authorization");
                     return new OkResult();
                 }
 
@@ -583,7 +581,6 @@ namespace API.Functions
                 _logger.LogInformation("✅ Gallery image deleted successfully: {ImageId}", imageId);
 
                 // Add CORS headers
-                req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
 
                 return new OkObjectResult(new { success = true, message = "Gallery image deleted successfully." });
             }
@@ -609,7 +606,7 @@ namespace API.Functions
         {
             _logger.LogInformation("🔄 Reorder gallery images request received");
 
-            if (!AuthTokenService.ValidateRequest(req))
+            if (!_authTokenService.ValidateRequest(req))
             {
                 return new UnauthorizedResult();
             }
@@ -619,9 +616,9 @@ namespace API.Functions
                 // Handle CORS preflight requests
                 if (req.Method == "OPTIONS")
                 {
-                    req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
-                    req.HttpContext.Response.Headers.Add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-                    req.HttpContext.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization");
+                    req.HttpContext.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+                    req.HttpContext.Response.Headers.Append("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+                    req.HttpContext.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Authorization");
                     return new OkResult();
                 }
 
@@ -664,7 +661,6 @@ namespace API.Functions
                 _logger.LogInformation("✅ Gallery images reordered successfully");
 
                 // Add CORS headers
-                req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
 
                 return new OkObjectResult(new { success = true, message = "Gallery images reordered successfully." });
             }
@@ -695,7 +691,7 @@ namespace API.Functions
         {
             _logger.LogInformation("📊 Gallery categories request received");
 
-            if (!AuthTokenService.ValidateRequest(req))
+            if (!_authTokenService.ValidateRequest(req))
             {
                 return new UnauthorizedResult();
             }
@@ -705,9 +701,9 @@ namespace API.Functions
                 // Handle CORS preflight requests
                 if (req.Method == "OPTIONS")
                 {
-                    req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
-                    req.HttpContext.Response.Headers.Add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-                    req.HttpContext.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization");
+                    req.HttpContext.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+                    req.HttpContext.Response.Headers.Append("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+                    req.HttpContext.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Authorization");
                     return new OkResult();
                 }
 
@@ -725,7 +721,6 @@ namespace API.Functions
                 _logger.LogInformation("✅ Retrieved {Count} gallery categories", categories.Count);
 
                 // Add CORS headers
-                req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
 
                 return new OkObjectResult(categories);
             }
@@ -756,9 +751,9 @@ namespace API.Functions
                 // Handle CORS preflight requests
                 if (req.Method == "OPTIONS")
                 {
-                    req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
-                    req.HttpContext.Response.Headers.Add("Access-Control-Allow-Methods", "GET, OPTIONS");
-                    req.HttpContext.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization");
+                    req.HttpContext.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+                    req.HttpContext.Response.Headers.Append("Access-Control-Allow-Methods", "GET, OPTIONS");
+                    req.HttpContext.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Authorization");
                     return new OkResult();
                 }
 
@@ -815,9 +810,8 @@ namespace API.Functions
                 _logger.LogInformation("✅ Retrieved {Count} public gallery images", imageDtos.Count);
 
                 // Add CORS headers
-                req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
-                req.HttpContext.Response.Headers.Add("Access-Control-Allow-Methods", "GET, OPTIONS");
-                req.HttpContext.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization");
+                req.HttpContext.Response.Headers.Append("Access-Control-Allow-Methods", "GET, OPTIONS");
+                req.HttpContext.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
                 return new OkObjectResult(response);
             }

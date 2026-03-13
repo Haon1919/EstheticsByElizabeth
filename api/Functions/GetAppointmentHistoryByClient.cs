@@ -17,9 +17,11 @@ namespace API.Functions
     /// </summary>
     public class GetAppointmentHistoryByClient
     {
+        private readonly IAuthTokenService _authTokenService;
         private readonly ILogger<GetAppointmentHistoryByClient> _logger;
-        private readonly ProjectContext _context;        public GetAppointmentHistoryByClient(ILogger<GetAppointmentHistoryByClient> logger, ProjectContext context)
+        private readonly ProjectContext _context;        public GetAppointmentHistoryByClient(ILogger<GetAppointmentHistoryByClient> logger, ProjectContext context, IAuthTokenService authTokenService)
         {
+            _authTokenService = authTokenService;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }
@@ -30,10 +32,20 @@ namespace API.Functions
         /// </summary>        
         [Function("GetAppointmentHistoryByClient")]
         public async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "appointments/history")] HttpRequest req)        {
+            [HttpTrigger(AuthorizationLevel.Anonymous, "get", "options", Route = "appointments/history")] HttpRequest req)        {
             _logger.LogInformation("📚 Client appointment history request received.");
 
-            if (!AuthTokenService.ValidateRequest(req))
+            // Handle CORS
+            req.HttpContext.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+            req.HttpContext.Response.Headers.Append("Access-Control-Allow-Methods", "GET, OPTIONS");
+            req.HttpContext.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+            if (req.Method == "OPTIONS")
+            {
+                return new OkResult();
+            }
+
+            if (!_authTokenService.ValidateRequest(req))
             {
                 return new UnauthorizedResult();
             }

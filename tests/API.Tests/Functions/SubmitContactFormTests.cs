@@ -7,6 +7,7 @@ using API.Data;
 using API.DTOs;
 using API.Entities;
 using API.Functions;
+using API.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -20,6 +21,7 @@ namespace API.Tests.Functions
     {
         private readonly DbContextOptions<ProjectContext> _dbContextOptions;
         private readonly Mock<ILogger<SubmitContactForm>> _loggerMock;
+        private readonly Mock<ILlmService> _llmServiceMock;
 
         public SubmitContactFormTests()
         {
@@ -30,6 +32,11 @@ namespace API.Tests.Functions
             
             // Set up logger mock
             _loggerMock = new Mock<ILogger<SubmitContactForm>>();
+            
+            // Set up llm service mock
+            _llmServiceMock = new Mock<ILlmService>();
+            _llmServiceMock.Setup(x => x.AnalyzeContactSubmissionAsync(It.IsAny<string>(), It.IsAny<string>()))
+                .ReturnsAsync((Category: "General", DraftResponse: "Thank you", UrgencyScore: 1));
         }
 
         private ProjectContext CreateContext()
@@ -59,7 +66,7 @@ namespace API.Tests.Functions
         {
             // Arrange
             using var context = CreateContext();
-            var function = new SubmitContactForm(_loggerMock.Object, context);
+            var function = new SubmitContactForm(_loggerMock.Object, context, _llmServiceMock.Object);
 
             var contactDto = new ContactSubmissionDto
             {
@@ -93,7 +100,7 @@ namespace API.Tests.Functions
             Assert.Equal(contactDto.Phone, savedSubmission.Phone);
             Assert.Equal(contactDto.Subject, savedSubmission.Subject);
             Assert.Equal(contactDto.Message, savedSubmission.Message);
-            Assert.False(savedSubmission.IsRead);
+            Assert.Equal("unread", savedSubmission.Status);
             Assert.True(savedSubmission.SubmittedAt > DateTimeOffset.MinValue);
         }
 
@@ -102,7 +109,7 @@ namespace API.Tests.Functions
         {
             // Arrange
             using var context = CreateContext();
-            var function = new SubmitContactForm(_loggerMock.Object, context);
+            var function = new SubmitContactForm(_loggerMock.Object, context, _llmServiceMock.Object);
             var request = CreateMockRequest("");
 
             // Act
@@ -119,7 +126,7 @@ namespace API.Tests.Functions
         {
             // Arrange
             using var context = CreateContext();
-            var function = new SubmitContactForm(_loggerMock.Object, context);
+            var function = new SubmitContactForm(_loggerMock.Object, context, _llmServiceMock.Object);
             var request = CreateMockRequest("{ invalid json }");
 
             // Act
@@ -134,7 +141,7 @@ namespace API.Tests.Functions
         {
             // Arrange
             using var context = CreateContext();
-            var function = new SubmitContactForm(_loggerMock.Object, context);
+            var function = new SubmitContactForm(_loggerMock.Object, context, _llmServiceMock.Object);
 
             var incompleteContactDto = new ContactSubmissionDto
             {
@@ -159,7 +166,7 @@ namespace API.Tests.Functions
         {
             // Arrange
             using var context = CreateContext();
-            var function = new SubmitContactForm(_loggerMock.Object, context);
+            var function = new SubmitContactForm(_loggerMock.Object, context, _llmServiceMock.Object);
 
             var contactDto = new ContactSubmissionDto
             {
@@ -185,7 +192,7 @@ namespace API.Tests.Functions
         {
             // Arrange
             using var context = CreateContext();
-            var function = new SubmitContactForm(_loggerMock.Object, context);
+            var function = new SubmitContactForm(_loggerMock.Object, context, _llmServiceMock.Object);
             var request = CreateMockRequest("", "OPTIONS");
 
             // Act
@@ -203,7 +210,7 @@ namespace API.Tests.Functions
         {
             // Arrange
             using var context = CreateContext();
-            var function = new SubmitContactForm(_loggerMock.Object, context);
+            var function = new SubmitContactForm(_loggerMock.Object, context, _llmServiceMock.Object);
 
             var contactDto = new ContactSubmissionDto
             {
@@ -238,7 +245,7 @@ namespace API.Tests.Functions
         {
             // Arrange
             using var context = CreateContext();
-            var function = new SubmitContactForm(_loggerMock.Object, context);
+            var function = new SubmitContactForm(_loggerMock.Object, context, _llmServiceMock.Object);
 
             var contactDto = new ContactSubmissionDto
             {

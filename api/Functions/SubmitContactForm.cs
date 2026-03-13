@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using API.Data;
 using API.DTOs;
 using API.Entities;
+using API.Services;
 
 
 namespace API.Functions
@@ -37,9 +38,19 @@ namespace API.Functions
         /// </summary>
         [Function("SubmitContactForm")]
         public async Task<IActionResult> Run(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "contact")] HttpRequest req)
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", "options", Route = "contact")] HttpRequest req)
         {
             _logger.LogInformation("📧 Contact form submission received.");
+
+            // Handle CORS
+            req.HttpContext.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+            req.HttpContext.Response.Headers.Append("Access-Control-Allow-Methods", "POST, OPTIONS");
+            req.HttpContext.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+            if (req.Method == "OPTIONS")
+            {
+                return new OkResult();
+            }
 
             try
             {

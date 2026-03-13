@@ -17,11 +17,13 @@ namespace API.Functions
 {
     public class ManageSettings
     {
+        private readonly IAuthTokenService _authTokenService;
         private readonly ILogger<ManageSettings> _logger;
         private readonly ProjectContext _context;
 
-        public ManageSettings(ILogger<ManageSettings> logger, ProjectContext context)
+        public ManageSettings(ILogger<ManageSettings> logger, ProjectContext context, IAuthTokenService authTokenService)
         {
+            _authTokenService = authTokenService;
             _logger = logger;
             _context = context;
         }
@@ -30,7 +32,7 @@ namespace API.Functions
         public async Task<IActionResult> GetSettings(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "manage/settings")] HttpRequest req)
         {
-            if (!AuthTokenService.ValidateRequest(req)) return new UnauthorizedResult();
+            if (!_authTokenService.ValidateRequest(req)) return new UnauthorizedResult();
 
             var settings = await _context.SystemSettings.ToListAsync();
             var result = settings.ToDictionary(s => s.Key, s => s.Value);
@@ -48,7 +50,7 @@ namespace API.Functions
         public async Task<IActionResult> UpdateSettings(
             [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "manage/settings")] HttpRequest req)
         {
-            if (!AuthTokenService.ValidateRequest(req)) return new UnauthorizedResult();
+            if (!_authTokenService.ValidateRequest(req)) return new UnauthorizedResult();
 
             string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             var updates = JsonSerializer.Deserialize<Dictionary<string, string>>(requestBody);

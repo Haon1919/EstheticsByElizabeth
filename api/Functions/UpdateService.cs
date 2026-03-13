@@ -22,11 +22,13 @@ namespace API.Functions
     /// </summary>
     public class UpdateService
     {
+        private readonly IAuthTokenService _authTokenService;
         private readonly ILogger<UpdateService> _logger;
         private readonly ProjectContext _context;
         
-        public UpdateService(ILogger<UpdateService> logger, ProjectContext context)
+        public UpdateService(ILogger<UpdateService> logger, ProjectContext context, IAuthTokenService authTokenService)
         {
+            _authTokenService = authTokenService;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }
@@ -42,7 +44,7 @@ namespace API.Functions
         {
             _logger.LogInformation("💅 Update service request received for service ID: {ServiceId}", serviceId);
 
-            if (!AuthTokenService.ValidateRequest(req))
+            if (!_authTokenService.ValidateRequest(req))
             {
                 return new UnauthorizedResult();
             }

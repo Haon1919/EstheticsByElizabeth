@@ -12,14 +12,16 @@ namespace API.Functions
 {
     public class AdminLogin
     {
+        private readonly IAuthTokenService _authTokenService;
         private readonly ILogger<AdminLogin> _logger;
         // Simple in-memory rate limiting (resets on restart)
         private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, (int Attempts, DateTimeOffset LastAttempt)> _failedLogins = new();
         private const int MaxAttempts = 5;
         private const int LockoutMinutes = 15;
 
-        public AdminLogin(ILogger<AdminLogin> logger)
+        public AdminLogin(ILogger<AdminLogin> logger, IAuthTokenService authTokenService)
         {
+            _authTokenService = authTokenService;
             _logger = logger;
         }
 
@@ -30,13 +32,12 @@ namespace API.Functions
             // Handle CORS preflight
             if (req.Method == HttpMethods.Options)
             {
-                req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
-                req.HttpContext.Response.Headers.Add("Access-Control-Allow-Methods", "POST, OPTIONS");
-                req.HttpContext.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization");
+                req.HttpContext.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+                req.HttpContext.Response.Headers.Append("Access-Control-Allow-Methods", "POST, OPTIONS");
+                req.HttpContext.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Authorization");
                 return new OkResult();
             }
 
-            req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
 
             // Rate Limiting Check
             var ipAddress = req.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
@@ -79,7 +80,7 @@ namespace API.Functions
                     // Successful login - clear failures
                     _failedLogins.TryRemove(ipAddress, out _);
 
-                    var token = AuthTokenService.GenerateToken();
+                    var token = _authTokenService.GenerateToken();
                     return new OkObjectResult(new
                     {
                         success = true,

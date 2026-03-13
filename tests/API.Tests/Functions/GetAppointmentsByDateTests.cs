@@ -3,7 +3,10 @@ using System.Threading.Tasks;
 using API.Data;
 using API.Entities;
 using API.Functions;
+using API.Services;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Primitives;
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -16,6 +19,7 @@ namespace API.Tests.Functions
     {
         private readonly DbContextOptions<ProjectContext> _dbContextOptions;
         private readonly Mock<ILogger<GetAppointmentsByDate>> _loggerMock;
+        private readonly Mock<IAuthTokenService> _authTokenServiceMock;
 
         public GetAppointmentsByDateTests()
         {
@@ -26,6 +30,11 @@ namespace API.Tests.Functions
             
             // Set up logger mock
             _loggerMock = new Mock<ILogger<GetAppointmentsByDate>>();
+            
+            // Set up auth token service mock
+            _authTokenServiceMock = new Mock<IAuthTokenService>();
+            _authTokenServiceMock.Setup(x => x.ValidateRequest(It.IsAny<HttpRequest>()))
+                .Returns(true);
         }
 
         private ProjectContext CreateContext()
@@ -112,7 +121,7 @@ namespace API.Tests.Functions
         {
             // Arrange
             await SeedDatabase();
-            var function = new GetAppointmentsByDate(_loggerMock.Object, CreateContext());
+            var function = new GetAppointmentsByDate(_loggerMock.Object, CreateContext(), _authTokenServiceMock.Object);
             var mockRequest = new Mock<HttpRequest>();
             var mockContext = new Mock<HttpContext>();
             var mockResponse = new Mock<HttpResponse>();
@@ -121,6 +130,10 @@ namespace API.Tests.Functions
             mockResponse.Setup(r => r.Headers).Returns(mockHeaders);
             mockContext.Setup(c => c.Response).Returns(mockResponse.Object);
             mockRequest.Setup(r => r.HttpContext).Returns(mockContext.Object);
+            
+            var queryDict = new Dictionary<string, StringValues>();
+            var queryCollection = new QueryCollection(queryDict);
+            mockRequest.Setup(r => r.Query).Returns(queryCollection);
             mockRequest.Setup(r => r.Method).Returns("GET");
 
             // Act
@@ -128,10 +141,8 @@ namespace API.Tests.Functions
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
-            var appointments = Assert.IsAssignableFrom<System.Collections.IEnumerable>(okResult.Value);
-            
-            var appointmentList = appointments.Cast<object>().ToList();
-            Assert.Equal(2, appointmentList.Count); // Should return 2 appointments for 2025-06-15
+            var appointments = ((System.Collections.IEnumerable)((dynamic)okResult.Value).Appointments).Cast<object>().ToList();
+            Assert.Equal(2, appointments.Count); // Should return 2 appointments for 2025-06-15
         }
 
         [Fact]
@@ -139,7 +150,7 @@ namespace API.Tests.Functions
         {
             // Arrange
             await SeedDatabase();
-            var function = new GetAppointmentsByDate(_loggerMock.Object, CreateContext());
+            var function = new GetAppointmentsByDate(_loggerMock.Object, CreateContext(), _authTokenServiceMock.Object);
             var mockRequest = new Mock<HttpRequest>();
             var mockContext = new Mock<HttpContext>();
             var mockResponse = new Mock<HttpResponse>();
@@ -148,6 +159,10 @@ namespace API.Tests.Functions
             mockResponse.Setup(r => r.Headers).Returns(mockHeaders);
             mockContext.Setup(c => c.Response).Returns(mockResponse.Object);
             mockRequest.Setup(r => r.HttpContext).Returns(mockContext.Object);
+            
+            var queryDict = new Dictionary<string, StringValues>();
+            var queryCollection = new QueryCollection(queryDict);
+            mockRequest.Setup(r => r.Query).Returns(queryCollection);
             mockRequest.Setup(r => r.Method).Returns("GET");
 
             // Act
@@ -155,17 +170,15 @@ namespace API.Tests.Functions
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
-            var appointments = Assert.IsAssignableFrom<System.Collections.IEnumerable>(okResult.Value);
-            
-            var appointmentList = appointments.Cast<object>().ToList();
-            Assert.Empty(appointmentList);
+            var appointments = ((System.Collections.IEnumerable)((dynamic)okResult.Value).Appointments).Cast<object>().ToList();
+            Assert.Empty(appointments);
         }
 
         [Fact]
         public async Task Run_ReturnsBadRequest_WhenDateParameterIsNull()
         {
             // Arrange
-            var function = new GetAppointmentsByDate(_loggerMock.Object, CreateContext());
+            var function = new GetAppointmentsByDate(_loggerMock.Object, CreateContext(), _authTokenServiceMock.Object);
             var mockRequest = new Mock<HttpRequest>();
             var mockContext = new Mock<HttpContext>();
             var mockResponse = new Mock<HttpResponse>();
@@ -174,6 +187,10 @@ namespace API.Tests.Functions
             mockResponse.Setup(r => r.Headers).Returns(mockHeaders);
             mockContext.Setup(c => c.Response).Returns(mockResponse.Object);
             mockRequest.Setup(r => r.HttpContext).Returns(mockContext.Object);
+            
+            var queryDict = new Dictionary<string, StringValues>();
+            var queryCollection = new QueryCollection(queryDict);
+            mockRequest.Setup(r => r.Query).Returns(queryCollection);
             mockRequest.Setup(r => r.Method).Returns("GET");
 
             // Act
@@ -188,7 +205,7 @@ namespace API.Tests.Functions
         public async Task Run_ReturnsBadRequest_WhenDateParameterIsEmpty()
         {
             // Arrange
-            var function = new GetAppointmentsByDate(_loggerMock.Object, CreateContext());
+            var function = new GetAppointmentsByDate(_loggerMock.Object, CreateContext(), _authTokenServiceMock.Object);
             var mockRequest = new Mock<HttpRequest>();
             var mockContext = new Mock<HttpContext>();
             var mockResponse = new Mock<HttpResponse>();
@@ -197,6 +214,10 @@ namespace API.Tests.Functions
             mockResponse.Setup(r => r.Headers).Returns(mockHeaders);
             mockContext.Setup(c => c.Response).Returns(mockResponse.Object);
             mockRequest.Setup(r => r.HttpContext).Returns(mockContext.Object);
+            
+            var queryDict = new Dictionary<string, StringValues>();
+            var queryCollection = new QueryCollection(queryDict);
+            mockRequest.Setup(r => r.Query).Returns(queryCollection);
             mockRequest.Setup(r => r.Method).Returns("GET");
 
             // Act
@@ -211,7 +232,7 @@ namespace API.Tests.Functions
         public async Task Run_ReturnsBadRequest_WhenDateFormatIsInvalid()
         {
             // Arrange
-            var function = new GetAppointmentsByDate(_loggerMock.Object, CreateContext());
+            var function = new GetAppointmentsByDate(_loggerMock.Object, CreateContext(), _authTokenServiceMock.Object);
             var mockRequest = new Mock<HttpRequest>();
             var mockContext = new Mock<HttpContext>();
             var mockResponse = new Mock<HttpResponse>();
@@ -220,6 +241,10 @@ namespace API.Tests.Functions
             mockResponse.Setup(r => r.Headers).Returns(mockHeaders);
             mockContext.Setup(c => c.Response).Returns(mockResponse.Object);
             mockRequest.Setup(r => r.HttpContext).Returns(mockContext.Object);
+            
+            var queryDict = new Dictionary<string, StringValues>();
+            var queryCollection = new QueryCollection(queryDict);
+            mockRequest.Setup(r => r.Query).Returns(queryCollection);
             mockRequest.Setup(r => r.Method).Returns("GET");
 
             // Act
@@ -227,14 +252,14 @@ namespace API.Tests.Functions
 
             // Assert
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-            Assert.Contains("Invalid date format", badRequestResult.Value.ToString());
+            Assert.Contains("Invalid start date format", badRequestResult.Value.ToString());
         }
 
         [Fact]
         public async Task Run_HandlesCorsPreflight_ReturnsOkResult()
         {
             // Arrange
-            var function = new GetAppointmentsByDate(_loggerMock.Object, CreateContext());
+            var function = new GetAppointmentsByDate(_loggerMock.Object, CreateContext(), _authTokenServiceMock.Object);
             var mockRequest = new Mock<HttpRequest>();
             var mockContext = new Mock<HttpContext>();
             var mockResponse = new Mock<HttpResponse>();
@@ -243,6 +268,10 @@ namespace API.Tests.Functions
             mockResponse.Setup(r => r.Headers).Returns(mockHeaders);
             mockContext.Setup(c => c.Response).Returns(mockResponse.Object);
             mockRequest.Setup(r => r.HttpContext).Returns(mockContext.Object);
+            
+            var queryDict = new Dictionary<string, StringValues>();
+            var queryCollection = new QueryCollection(queryDict);
+            mockRequest.Setup(r => r.Query).Returns(queryCollection);
             mockRequest.Setup(r => r.Method).Returns("OPTIONS");
 
             // Act
@@ -259,7 +288,7 @@ namespace API.Tests.Functions
         {
             // Arrange
             await SeedDatabase();
-            var function = new GetAppointmentsByDate(_loggerMock.Object, CreateContext());
+            var function = new GetAppointmentsByDate(_loggerMock.Object, CreateContext(), _authTokenServiceMock.Object);
             var mockRequest = new Mock<HttpRequest>();
             var mockContext = new Mock<HttpContext>();
             var mockResponse = new Mock<HttpResponse>();
@@ -268,6 +297,10 @@ namespace API.Tests.Functions
             mockResponse.Setup(r => r.Headers).Returns(mockHeaders);
             mockContext.Setup(c => c.Response).Returns(mockResponse.Object);
             mockRequest.Setup(r => r.HttpContext).Returns(mockContext.Object);
+            
+            var queryDict = new Dictionary<string, StringValues>();
+            var queryCollection = new QueryCollection(queryDict);
+            mockRequest.Setup(r => r.Query).Returns(queryCollection);
             mockRequest.Setup(r => r.Method).Returns("GET");
 
             // Act
@@ -275,10 +308,10 @@ namespace API.Tests.Functions
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
-            var appointments = okResult.Value as dynamic[];
+            var appointments = ((System.Collections.IEnumerable)((dynamic)okResult.Value).Appointments).Cast<dynamic>().ToList();
             
             Assert.NotNull(appointments);
-            Assert.Equal(2, appointments.Length);
+            Assert.Equal(2, appointments.Count);
             
             // Verify appointments are ordered by time (first one should be at 10:00, second at 12:00)
             dynamic firstAppointment = appointments[0];
@@ -295,7 +328,7 @@ namespace API.Tests.Functions
         {
             // Arrange
             await SeedDatabase();
-            var function = new GetAppointmentsByDate(_loggerMock.Object, CreateContext());
+            var function = new GetAppointmentsByDate(_loggerMock.Object, CreateContext(), _authTokenServiceMock.Object);
             var mockRequest = new Mock<HttpRequest>();
             var mockContext = new Mock<HttpContext>();
             var mockResponse = new Mock<HttpResponse>();
@@ -304,6 +337,10 @@ namespace API.Tests.Functions
             mockResponse.Setup(r => r.Headers).Returns(mockHeaders);
             mockContext.Setup(c => c.Response).Returns(mockResponse.Object);
             mockRequest.Setup(r => r.HttpContext).Returns(mockContext.Object);
+            
+            var queryDict = new Dictionary<string, StringValues>();
+            var queryCollection = new QueryCollection(queryDict);
+            mockRequest.Setup(r => r.Query).Returns(queryCollection);
             mockRequest.Setup(r => r.Method).Returns("GET");
 
             // Act
@@ -311,10 +348,10 @@ namespace API.Tests.Functions
 
             // Assert
             var okResult = Assert.IsType<OkObjectResult>(result);
-            var appointments = okResult.Value as dynamic[];
+            var appointments = ((System.Collections.IEnumerable)((dynamic)okResult.Value).Appointments).Cast<dynamic>().ToList();
             
             Assert.NotNull(appointments);
-            Assert.True(appointments.Length > 0);
+            Assert.True(appointments.Count > 0);
             
             dynamic firstAppointment = appointments[0];
             

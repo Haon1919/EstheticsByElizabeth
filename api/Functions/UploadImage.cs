@@ -16,6 +16,7 @@ namespace API.Functions
     /// </summary>
     public class UploadImage
     {
+        private readonly IAuthTokenService _authTokenService;
         private readonly ILogger<UploadImage> _logger;
         private readonly IImageStorageService _storageService;
         private static readonly string[] AllowedExtensions = { ".jpg", ".jpeg", ".png", ".gif", ".webp" };
@@ -31,8 +32,9 @@ namespace API.Functions
             { ".webp", new List<byte[]> { new byte[] { 0x52, 0x49, 0x46, 0x46 }, new byte[] { 0x57, 0x45, 0x42, 0x50 } } } // WEBP is complex (RIFF...WEBP)
         };
 
-        public UploadImage(ILogger<UploadImage> logger, IImageStorageService storageService)
+        public UploadImage(ILogger<UploadImage> logger, IImageStorageService storageService, IAuthTokenService authTokenService)
         {
+            _authTokenService = authTokenService;
             _logger = logger;
             _storageService = storageService;
         }
@@ -46,7 +48,7 @@ namespace API.Functions
         {
             _logger.LogInformation("📤 Image upload request received");
 
-            if (!AuthTokenService.ValidateRequest(req))
+            if (!_authTokenService.ValidateRequest(req))
             {
                 return new UnauthorizedResult();
             }
@@ -56,9 +58,9 @@ namespace API.Functions
                 // Handle CORS preflight requests
                 if (req.Method == "OPTIONS")
                 {
-                    req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
-                    req.HttpContext.Response.Headers.Add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-                    req.HttpContext.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization");
+                    req.HttpContext.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+                    req.HttpContext.Response.Headers.Append("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+                    req.HttpContext.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Authorization");
                     return new OkResult();
                 }
 
@@ -156,7 +158,6 @@ namespace API.Functions
                 };
 
                 // Add CORS headers
-                req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
 
                 return new OkObjectResult(response);
             }
@@ -185,7 +186,7 @@ namespace API.Functions
         {
             _logger.LogInformation("🔍 Upload info request received");
 
-            if (!AuthTokenService.ValidateRequest(req))
+            if (!_authTokenService.ValidateRequest(req))
             {
                 return new UnauthorizedResult();
             }
@@ -195,9 +196,9 @@ namespace API.Functions
                 // Handle CORS preflight requests
                 if (req.Method == "OPTIONS")
                 {
-                    req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
-                    req.HttpContext.Response.Headers.Add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-                    req.HttpContext.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization");
+                    req.HttpContext.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+                    req.HttpContext.Response.Headers.Append("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+                    req.HttpContext.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Authorization");
                     return new OkResult();
                 }
 
@@ -216,7 +217,6 @@ namespace API.Functions
                 };
 
                 // Add CORS headers
-                req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
 
                 return new OkObjectResult(uploadInfo);
             }

@@ -21,6 +21,7 @@ namespace API.Functions
     /// </summary>
     public class ManageClientReviews
     {
+        private readonly IAuthTokenService _authTokenService;
         private readonly ILogger<ManageClientReviews> _logger;
         private readonly ProjectContext _context;
         private readonly ClientReviewService _reviewService;
@@ -28,8 +29,9 @@ namespace API.Functions
         public ManageClientReviews(
             ILogger<ManageClientReviews> logger, 
             ProjectContext context,
-            ClientReviewService reviewService)
+            ClientReviewService reviewService, IAuthTokenService authTokenService)
         {
+            _authTokenService = authTokenService;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _context = context ?? throw new ArgumentNullException(nameof(context));
             _reviewService = reviewService ?? throw new ArgumentNullException(nameof(reviewService));
@@ -44,7 +46,7 @@ namespace API.Functions
         {
             _logger.LogInformation("📋 Fetching client review flags");
 
-            if (!AuthTokenService.ValidateRequest(req))
+            if (!_authTokenService.ValidateRequest(req))
             {
                 return new UnauthorizedResult();
             }
@@ -117,7 +119,7 @@ namespace API.Functions
         {
             _logger.LogInformation("🔍 Fetching client review flag with ID: {FlagId}", id);
 
-            if (!AuthTokenService.ValidateRequest(req))
+            if (!_authTokenService.ValidateRequest(req))
             {
                 return new UnauthorizedResult();
             }
@@ -189,7 +191,7 @@ namespace API.Functions
         {
             _logger.LogInformation("✏️ Updating client review flag with ID: {FlagId}", id);
 
-            if (!AuthTokenService.ValidateRequest(req))
+            if (!_authTokenService.ValidateRequest(req))
             {
                 return new UnauthorizedResult();
             }
@@ -244,7 +246,7 @@ namespace API.Functions
         {
             _logger.LogInformation("👤 Fetching pending reviews for client ID: {ClientId}", clientId);
 
-            if (!AuthTokenService.ValidateRequest(req))
+            if (!_authTokenService.ValidateRequest(req))
             {
                 return new UnauthorizedResult();
             }
@@ -303,7 +305,7 @@ namespace API.Functions
         {
             _logger.LogInformation("🚫 Processing ban request for client ID: {ClientId}", clientId);
 
-            if (!AuthTokenService.ValidateRequest(req))
+            if (!_authTokenService.ValidateRequest(req))
             {
                 return new UnauthorizedResult();
             }
@@ -362,7 +364,7 @@ namespace API.Functions
         {
             _logger.LogInformation("➕ Creating new client review flag");
 
-            if (!AuthTokenService.ValidateRequest(req))
+            if (!_authTokenService.ValidateRequest(req))
             {
                 return new UnauthorizedResult();
             }
@@ -439,7 +441,7 @@ namespace API.Functions
         {
             _logger.LogInformation("🗑️ Deleting client review flag with ID: {FlagId}", id);
 
-            if (!AuthTokenService.ValidateRequest(req))
+            if (!_authTokenService.ValidateRequest(req))
             {
                 return new UnauthorizedResult();
             }

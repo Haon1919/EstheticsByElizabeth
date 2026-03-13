@@ -35,9 +35,9 @@ namespace API.Functions
             _logger.LogInformation("💅 Service list request received.");
 
             // Handle CORS
-            req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
-            req.HttpContext.Response.Headers.Add("Access-Control-Allow-Methods", "GET, OPTIONS");
-            req.HttpContext.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization");
+            req.HttpContext.Response.Headers.Append("Access-Control-Allow-Origin", "*");
+            req.HttpContext.Response.Headers.Append("Access-Control-Allow-Methods", "GET, OPTIONS");
+            req.HttpContext.Response.Headers.Append("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
             if (req.Method == "OPTIONS")
             {
@@ -73,7 +73,6 @@ namespace API.Functions
                 _logger.LogInformation("✅ Retrieved {Count} services from database", services.Count);
                 
                 // Ensure headers are present on response
-                req.HttpContext.Response.Headers.Add("Access-Control-Allow-Origin", "*");
 
                 return new OkObjectResult(services);
             }
